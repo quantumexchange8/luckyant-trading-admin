@@ -1,0 +1,228 @@
+<script setup>
+import Loading from "@/Components/Loading.vue";
+import {TailwindPagination} from "laravel-vue-pagination";
+import {computed, ref, watch, watchEffect} from "vue";
+import debounce from "lodash/debounce.js";
+import {transactionFormat} from "@/Composables/index.js";
+import {usePage} from "@inertiajs/vue3";
+import Action from "@/Pages/Member/Partials/Action.vue";
+import KycAction from "@/Pages/Member/Partials/KycAction.vue";
+
+const props = defineProps({
+    search: String,
+    date: String,
+    rank: String,
+    refresh: Boolean,
+    isLoading: Boolean,
+    kycStatus: String,
+    exportStatus: Boolean,
+})
+const formatter = ref({
+    date: 'YYYY-MM-DD',
+    month: 'MM'
+});
+const members = ref({data: []});
+const currentPage = ref(1);
+const refreshDeposit = ref(props.refresh);
+const isLoading = ref(props.isLoading);
+const emit = defineEmits(['update:loading', 'update:refresh']);
+const { formatDateTime, formatAmount } = transactionFormat();
+
+watch(
+    [() => props.search, () => props.rank, () => props.date],
+    debounce(([searchValue, rankValue, dateValue]) => {
+        getResults(1, searchValue, rankValue, dateValue);
+    }, 300)
+);
+
+const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = props.kycStatus) => {
+    isLoading.value = true
+    try {
+        let url = `/member/getMemberDetails?page=${page}`;
+
+        if (search) {
+            url += `&search=${search}`;
+        }
+
+        if (type) {
+            url += `&type=${type}`;
+        }
+
+        if (rank) {
+            url += `&rank=${rank}`;
+        }
+
+        if (date) {
+            url += `&date=${date}`;
+        }
+
+        const response = await axios.get(url);
+        members.value = response.data;
+    } catch (error) {
+        console.error(error);
+    } finally {
+        isLoading.value = false
+        emit('update:loading', false);
+    }
+}
+
+getResults()
+
+const handlePageChange = (newPage) => {
+    if (newPage >= 1) {
+        currentPage.value = newPage;
+
+        getResults(currentPage.value, props.search, props.rank, props.date, props.kycStatus);
+    }
+};
+
+watch(() => props.refresh, (newVal) => {
+    refreshDeposit.value = newVal;
+    if (newVal) {
+        // Call the getResults function when refresh is true
+        getResults();
+        emit('update:refresh', false);
+    }
+});
+
+// watch(() => props.exportStatus, (newVal) => {
+//     refreshDeposit.value = newVal;
+//     if(newVal) {
+
+//         let url = `/member/getMemberDetails?exportStatus=yes`;
+
+//             if (props.date) {
+//                 url += `&date=${props.date}`;
+//             }
+
+//             if (props.search) {
+//                 url += `&search=${props.search}`;
+//             }
+
+//             if (props.filter) {
+//                 url += `&filter=${props.filter}`;
+//             }
+
+//             window.location.href = url;
+//             emit('update:export', false);
+//     }
+// })
+
+watchEffect(() => {
+    if (usePage().props.title !== null) {
+        getResults();
+    }
+});
+
+const paginationClass = [
+    'bg-transparent border-0 dark:text-gray-400'
+];
+
+const paginationActiveClass = [
+    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
+];
+
+const getKycClass = (kycApprovalStatus) => {
+    if (kycApprovalStatus === 'Pending') return 'flex w-20 px-2 py-1 justify-center bg-blue-500 dark:bg-blue-500 text-white mx-auto rounded-lg';
+    if (kycApprovalStatus === 'Verified') return 'flex w-20 px-2 py-1 justify-center bg-green-500 dark:bg-success-500 text-white mx-auto rounded-lg';
+    if (kycApprovalStatus === 'Unverified') return 'flex w-20 px-2 py-1 justify-center bg-red-500 dark:bg-warning-500 text-white mx-auto rounded-lg';
+}
+</script>
+
+<template>
+    <div class="relative overflow-x-auto sm:rounded-lg">
+        <div v-if="isLoading" class="w-full flex justify-center my-8">
+            <Loading />
+        </div>
+        <table v-else class="w-[850px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
+            <thead class="text-xs font-medium text-gray-700 uppercase bg-gray-50 dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-600">
+            <tr>
+                <th scope="col" colspan="4" class="px-3 py-2.5">
+                    Name
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-56">
+                    Joining Date
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-56">
+                    Wallet Balance
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-24">
+                    Country
+                </th>
+                <th scope="col" colspan="1" class="px-3 py-2.5 text-center w-24">
+                    Rank
+                </th>
+                <th v-if="kycStatus !== 'pending'" scope="col" colspan="1"  class="px-3 py-2.5 text-center w-24">
+                    Status
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-36">
+                    Action
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr
+                v-for="member in members.data"
+                class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-600"
+            >
+                <td class="pl-3 py-2.5" colspan="4">
+                    <div class="inline-flex items-center gap-2 mr-3">
+                        <img :src="member.profile_photo_url ? member.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
+                        <div class="flex flex-col">
+                            <div>
+                                {{ member.name }}
+                            </div>
+                            <div class="dark:text-gray-400">
+                                {{ member.email }}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 py-2.5 text-right" colspan="2">
+                    {{ formatDateTime(member.created_at, false) }}
+                </td>
+                <td class="px-3 py-2.5 text-right" colspan="2">
+                    $ {{ formatAmount(member.cash_wallet) }}
+                </td>
+                <td class="px-3 py-2.5 text-center" colspan="2">
+                    {{ member.country.name }}
+                </td>
+                <td class="px-3 py-2.5 text-center uppercase" colspan="1">
+                    {{ member.rank.name }}
+                </td>
+                <td v-if="kycStatus !== 'pending'" class="px-3 py-2.5 text-center" colspan="1">
+                    <div :class="getKycClass(member.kyc_approval)">
+                        {{ member.kyc_approval }}
+                    </div>
+                </td>
+                <td class="px-3 py-2.5 text-center" colspan="2">
+                    <Action
+                        v-if="kycStatus !== 'pending'"
+                        :members="member"
+                        type="member"
+                    />
+                    <KycAction
+                        v-else
+                        :member="member"
+                    />
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <div class="flex justify-center mt-4" v-if="!isLoading">
+            <TailwindPagination
+                :item-classes=paginationClass
+                :active-classes=paginationActiveClass
+                :data="members"
+                :limit=2
+                @pagination-change-page="handlePageChange"
+            />
+        </div>
+        <div v-if="members.data.length === 0 && !isLoading" class="flex flex-col justify-center items-center gap-2">
+            <div class="text-xl dark:text-gray-400">
+                No Member
+            </div>
+        </div>
+    </div>
+
+</template>

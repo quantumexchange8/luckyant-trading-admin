@@ -7,6 +7,7 @@ defineProps({
         type: Boolean,
         default: false,
     },
+    invalid: [String, Array]
 })
 
 defineEmits(['update:modelValue'])
@@ -30,13 +31,17 @@ onMounted(() => {
 <template>
     <input
         :class="[
-            'py-2 border-gray-400 rounded-md',
-            'focus:border-gray-400 focus:ring focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-white',
-            'dark:border-gray-600 dark:bg-dark-eval-1 dark:text-gray-300 dark:focus:ring-offset-dark-eval-1',
+            'py-2.5 rounded-lg text-base font-normal shadow-xs border placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-50',
+            'bg-white dark:bg-gray-700',
+            'disabled:bg-gray-50 disabled:cursor-not-allowed dark:disabled:bg-gray-900',
             {
                 'px-4': !withIcon,
                 'pl-11 pr-4': withIcon,
             },
+            {
+                'border-gray-300 dark:border-dark-eval-2 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500' :!invalid,
+                'border-error-300 focus:ring-error-300 hover:border-error-300 focus:border-error-300 dark:border-error-600 dark:focus:ring-error-600 dark:hover:border-error-600 dark:focus:border-error-600' :invalid,
+            }
         ]"
         :value="modelValue"
         @input="$emit('update:modelValue', $event.target.value)"

@@ -7,3 +7,21 @@
 .dark .ps__rail-x {
     background-color: transparent !important;
 }
+
+@layer base {
+    :root {
+        --primary-25: #faf5ff;
+        --primary-50: #f4e8ff;
+        --primary-100: #f4e8ff;
+        --primary-200: #ebd5ff;
+        --primary-300: #dab4fe;
+        --primary-400: #c184fc;
+        --primary-500: #a855f7;
+        --primary-600: #9133ea;
+        --primary-700: #7a22ce;
+        --primary-800: #6621a8;
+        --primary-900: #531c87;
+        --primary-950: #370764;
+    }
+}
+

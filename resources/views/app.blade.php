@@ -3,8 +3,12 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex, nofollow">
+        @if (App::environment('production'))
+            <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+        @endif
 
-        <title inertia>{{ config('app.name', 'K UI') }}</title>
+        <title inertia>{{ config('app.name', 'LuckyAnt Trading Admin') }}</title>
 
         <!-- Fonts -->
         <link

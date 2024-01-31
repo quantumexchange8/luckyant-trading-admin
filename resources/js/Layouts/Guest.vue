@@ -5,6 +5,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import PageFooter from '@/Components/PageFooter.vue'
 import Button from '@/Components/Button.vue'
 import { toggleDarkMode, isDark } from '@/Composables'
+import ToastList from "@/Components/ToastList.vue";
 
 defineProps({
     title: String
@@ -19,14 +20,15 @@ defineProps({
     >
         <div class="flex-shrink-0">
             <Link href="/">
-                <ApplicationLogo class="w-20 h-20" />
+                <ApplicationLogo class="w-full h-20" />
             </Link>
         </div>
 
-        <main class="flex items-center flex-1 w-full sm:max-w-md">
+        <main class="flex items-center flex-1 w-full sm:max-w-2xl">
             <div
-                class="w-full px-6 py-4 overflow-hidden bg-white shadow-md  sm:rounded-lg dark:bg-dark-eval-1"
+                class="w-full px-6 py-4 bg-white shadow-md sm:rounded-lg dark:bg-dark-eval-1"
             >
+                <ToastList />
                 <slot />
             </div>
         </main>
@@ -38,7 +40,7 @@ defineProps({
                 iconOnly
                 variant="secondary"
                 type="button"
-                @click="toggleDarkMode"
+                @click="() => { toggleDarkMode() }"
                 v-slot="{ iconSizeClasses }"
                 class="hidden md:inline-flex"
                 srText="Toggle dark mode"

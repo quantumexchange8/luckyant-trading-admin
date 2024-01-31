@@ -8,6 +8,7 @@ import GuestLayout from '@/Layouts/Guest.vue'
 import Input from '@/Components/Input.vue'
 import Label from '@/Components/Label.vue'
 import ValidationErrors from '@/Components/ValidationErrors.vue'
+import InputError from "@/Components/InputError.vue";
 
 defineProps({
     canResetPassword: Boolean,
@@ -29,22 +30,32 @@ const submit = () => {
 
 <template>
     <GuestLayout title="Log in">
-        <ValidationErrors class="mb-4" />
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
             {{ status }}
         </div>
 
         <form @submit.prevent="submit">
-            <div class="grid gap-6">
+            <div class="grid gap-6 py-2">
                 <div class="space-y-2">
                     <Label for="email" value="Email" />
                     <InputIconWrapper>
                         <template #icon>
                             <MailIcon aria-hidden="true" class="w-5 h-5" />
                         </template>
-                        <Input withIcon id="email" type="email" class="block w-full" placeholder="Email" v-model="form.email" required autofocus autocomplete="username" />
+                        <Input
+                            withIcon
+                            id="email"
+                            type="email"
+                            class="block w-full"
+                            placeholder="Email"
+                            v-model="form.email"
+                            autofocus
+                            autocomplete="username"
+                            :invalid="form.errors.email"
+                        />
                     </InputIconWrapper>
+                    <InputError :message="form.errors.email" />
                 </div>
 
                 <div class="space-y-2">
@@ -53,8 +64,18 @@ const submit = () => {
                         <template #icon>
                             <LockClosedIcon aria-hidden="true" class="w-5 h-5" />
                         </template>
-                        <Input withIcon id="password" type="password" class="block w-full" placeholder="Password" v-model="form.password" required autocomplete="current-password" />
+                        <Input
+                            withIcon
+                            id="password"
+                            type="password"
+                            class="block w-full"
+                            placeholder="Password"
+                            v-model="form.password"
+                            autocomplete="current-password"
+                            :invalid="form.errors.password"
+                        />
                     </InputIconWrapper>
+                    <InputError :message="form.errors.password" />
                 </div>
 
                 <div class="flex items-center justify-between">
@@ -74,13 +95,6 @@ const submit = () => {
                         <span>Log in</span>
                     </Button>
                 </div>
-
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    Don't have an account?
-                    <Link :href="route('register')" class="text-blue-500 hover:underline">
-                        Register
-                    </Link>
-                </p>
             </div>
         </form>
     </GuestLayout>

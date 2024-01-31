@@ -4,7 +4,7 @@ import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
 import { DashboardIcon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon } from '@heroicons/vue/outline'
+import { TemplateIcon, UsersIcon } from '@heroicons/vue/outline'
 </script>
 
 <template>
@@ -25,6 +25,24 @@ import { TemplateIcon } from '@heroicons/vue/outline'
                 />
             </template>
         </SidebarLink>
+
+        <SidebarCollapsible
+            title="Members"
+            :active="route().current('member.*')"
+        >
+            <template #icon>
+                <UsersIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('member.member_listing')"
+                title="Member Listing"
+                :active="route().current('member.member_listing')"
+            />
+        </SidebarCollapsible>
 
         <SidebarCollapsible
             title="Components"
