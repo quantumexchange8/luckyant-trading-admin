@@ -41,6 +41,13 @@ class User extends Authenticatable implements HasMedia
         'password' => 'hashed',
     ];
 
+    public function getChildrenIds(): array
+    {
+        return User::query()->where('hierarchyList', 'like', '%-' . $this->id . '-%')
+            ->where('status', 1)
+            ->pluck('id'
+            )->toArray();
+    }
     public function rank(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(SettingRank::class, 'setting_rank_id', 'id');
@@ -49,5 +56,15 @@ class User extends Authenticatable implements HasMedia
     public function country(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Country::class,'country', 'id');
+    }
+
+    public function upline(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'upline_id', 'id');
+    }
+
+    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(User::class, 'upline_id', 'id');
     }
 }

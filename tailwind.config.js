@@ -120,6 +120,12 @@ module.exports = {
             'sm': ['14px', {
                 fontWeight: '600',
             }],
+            'base': ['16px', {
+                fontWeight: '500',
+            }],
+            'lg': ['18px', {
+                fontWeight: '500',
+            }],
             'xl': ['20px', {
                 fontWeight: '600',
             }],

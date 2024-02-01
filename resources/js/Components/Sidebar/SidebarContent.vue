@@ -44,23 +44,23 @@ import { TemplateIcon, UsersIcon } from '@heroicons/vue/outline'
             />
         </SidebarCollapsible>
 
-        <SidebarCollapsible
-            title="Components"
-            :active="route().current('components.*')"
-        >
-            <template #icon>
-                <TemplateIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template>
+<!--        <SidebarCollapsible-->
+<!--            title="Components"-->
+<!--            :active="route().current('components.*')"-->
+<!--        >-->
+<!--            <template #icon>-->
+<!--                <TemplateIcon-->
+<!--                    class="flex-shrink-0 w-6 h-6"-->
+<!--                    aria-hidden="true"-->
+<!--                />-->
+<!--            </template>-->
 
-            <SidebarCollapsibleItem
-                :href="route('components.buttons')"
-                title="Buttons"
-                :active="route().current('components.buttons')"
-            />
-        </SidebarCollapsible>
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('components.buttons')"-->
+<!--                title="Buttons"-->
+<!--                :active="route().current('components.buttons')"-->
+<!--            />-->
+<!--        </SidebarCollapsible>-->
 
         <!-- Examples -->
         <!--

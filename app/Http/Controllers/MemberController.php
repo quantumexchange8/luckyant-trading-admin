@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KycApprovalRequest;
+use App\Models\Country;
 use App\Models\SettingRank;
+use App\Models\TradingAccount;
 use App\Models\User;
 use App\Notifications\KycApprovalNotification;
+use App\Services\MetaFiveService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
@@ -21,10 +25,17 @@ class MemberController extends Controller
                 'label' => $rank->name,
             ];
         });
+
+        $kycCounts = User::where('role', 'member')
+            ->whereIn('kyc_approval', ['Pending', 'Verified', 'Unverified'])
+            ->selectRaw('kyc_approval, count(*) as count')
+            ->groupBy('kyc_approval')
+            ->pluck('count', 'kyc_approval')
+            ->toArray();
+
         return Inertia::render('Member/MemberListing', [
             'rankLists' => $rankLists,
-            'pendingKycCount' => User::where('kyc_approval', '=', 'pending')->where('role', 'member')->count(),
-            'unverifiedKycCount' => User::where('kyc_approval', '=', 'unverified')->where('role', 'member')->count(),
+            'kycCounts' => $kycCounts,
         ]);
     }
 
@@ -114,5 +125,145 @@ class MemberController extends Controller
             ->notify(new KycApprovalNotification($user));
 
         return redirect()->back()->with('title', $title)->with('toast', $message);
+    }
+
+    public function viewMemberDetails($id)
+    {
+        $user = User::with(['media', 'upline:id,name,email'])->find($id);
+
+        $settingRanks = SettingRank::all();
+
+        $formattedRanks = $settingRanks->map(function ($country) {
+            return [
+                'value' => $country->id,
+                'label' => $country->name,
+            ];
+        });
+
+        $countries = Country::all();
+        $formattedCountries = $countries->map(function ($country) {
+            return [
+                'value' => $country->id,
+                'label' => $country->name,
+            ];
+        });
+
+        return Inertia::render('Member/MemberDetails/MemberDetail', [
+            'member_detail' => $user,
+            'ranks' => $formattedRanks,
+            'countries' => $formattedCountries,
+//            'referralCount' => $referralCount,
+        ]);
+    }
+
+    public function getAllUsers(Request $request)
+    {
+        $users = User::query()
+            ->where('role', '=', 'member')
+            ->whereNot('id', $request->id)
+            ->when($request->filled('query'), function ($query) use ($request) {
+                $search = $request->input('query');
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->select('id', 'name', 'email')
+            ->get();
+
+        $users->each(function ($users) {
+            $users->profile_photo = $users->getFirstMediaUrl('profile_photo');
+        });
+
+        return response()->json($users);
+    }
+
+    public function refreshTradingAccountsData()
+    {
+        $user = User::find(\request()->id);
+        $connection = (new MetaFiveService())->getConnectionStatus();
+
+        if ($connection == 0) {
+            try {
+                (new MetaFiveService())->getUserInfo($user->tradingAccounts);
+            } catch (\Exception $e) {
+                \Log::error('Error fetching trading accounts: '. $e->getMessage());
+            }
+        }
+
+        return TradingAccount::where('user_id', $user->id)->latest()->get();
+    }
+
+    public function affiliate_tree($id)
+    {
+        $user = User::find($id);
+
+        return Inertia::render('Member/MemberAffiliates/MemberAffiliate', [
+            'user' => $user
+        ]);
+    }
+
+    public function getTreeData(Request $request, $id)
+    {
+        $searchUser = null;
+        $searchTerm = $request->input('search');
+
+        if ($searchTerm) {
+            $searchUser = User::where('name', 'like', '%' . $searchTerm . '%')
+                ->orWhere('email', 'like', '%' . $searchTerm . '%')
+                ->first();
+
+            if (!$searchUser) {
+                return response()->json(['error' => 'User not found for the given search term.'], 404);
+            }
+        }
+
+        $user = $searchUser ?? User::find($id);
+
+        $users = User::whereHas('upline', function ($query) use ($user) {
+            $query->where('id', $user->id);
+        })->get();
+
+        $level = 0;
+        $rootNode = [
+            'name' => $user->name,
+            'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
+            'email' => $user->email,
+            'level' => $level,
+            'direct_affiliate' => count($user->children),
+            'total_affiliate' => count($user->getChildrenIds()),
+//            'self_deposit' => $this->getSelfDeposit($user),
+//            'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
+            'children' => $users->map(function ($user) {
+                return $this->mapUser($user, 0);
+            })
+        ];
+
+        return response()->json($rootNode);
+    }
+
+    protected function mapUser($user, $level) {
+        $children = $user->children;
+
+        $mappedChildren = $children->map(function ($child) use ($level) {
+            return $this->mapUser($child, $level + 1);
+        });
+
+        $mappedUser = [
+            'name' => $user->name,
+            'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
+            'email' => $user->email,
+            'level' => $level + 1,
+            'total_affiliate' => count($user->getChildrenIds()),
+//            'self_deposit' => $this->getSelfDeposit($user),
+//            'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
+        ];
+
+        // Add 'children' only if there are children
+        if (!$mappedChildren->isEmpty()) {
+            $mappedUser['children'] = $mappedChildren;
+        }
+
+        return $mappedUser;
     }
 }

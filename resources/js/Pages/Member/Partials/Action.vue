@@ -45,7 +45,6 @@ const closeModal = () => {
                 variant="gray"
                 :href="'/member/member_details/' + members.id"
                 pill
-                disabled
             >
                 <ClipboardListIcon aria-hidden="true" class="w-5 h-5 absolute" />
                 <span class="sr-only">View Details</span>
@@ -58,10 +57,9 @@ const closeModal = () => {
                 variant="gray"
                 :href="'/member/member_affiliates/' + members.id"
                 pill
-                disabled
             >
                 <UserGroupIcon aria-hidden="true" class="w-5 h-5 absolute" />
-                <span class="sr-only">Affiliate Tree</span>
+                <span class="sr-only">Referral Tree</span>
             </Button>
         </Tooltip>
         <Tooltip content="Delete Member" placement="bottom" v-if="type === 'member'">

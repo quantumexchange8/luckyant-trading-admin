@@ -3,7 +3,7 @@ import AuthenticatedLayout from "@/Layouts/Authenticated.vue";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import { RefreshIcon, SearchIcon } from "@heroicons/vue/outline";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import Input from "@/Components/Input.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
@@ -23,8 +23,7 @@ const formatter = ref({
 
 const props = defineProps({
     rankLists: Array,
-    pendingKycCount: Number,
-    unverifiedKycCount: Number,
+    kycCounts: Object,
 })
 
 const updateKycStatus = (kyc_status) => {
@@ -37,11 +36,21 @@ function changeTab(index) {
 }
 
 const kycStatuses = [
-    { value: '', name: 'All' },
-    { value: 'pending', name: 'Pending' },
-    { value: 'verified', name: 'Verified' },
-    { value: 'unverified', name: 'Unverified' },
-]
+    { value: '', name: 'All', count: 0 },
+    { value: 'Pending', name: 'Pending', count: 0 },
+    { value: 'Verified', name: 'Verified', count: 0 },
+    { value: 'Unverified', name: 'Unverified', count: 0 },
+];
+
+onMounted(() => {
+    updateKycCounts();
+});
+
+const updateKycCounts = () => {
+    for (const status of kycStatuses) {
+        status.count = props.kycCounts[status.value] || 0;
+    }
+}
 </script>
 
 <template>
@@ -109,7 +118,7 @@ const kycStatuses = [
                                     selected ? 'dark:text-white border-b-2' : 'border-b border-gray-400',
                                 ]"
                             >
-                                {{ kycStatus.name }} <span v-if="kycStatus.value === 'pending'">({{ pendingKycCount }})</span><span v-if="kycStatus.value === 'unverified'">({{ unverifiedKycCount }})</span>
+                                {{ kycStatus.name }} <span v-if="kycStatus.name !== 'All'">({{ kycStatus.count }})</span>
                             </button>
                         </Tab>
                     </TabList>

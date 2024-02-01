@@ -7,6 +7,7 @@ import {transactionFormat} from "@/Composables/index.js";
 import {usePage} from "@inertiajs/vue3";
 import Action from "@/Pages/Member/Partials/Action.vue";
 import KycAction from "@/Pages/Member/Partials/KycAction.vue";
+import Badge from "@/Components/Badge.vue";
 
 const props = defineProps({
     search: String,
@@ -122,10 +123,10 @@ const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
 ];
 
-const getKycClass = (kycApprovalStatus) => {
-    if (kycApprovalStatus === 'Pending') return 'flex w-20 px-2 py-1 justify-center bg-blue-500 dark:bg-blue-500 text-white mx-auto rounded-lg';
-    if (kycApprovalStatus === 'Verified') return 'flex w-20 px-2 py-1 justify-center bg-green-500 dark:bg-success-500 text-white mx-auto rounded-lg';
-    if (kycApprovalStatus === 'Unverified') return 'flex w-20 px-2 py-1 justify-center bg-red-500 dark:bg-warning-500 text-white mx-auto rounded-lg';
+const kycVariant = (kycApprovalStatus) => {
+    if (kycApprovalStatus === 'Pending') return 'processing';
+    if (kycApprovalStatus === 'Verified') return 'success';
+    if (kycApprovalStatus === 'Unverified') return 'warning';
 }
 </script>
 
@@ -152,7 +153,7 @@ const getKycClass = (kycApprovalStatus) => {
                 <th scope="col" colspan="1" class="px-3 py-2.5 text-center w-24">
                     Rank
                 </th>
-                <th v-if="kycStatus !== 'pending'" scope="col" colspan="1"  class="px-3 py-2.5 text-center w-24">
+                <th v-if="kycStatus !== 'Pending'" scope="col" colspan="1"  class="px-3 py-2.5 text-center w-24">
                     Status
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-36">
@@ -190,14 +191,16 @@ const getKycClass = (kycApprovalStatus) => {
                 <td class="px-3 py-2.5 text-center uppercase" colspan="1">
                     {{ member.rank.name }}
                 </td>
-                <td v-if="kycStatus !== 'pending'" class="px-3 py-2.5 text-center" colspan="1">
-                    <div :class="getKycClass(member.kyc_approval)">
+                <td v-if="kycStatus !== 'Pending'" class="px-3 py-2.5 text-center" colspan="1">
+                    <Badge
+                        :variant="kycVariant(member.kyc_approval)"
+                    >
                         {{ member.kyc_approval }}
-                    </div>
+                    </Badge>
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     <Action
-                        v-if="kycStatus !== 'pending'"
+                        v-if="kycStatus !== 'Pending'"
                         :members="member"
                         type="member"
                     />
