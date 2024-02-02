@@ -5,6 +5,7 @@ import Input from "@/Components/Input.vue";
 import {useForm} from "@inertiajs/vue3";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import Combobox from "@/Components/Combobox.vue";
+import Button from "@/Components/Button.vue";
 
 const props = defineProps({
     member_detail: Object,
@@ -12,6 +13,7 @@ const props = defineProps({
 })
 
 const form = useForm({
+    user_id: props.member_detail.id,
     rank: props.member_detail.setting_rank_id,
     upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.name } : {},
 })
@@ -30,6 +32,14 @@ function loadUsers(query, setOptions) {
                 })
             )
         });
+}
+
+const submit = () => {
+    form.patch(route('member.advanceEdit_member'), {
+        onSuccess: () => {
+            form.reset();
+        },
+    })
 }
 </script>
 
@@ -58,6 +68,16 @@ function loadUsers(query, setOptions) {
                     />
                 </div>
             </div>
+        </div>
+
+        <div class="mt-5 flex justify-end">
+            <Button
+                variant="primary"
+                :disabled="form.processing"
+                @click.prevent="submit"
+            >
+                <span>Save</span>
+            </Button>
         </div>
     </form>
 </template>

@@ -9,10 +9,14 @@ use App\Models\TradingAccount;
 use App\Models\User;
 use App\Notifications\KycApprovalNotification;
 use App\Services\MetaFiveService;
+use App\Http\Requests\EditMemberRequest;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class MemberController extends Controller
@@ -154,6 +158,111 @@ class MemberController extends Controller
             'countries' => $formattedCountries,
 //            'referralCount' => $referralCount,
         ]);
+    }
+
+    public function editMember(EditMemberRequest $request)
+    {
+        
+        $user = User::find($request->user_id);
+        
+        $user->update([
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'dob' => $request->dob,
+            'country' => $request->country,
+        ]);
+        
+        if ($request->password) {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+        }
+
+        return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
+    }
+
+    public function advanceEditMember(Request $request)
+    {
+
+        $user = User::find($request->user_id);
+        $upline_id = $request->upline_id['value'];
+
+        $currentRank = $request->rank;
+
+        if ($currentRank != $user->setting_rank_id) {
+            $user->rank_up_status = 'manual';
+            $user->save();
+        }
+
+        $user->update([
+            'setting_rank_id' => $request->rank,
+        ]);
+
+        if($user->upline_id != $upline_id)
+        {
+            $this->transferUpline($user, $upline_id);
+        }
+
+        return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
+    }
+
+    protected function transferUpline($user, $upline_id)
+    {
+        if ($user->id == $upline_id) {
+            throw ValidationException::withMessages(['upline_id' => 'Upline cannot be themselves']);
+        }
+
+        if ($upline_id == $user->upline_id) {
+            throw ValidationException::withMessages(['upline_id' => 'Upline cannot be the same']);
+        }
+
+        $new_parent = User::find($upline_id);
+        
+        if ($user->upline_id != $new_parent->id) {
+
+            if (str_contains($new_parent->hierarchyList, $user->id)) {
+                $new_parent->hierarchyList = $user->hierarchyList;
+                $new_parent->upline_id = $user->upline_id;
+                $new_parent->save();
+            }
+
+            if (empty($new_parent->hierarchyList)) {
+                $user_hierarchy = "-" . $new_parent->id . "-";
+            } else {
+                $user_hierarchy = $new_parent->hierarchyList . $new_parent->id . "-";
+            }
+
+            $this->updateHierarchyList($user, $user_hierarchy, '-' . $user->id . '-');
+
+            $user->hierarchyList = $user_hierarchy;
+            $user->upline_id = $new_parent->id;
+            $user->save();
+
+            // Update hierarchyList for users with same upline_id
+            $sameUplineIdUsers = User::where('upline_id', $new_parent->id)->get();
+            if ($sameUplineIdUsers) {
+                foreach ($sameUplineIdUsers as $sameUplineUser) {
+                    $new_user_hierarchy = $new_parent->hierarchyList . $new_parent->id . "-";
+                    $this->updateHierarchyList($sameUplineUser, $new_user_hierarchy, '-' . $sameUplineUser->id . '-');
+                    $sameUplineUser->hierarchyList = $new_user_hierarchy;
+                    $sameUplineUser->upline_id = $new_parent->id;
+                    $sameUplineUser->save();
+                }
+            }
+        }
+    }
+
+    private function updateHierarchyList($user, $list, $id)
+    {
+        $children = $user->children;
+        if (count($children)) {
+            foreach ($children as $child) {
+                //$child->hierarchyList = substr($list, -1) . substr($child->hierarchyList, strpos($child->hierarchyList, $id) + strlen($id));
+                $child->hierarchyList = substr($list, 0, -1) . $id;
+                $child->save();
+                $this->updateHierarchyList($child, $list, $id . $child->id . '-');
+            }
+        }
     }
 
     public function getAllUsers(Request $request)

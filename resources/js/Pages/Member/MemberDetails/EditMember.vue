@@ -3,9 +3,11 @@ import InputError from "@/Components/InputError.vue";
 import Label from "@/Components/Label.vue";
 import Input from "@/Components/Input.vue";
 import {useForm} from "@inertiajs/vue3";
+import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
-import {ref} from "vue";
+import { ref } from "vue";
 import { EyeIcon, EyeOffIcon } from '@heroicons/vue/outline'
+import VueTailwindDatepicker from "vue-tailwind-datepicker";
 
 const props = defineProps({
     member_detail: Object,
@@ -13,6 +15,7 @@ const props = defineProps({
 })
 
 const form = useForm({
+    user_id: props.member_detail.id,
     name: props.member_detail.name,
     email: props.member_detail.email,
     phone: props.member_detail.phone,
@@ -21,10 +24,25 @@ const form = useForm({
     password: '',
 })
 
+
+const formatter = ref({
+  date: 'YYYY-MM-DD',
+  month: 'MMM'
+})
+
 const showPassword = ref(false)
 const togglePasswordVisibility = () => {
     showPassword.value = !showPassword.value;
 };
+
+const submit = () => {
+    form.patch(route('member.edit_member'), {
+        onSuccess: () => {
+            form.reset();
+        },
+    })
+}
+
 </script>
 
 <template>
@@ -88,14 +106,20 @@ const togglePasswordVisibility = () => {
             <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="dob" value="Date of Birth" />
                 <div class="md:col-span-3">
-                    <Input
+                    <!-- <Input
                         id="dob"
                         type="text"
                         class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
                         v-model="form.dob"
                         :invalid="form.errors.dob"
                     />
-                    <InputError :message="form.errors.dob" class="mt-1 col-span-4" />
+                    <InputError :message="form.errors.dob" class="mt-1 col-span-4" /> -->
+                    <vue-tailwind-datepicker
+                        input-classes="py-2.5 border-gray-400 w-full rounded-lg text-sm placeholder:text-base dark:placeholder:text-gray-400 focus:border-gray-400 focus:border-pink-700 focus:ring focus:ring-pink-500 focus:ring-offset-0 focus:ring-offset-white dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                        v-model="form.dob"
+                        as-single
+                        :formatter="formatter"
+                    />
                 </div>
             </div>
 
@@ -127,6 +151,15 @@ const togglePasswordVisibility = () => {
                     <InputError :message="form.errors.password" class="mt-1 col-span-4" />
                 </div>
             </div>
+        </div>
+        <div class="flex justify-end mt-5">
+            <Button
+                variant="primary"
+                :disabled="form.processing"
+                @click.prevent="submit"
+            >
+                <span>Save</span>
+            </Button>
         </div>
     </form>
 </template>

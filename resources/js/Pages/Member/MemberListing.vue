@@ -8,6 +8,7 @@ import Input from "@/Components/Input.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import MemberTable from "@/Pages/Member/MemberTable.vue";
+import toast from "@/Composables/toast.js";
 
 const search = ref('');
 const date = ref('');

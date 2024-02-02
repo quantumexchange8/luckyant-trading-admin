@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/member_listing', [MemberController::class, 'index'])->name('member.member_listing');
         Route::get('/getMemberDetails', [MemberController::class, 'getMemberDetails'])->name('member.getMemberDetails');
         Route::get('/member_details/{id}', [MemberController::class, 'viewMemberDetails'])->name('member.viewMemberDetails');
+        Route::patch('/editMember', [MemberController::class, 'editMember'])->name('member.edit_member');
+        Route::patch('/advanceEditMember', [MemberController::class, 'advanceEditMember'])->name('member.advanceEdit_member');
         Route::get('/getAllUsers', [MemberController::class, 'getAllUsers'])->name('member.getAllUsers');
         Route::get('/refreshTradingAccountsData', [MemberController::class, 'refreshTradingAccountsData'])->name('member.refreshTradingAccountsData');
         Route::get('/member_affiliates/{id}', [MemberController::class, 'affiliate_tree'])->name('member.affiliate_tree');
