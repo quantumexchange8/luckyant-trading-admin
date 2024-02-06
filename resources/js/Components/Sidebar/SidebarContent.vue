@@ -4,7 +4,7 @@ import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
 import { DashboardIcon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon, UsersIcon, ClipboardListIcon } from '@heroicons/vue/outline'
+import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
 </script>
 
 <template>
@@ -43,6 +43,19 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon } from '@heroicons/vue/outli
                 :active="route().current('member.member_listing')"
             />
         </SidebarCollapsible>
+        
+        <SidebarLink
+            title="Announcement"
+            :href="route('announcement')"
+            :active="route().current('announcement')"
+        >
+            <template #icon>
+                <SpeakerphoneIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+        </SidebarLink>
 
         <SidebarCollapsible
             title="Transactions"

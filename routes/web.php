@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AnnoucementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    /**
+     * ==============================
+     *         Announcement
+     * ==============================
+     */
+    Route::get('/announcement', [AnnoucementController::class, 'Announcement'])->name('announcement');
+    Route::get('/getAnnouncement', [AnnoucementController::class, 'getAnnouncement'])->name('getAnnouncement');
+    Route::post('/addAnnouncement', [AnnoucementController::class, 'addAnnouncement'])->name('addAnnouncement');
+
 });
 
 Route::get('/components/buttons', function () {
