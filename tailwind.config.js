@@ -168,7 +168,10 @@ module.exports = {
             'xl': ['20px', {
                 fontWeight: '600',
             }],
-        },
+            '2xl': ['24px', {
+                fontWeight: '600',
+            }],
+        }
     },
 
     plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],

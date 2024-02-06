@@ -4,7 +4,7 @@ import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
 import { DashboardIcon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon, UsersIcon } from '@heroicons/vue/outline'
+import { TemplateIcon, UsersIcon, ClipboardListIcon } from '@heroicons/vue/outline'
 </script>
 
 <template>
@@ -41,6 +41,30 @@ import { TemplateIcon, UsersIcon } from '@heroicons/vue/outline'
                 :href="route('member.member_listing')"
                 title="Member Listing"
                 :active="route().current('member.member_listing')"
+            />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
+            title="Transactions"
+            :active="route().current('transaction.*')"
+        >
+            <template #icon>
+                <ClipboardListIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('transaction.pending_transaction')"
+                title="Pending Transaction"
+                :active="route().current('transaction.pending_transaction')"
+            />
+
+            <SidebarCollapsibleItem
+                :href="route('transaction.transaction_history')"
+                title="Transaction History"
+                :active="route().current('transaction.transaction_history')"
             />
         </SidebarCollapsible>
 
