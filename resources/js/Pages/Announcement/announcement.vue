@@ -105,7 +105,7 @@ const closeModal = () => {
             </div>
         </template>
 
-        <div class="w-full p-5 rounded-xl shadow-md dark:bg-gray-700">
+        <div class="w-full p-5 rounded-xl shadow-md dark:bg-gray-900">
             <h4 class="font-semibold darkLtext-white">
                 History
             </h4>
@@ -159,7 +159,7 @@ const closeModal = () => {
                         </tr>
                         <tr
                             v-for="announcement in announcements.data"
-                            class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-600 dark:hover:bg-gray-600"
+                            class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-600 dark:hover:bg-gray-800"
                         >
                             <td class="px-3 py-4">
                                 {{ formatDateTime(announcement.created_at) }}

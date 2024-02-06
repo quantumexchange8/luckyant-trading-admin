@@ -64,7 +64,7 @@ const updateKycCounts = () => {
             </div>
         </template>
 
-        <div class="p-6 bg-white rounded-md shadow-md dark:bg-dark-eval-1">
+        <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900 ">
             <div class="flex items-center gap-5">
                 <div class="w-full lg:w-[280px]">
                     <InputIconWrapper class="md:col-span-2">
@@ -102,7 +102,7 @@ const updateKycCounts = () => {
             </div>
         </div>
 
-        <div class="p-6 bg-white rounded-md shadow-md dark:bg-dark-eval-1 my-8">
+        <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900  my-8">
             <div class="w-full pt-5">
                 <TabGroup :selectedIndex="selectedTab" @change="changeTab">
                     <TabList class="max-w-md flex py-1">

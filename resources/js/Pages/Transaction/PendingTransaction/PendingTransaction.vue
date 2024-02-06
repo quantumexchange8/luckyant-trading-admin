@@ -104,7 +104,7 @@ const exportTransaction = () => {
             </div>
         </div>
 
-        <div class="p-5 my-8 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-dark-eval-1">
+        <div class="p-5 my-8 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-gray-900">
             <PendingTransactionTable
                 :refresh="refresh"
                 :isLoading="isLoading"
