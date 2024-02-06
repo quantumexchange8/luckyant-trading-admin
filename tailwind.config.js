@@ -112,6 +112,32 @@ module.exports = {
                 "vtd-primary": colors.purple,
                 "vtd-secondary": colors.zinc,
             },
+            typography: ({ theme }) => ({
+                DEFAULT: {
+                    css: {
+                        '--tw-prose-paragraphs': theme('colors.white'),
+                        '--tw-prose-headings': theme('colors.white'),
+                        '--tw-prose-counters': theme('colors.white'),
+                        '--tw-prose-bold': theme('colors.white'),
+                        h1: {
+                            fontSize: '28px',
+                            lineHeight: '36px'
+                        },
+                        h2: {
+                            fontSize: '24px',
+                            lineHeight: '32px'
+                        },
+                        h3: {
+                            fontSize: '20px',
+                            lineHeight: '28px'
+                        },
+                        p: {
+                            fontSize: '14px',
+                            lineHeight: '24px'
+                        }
+                    },
+                },
+            }),
         },
         fontSize: {
             'xs': ['12px', {
@@ -129,8 +155,8 @@ module.exports = {
             'xl': ['20px', {
                 fontWeight: '600',
             }],
-        }
+        },
     },
 
-    plugins: [require('@tailwindcss/forms')],
+    plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
 }
