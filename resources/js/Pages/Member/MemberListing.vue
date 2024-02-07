@@ -103,7 +103,7 @@ const updateKycCounts = () => {
         </div>
 
         <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900  my-8">
-            <div class="w-full pt-5">
+            <div class="w-full">
                 <TabGroup :selectedIndex="selectedTab" @change="changeTab">
                     <TabList class="max-w-md flex py-1">
                         <Tab
@@ -116,7 +116,9 @@ const updateKycCounts = () => {
                                 :class="[
                                     'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                                     'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                                    selected ? 'dark:text-white border-b-2' : 'border-b border-gray-400',
+                                       selected
+                                    ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                    : 'border-b border-gray-300 dark:border-gray-700',
                                 ]"
                             >
                                 {{ kycStatus.name }} <span v-if="kycStatus.name !== 'All'">({{ kycStatus.count }})</span>

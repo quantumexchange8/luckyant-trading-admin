@@ -43,11 +43,11 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon } from '@h
                 :active="route().current('member.member_listing')"
             />
         </SidebarCollapsible>
-        
+
         <SidebarLink
             title="Announcement"
-            :href="route('announcement')"
-            :active="route().current('announcement')"
+            :href="route('announcement.announcement_listing')"
+            :active="route().current('announcement.announcement_listing')"
         >
             <template #icon>
                 <SpeakerphoneIcon

@@ -136,7 +136,7 @@ const kycVariant = (kycApprovalStatus) => {
             <Loading />
         </div>
         <table v-else class="w-[850px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
-            <thead class="text-xs font-medium text-gray-700 uppercase bg-gray-50 dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-600">
+            <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
             <tr>
                 <th scope="col" colspan="4" class="px-3 py-2.5">
                     Name
@@ -164,7 +164,7 @@ const kycVariant = (kycApprovalStatus) => {
             <tbody>
             <tr
                 v-for="member in members.data"
-                class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-600"
+                class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-800"
             >
                 <td class="pl-3 py-2.5" colspan="4">
                     <div class="inline-flex items-center gap-2 mr-3">

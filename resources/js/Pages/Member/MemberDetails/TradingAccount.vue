@@ -8,7 +8,8 @@ import {RefreshIcon} from "@heroicons/vue/solid";
 import Loading from "@/Components/Loading.vue";
 
 const props = defineProps({
-    member_detail: Object
+    member_detail: Object,
+    tradingAccounts: Object,
 })
 
 const { formatAmount } = transactionFormat();
@@ -50,20 +51,42 @@ onMounted(() => {
 
 <template>
     <div
-        class="grid grid-cols-3"
+        v-if="tradingAccounts.length === 0"
+        class="flex flex-col items-start gap-3 border border-gray-300 dark:border-gray-600 rounded-lg p-5 animate-pulse w-96 mx-auto sm:mx-0 shadow-lg"
+    >
+        <div class="flex justify-between items-center self-stretch">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center">
+                    <div>
+                        <div class="h-2.5 bg-gray-200 rounded-full dark:bg-gray-700 w-32 mb-2"></div>
+                        <div class="w-48 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+                    </div>
+                </div>
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="flex items-center justify-between w-full">
+            <div>
+                <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
+                <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
+            </div>
+            <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
+        </div>
+    </div>
+
+    <div
+        v-else
+        class="overflow-x-auto grid grid-flow-col justify-start gap-5"
     >
         <div
             v-for="account in tradingAccounts"
-            class="flex flex-col items-start gap-3 border border-gray-400 dark:border-gray-600 rounded-lg p-5 max-w-md"
+            class="flex flex-col items-start gap-3 border border-gray-300 dark:border-gray-600 rounded-lg p-5 w-96 shadow-lg"
         >
             <div class="flex justify-between items-center self-stretch">
                 <div class="flex items-center gap-3">
-                    <div class="bg-gray-600 rounded-full w-12 h-12 flex items-center justify-center">
-                        Logo
-                    </div>
                     <div class="flex flex-col items-start">
-                        <div class="text-sm">
-                            Standard Account
+                        <div class="text-sm font-semibold">
+                            {{ account.account_type.name }}
                         </div>
                         <div class="text-xs">
                             {{ account.meta_login }}
@@ -71,19 +94,15 @@ onMounted(() => {
                     </div>
                 </div>
                 <div class="flex justify-end">
-                    <Badge
-                        variant="success"
-                    >
-                        Active
-                    </Badge>
+                    <Badge variant="success">Active</Badge>
                 </div>
             </div>
             <div class="flex justify-between items-center self-stretch">
                 <div class="flex items-center gap-3">
-                    <div class="border-r pr-3 border-gray-400 dark:border-gray-600 text-xs">
+                    <div class="border-r pr-3 border-gray-400 dark:border-gray-600 text-xs font-normal">
                         {{ account.margin_leverage }}
                     </div>
-                    <div class="text-xs">
+                    <div class="text-xs font-normal">
                         Credit: $ {{ formatAmount(account.credit ? account.credit : 0) }}
                     </div>
                 </div>
@@ -91,26 +110,17 @@ onMounted(() => {
                     $ {{ formatAmount(account.balance ? account.balance : 0) }}
                 </div>
             </div>
-            <div class="flex items-center gap-3 w-full">
-                <Button
-                    type="button"
-                    variant="primary"
-                    class="flex justify-center gap-2"
-                    v-slot="{ iconSizeClasses }"
-                >
-                    <CreditCardAddIcon />
-                    Deposit
-                </Button>
-                <Button
-                    type="button"
-                    variant="transparent"
-                    class="flex justify-center"
-                >
-                    More
-                </Button>
-                <div class="flex items-center gap-2 justify-end w-full">
+            <div class="flex items-center gap-10 w-full">
+                <div class="flex items-center gap-3">
+<!--                    <Action-->
+<!--                        :account="account"-->
+<!--                        :walletSel="walletSel"-->
+<!--                        :tradingAccounts="tradingAccounts"-->
+<!--                    />-->
+                </div>
+                <div class="flex items-center gap-2 justify-end w-full"> <!-- Adjust the width as needed -->
                     <Loading class="w-5 h-5" />
-                    <div class="text-xs">Refreshing in {{ countdown }} seconds</div>
+                    <div class="text-xs">Refreshing in {{ countdown }}s</div>
                 </div>
             </div>
         </div>

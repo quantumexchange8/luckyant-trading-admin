@@ -44,7 +44,7 @@ const getResults = async (page = 1, search = '', date = '') => {
         if (date) {
             url += `&date=${date}`;
         }
-        
+
         const response = await axios.get(url);
         transfers.value = response.data.InternalTransfer;
     } catch (error) {
@@ -116,7 +116,7 @@ const closeModal = () => {
             <Loading />
         </div>
         <table v-else class="w-[800px] table-fixed md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
-            <thead class="text-xs font-medium text-gray-700 uppercase bg-gray-50 dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-600">
+            <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
             <tr>
                 <th scope="col" class="pl-5 py-2">
                     Date
@@ -146,7 +146,7 @@ const closeModal = () => {
             </tr>
             <tr
                 v-for="transfer in transfers.data"
-                class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-600 hover:cursor-pointer dark:hover:bg-gray-600"
+                class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-600 hover:cursor-pointer dark:hover:bg-gray-800"
                 @click="openTransferHistoryModal(transfer)"
             >
                 <td class="pl-5 py-2">

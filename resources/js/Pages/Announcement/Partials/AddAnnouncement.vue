@@ -146,16 +146,16 @@ const submit = () => {
                                 >
                                     <div
                                         :class="[
-                                    checked ? 'bg-gray-300 dark:bg-gray-600 border-primary-400 dark:text-white border-2 dark:border-white' : 'bg-gray-700',
+                                    checked ? 'bg-gray-100 dark:bg-gray-600 border-primary-400 dark:text-white border-2 dark:border-white' : 'border border-gray-300 dark:border-transparent dark:bg-gray-700',
                                 ]"
-                                        class="relative flex cursor-pointer rounded-lg px-5 py-2.5 shadow-md focus:outline-none"
+                                        class="relative flex cursor-pointer rounded-lg px-5 py-2.5 focus:outline-none"
                                     >
                                         <div class="flex w-full items-center justify-center">
                                             <div class="flex items-center">
                                                 <div class="text-sm">
                                                     <RadioGroupLabel
                                                         as="p"
-                                                        :class="checked ? 'text-black dark:text-white' : 'text-white dark:text-white'"
+                                                        :class="checked ? 'text-gray-700 dark:text-white' : 'text-gray-700 dark:text-white'"
                                                         class="font-medium"
                                                     >
                                                         {{ plan.name }}
@@ -182,8 +182,8 @@ const submit = () => {
                         type="text"
                         placeholder="Enter subject"
                         class="block w-full"
-                        :class="form.errors.subject ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
                         v-model="form.subject"
+                        :invalid="form.errors.subject"
                     />
                     <InputError :message="form.errors.subject" class="mt-2" />
                 </div>

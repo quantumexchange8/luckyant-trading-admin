@@ -14,6 +14,7 @@ import Tooltip from "@/Components/Tooltip.vue";
 import Button from "@/Components/Button.vue";
 import Modal from "@/Components/Modal.vue";
 import debounce from "lodash/debounce.js";
+import {TailwindPagination} from "laravel-vue-pagination";
 
 const announcements = ref({data: []});
 const isLoading = ref(false);
@@ -22,6 +23,7 @@ const date = ref('');
 const announcementModal = ref(false);
 const { formatDateTime } = transactionFormat();
 const announcementDetail = ref();
+const currentPage = ref(1);
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MM'
@@ -37,7 +39,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '') => {
     isLoading.value = true
     try {
-        let url = `/getAnnouncement?page=${page}`;
+        let url = `/announcement/getAnnouncement?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -62,7 +64,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
         const dateRange = date.value.split(' - ');
-        getResults(currentPage.value, dateRange, search.value);
+        getResults(currentPage.value,  search.value, dateRange);
     }
 };
 
@@ -97,7 +99,7 @@ const closeModal = () => {
                 <h2
                     class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight"
                 >
-                    Announencement
+                    Announcement
                 </h2>
                 <div class="flex justify-end">
                     <AddAnnouncement />
@@ -105,8 +107,8 @@ const closeModal = () => {
             </div>
         </template>
 
-        <div class="w-full p-5 rounded-xl shadow-md dark:bg-gray-900">
-            <h4 class="font-semibold darkLtext-white">
+        <div class="w-full p-5 rounded-xl shadow-md bg-white dark:bg-gray-900">
+            <h4 class="font-semibold dark:text-white">
                 History
             </h4>
             <form>
@@ -116,7 +118,7 @@ const closeModal = () => {
                             <template #icon>
                                 <SearchIcon aria-hidden="true" class="w-5 h-5" />
                             </template>
-                            <Input withIcon id="search" type="text" class="block w-full border border-transparent" placeholder="Search" v-model="search" />
+                            <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
                         </InputIconWrapper>
                     </div>
                     <div class="md:w-2/3">
@@ -125,7 +127,7 @@ const closeModal = () => {
                             :formatter="formatter"
                             separator=" - "
                             v-model="date"
-                            input-classes="py-2.5 border-gray-400 w-full rounded-lg text-sm placeholder:text-base dark:placeholder:text-gray-400 focus:border-gray-400 focus:border-pink-700 focus:ring focus:ring-pink-500 focus:ring-offset-0 focus:ring-offset-white dark:border-gray-600 dark:bg-gray-600 dark:text-white"
+                            input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
                         />
                     </div>
                 </div>
@@ -135,18 +137,18 @@ const closeModal = () => {
                     <Loading />
                 </div>
                 <table v-else class="w-[650px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
-                    <thead class="text-xs font-medium text-gray-700 uppercase bg-gray-50 dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-600">
+                    <thead class="text-xs font-medium text-gray-700 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
                         <tr>
-                            <th scope="col" class="px-3 py-4">
+                            <th scope="col" class="p-3">
                                 Date
                             </th>
-                            <th scope="col" class="px-3 py-4">
+                            <th scope="col" class="p-3">
                                 Subject
                             </th>
-                            <th scope="col" class="px-3 py-4">
+                            <th scope="col" class="p-3">
                                 Type
                             </th>
-                            <th scope="col" class="px-3 py-4">
+                            <th scope="col" class="p-3 text-center">
                                 Action
                             </th>
                         </tr>
@@ -159,24 +161,27 @@ const closeModal = () => {
                         </tr>
                         <tr
                             v-for="announcement in announcements.data"
-                            class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-600 dark:hover:bg-gray-800"
+                            class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-800 dark:hover:bg-gray-800"
                         >
-                            <td class="px-3 py-4">
+                            <td class="p-3">
                                 {{ formatDateTime(announcement.created_at) }}
                             </td>
-                            <td class="px-3 py-4">
+                            <td class="p-3">
                                 {{ announcement.subject }}
                             </td>
-                            <td class="px-3 py-4">
+                            <td class="p-3">
                                 {{ announcement.type }}
                             </td>
-                            <td class="px-3 py-4">
+                            <td class="p-3 flex justify-center">
                                 <Tooltip content="View Details" placement="bottom">
                                     <Button
                                         type="button"
-                                        class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-                                        variant="action"
+                                        class="flex items-center justify-center"
+                                        variant="gray"
+                                        iconOnly
+                                        size="lg"
                                         pill
+                                        v-slot="{ iconSizeClasses }"
                                         @click="openAnnouncementModal(announcement)"
                                     >
                                         <MemberDetailIcon aria-hidden="true" class="w-5 h-5 absolute" />
@@ -187,6 +192,15 @@ const closeModal = () => {
                         </tr>
                     </tbody>
                 </table>
+                <div class="flex justify-center mt-4" v-if="!isLoading">
+                    <TailwindPagination
+                        :item-classes=paginationClass
+                        :active-classes=paginationActiveClass
+                        :data="announcements"
+                        :limit=2
+                        @pagination-change-page="handlePageChange"
+                    />
+                </div>
             </div>
         </div>
 

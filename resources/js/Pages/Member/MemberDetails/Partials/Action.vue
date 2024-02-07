@@ -34,8 +34,8 @@ const closeModal = () => {
         <Tooltip content="Wallet Adjustment" placement="right" v-if="type === 'wallet'">
             <Button
                 type="button"
-                class="justify-center p-1 w-8 h-8 relative focus:outline-none dark:bg-[#ffffff32]"
-                variant="gray"
+                class="justify-center p-1 w-8 h-8 relative focus:outline-none"
+                variant="opacity"
                 @click="openMemberModal('wallet_adjustment')"
                 pill
             >

@@ -28,7 +28,7 @@ const editor = useEditor({
     },
     editorProps: {
         attributes: {
-            class: 'rounded-lg dark:bg-gray-600 border border-transparent focus:border-pink-700 focus:ring focus:ring-pink-500 focus:ring-offset-0 focus:ring-offset-white focus:outline-none focus-visible:ring py-2 px-3.5 min-h-[120px] max-h-[240px] overflow-y-auto dark:text-gray-300 prose leading-3',
+            class: 'rounded-lg dark:bg-gray-600 border border-gray-300 focus:border-pink-700 focus:ring focus:ring-pink-500 focus:ring-offset-0 focus:ring-offset-white focus:outline-none focus-visible:ring py-2 px-3.5 min-h-[120px] max-h-[240px] overflow-y-auto dark:text-gray-300 prose leading-3',
         },
     },
     extensions: [
@@ -46,7 +46,7 @@ const editor = useEditor({
 <template>
     <section
         v-if="editor"
-        class="flex items-center flex-wrap gap-x-4 rounded-lg dark:bg-gray-600 border border-gray-400 dark:border-gray-600 p-3"
+        class="flex items-center flex-wrap gap-x-4 rounded-lg dark:bg-gray-600 border border-gray-300 dark:border-gray-600 p-3"
     >
         <button
             type="button"

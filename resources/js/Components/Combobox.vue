@@ -176,7 +176,7 @@ function clearSelection() {
             :class="{
                 'border-primary-500 bg-white dark:bg-gray-600': open && !field.error,
                 'border-error-500': !open && field.error,
-                'border-transparent': !open && !field.error,
+                'border-gray-300 dark:border-transparent': !open && !field.error,
               }"
             class="min-h-[2.5rem] relative flex w-full flex-wrap items-center gap-1 overflow-hidden rounded-lg border bg-white dark:bg-gray-700 p-1 pr-14 focus-within:border-primary-500 hover:bg-gray-100 focus:ring-0 dark:disabled:bg-gray-700 dark:disabled:border-transparent"
         >

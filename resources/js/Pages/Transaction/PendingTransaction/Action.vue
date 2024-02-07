@@ -89,7 +89,7 @@ const submitForm = () => {
                 type="button"
                 pill
                 class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-                variant="action"
+                variant="gray"
                 @click="openTransactionModal(transaction.id, 'view')"
             >
                 <MemberDetailIcon aria-hidden="true" class="w-6 h-6 absolute" />

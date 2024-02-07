@@ -67,4 +67,9 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->hasMany(User::class, 'upline_id', 'id');
     }
+
+    public function tradingAccounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TradingAccount::class, 'user_id', 'id');
+    }
 }

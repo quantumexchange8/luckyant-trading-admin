@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TransactionController;
@@ -7,7 +8,6 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\AnnoucementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -66,10 +66,11 @@ Route::middleware('auth')->group(function () {
      *         Announcement
      * ==============================
      */
-    Route::get('/announcement', [AnnoucementController::class, 'Announcement'])->name('announcement');
-    Route::get('/getAnnouncement', [AnnoucementController::class, 'getAnnouncement'])->name('getAnnouncement');
-    Route::post('/addAnnouncement', [AnnoucementController::class, 'addAnnouncement'])->name('addAnnouncement');
-
+    Route::prefix('announcement')->group(function () {
+        Route::get('/listing', [AnnouncementController::class, 'index'])->name('announcement.announcement_listing');
+        Route::get('/getAnnouncement', [AnnouncementController::class, 'getAnnouncement'])->name('getAnnouncement');
+        Route::post('/addAnnouncement', [AnnouncementController::class, 'addAnnouncement'])->name('addAnnouncement');
+    });
 });
 
 Route::get('/components/buttons', function () {

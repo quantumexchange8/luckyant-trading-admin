@@ -31,9 +31,9 @@ const updateTransactionType = (transaction_type) => {
                     :class="[
                               'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                               'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                              selected
-                                ? 'dark:text-white border-b-2'
-                                : 'border-b border-gray-400',
+                               selected
+                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                : 'border-b border-gray-300 dark:border-gray-700',
                            ]"
                 >
                     Deposit
@@ -48,9 +48,9 @@ const updateTransactionType = (transaction_type) => {
                     :class="[
                               'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                               'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                              selected
-                                ? 'dark:text-white border-b-2'
-                                : 'border-b border-gray-400',
+                               selected
+                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                : 'border-b border-gray-300 dark:border-gray-700',
                            ]"
                 >
                     Withdrawal

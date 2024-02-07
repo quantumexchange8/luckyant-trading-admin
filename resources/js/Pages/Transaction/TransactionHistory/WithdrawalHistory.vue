@@ -127,7 +127,7 @@ const closeModal = () => {
             <Loading />
         </div>
         <table v-else class="w-[800px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
-            <thead class="text-xs font-medium text-gray-700 uppercase bg-gray-50 dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-600">
+            <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
             <tr>
                 <th scope="col" class="pl-5 py-2">
                     Name
@@ -157,7 +157,7 @@ const closeModal = () => {
             </tr>
             <tr
                 v-for="withdrawal in withdrawals.data"
-                class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-600 hover:cursor-pointer dark:hover:bg-gray-600"
+                class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-600 hover:cursor-pointer dark:hover:bg-gray-800"
                 @click="openWithdrawalHistoryModal(withdrawal)"
             >
                 <td class="pl-5 py-2">

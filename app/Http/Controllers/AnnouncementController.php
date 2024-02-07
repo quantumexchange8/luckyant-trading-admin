@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Models\Announcement;
 
-class AnnoucementController extends Controller
+class AnnouncementController extends Controller
 {
-    //
-
-    public function Announcement()
+    public function index()
     {
-
-        return Inertia::render('Announcement/announcement');
+        return Inertia::render('Announcement/Announcement');
     }
 
     public function getAnnouncement(Request $request)
@@ -34,7 +31,7 @@ class AnnoucementController extends Controller
             });
 
         $results = $announcements->latest()->paginate(10);
-        
+
         // $results->each(function ($image) {
         //     $image->user->profile_photo_url = $user_deposit->user->getFirstMediaUrl('profile_photo');
         // });

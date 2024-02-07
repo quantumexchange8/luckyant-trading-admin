@@ -39,12 +39,12 @@ const closeModal = () => {
 
 <template>
     <form>
-        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md dark:bg-gradient-to-l dark:from-gray-600 dark:to-gray-700 rounded-[20px]">
+        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md bg-gradient-to-bl from-primary-400 to-primary-600 rounded-[20px]">
             <div class="space-y-2">
-                <div class="text-base font-semibold dark:text-white">
+                <div class="text-base font-semibold text-gray-100 dark:text-white">
                     {{ wallet.name }}
                 </div>
-                <div class="text-xl font-semibold dark:text-white">
+                <div class="text-xl font-semibold text-gray-100 dark:text-white">
                     $ {{ formatAmount(wallet.balance) }}
                 </div>
             </div>
@@ -57,10 +57,10 @@ const closeModal = () => {
                         id="adjustment"
                         type="number"
                         placeholder="+/-0.00"
-                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                        :class="form.errors.amount ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
+                        class="block w-full"
                         v-model="form.amount"
                         autofocus
+                        :invalid="form.errors.amount"
                     />
                     <InputError :message="form.errors.amount" class="mt-1 col-span-4" />
                 </div>
@@ -72,9 +72,9 @@ const closeModal = () => {
                     id="description"
                     type="text"
                     placeholder="Description"
-                    class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                    :class="form.errors.description ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
+                    class="block w-full"
                     v-model="form.description"
+                    :invalid="form.errors.description"
                     />
                     <InputError :message="form.errors.description" class="mt-1 col-span-4" />
                 </div>
@@ -83,7 +83,7 @@ const closeModal = () => {
         <div class="flex pt-8 gap-3 justify-end border-t dark:border-gray-700">
             <Button
                 type="button"
-                variant="secondary"
+                variant="transparent"
                 class="px-4 py-2 justify-center"
                 @click="closeModal"
             >

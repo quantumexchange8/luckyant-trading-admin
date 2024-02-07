@@ -26,10 +26,6 @@ const updateTransactionType = (transaction_type) => {
 </script>
 
 <template>
-    <div class="flex gap-4 mb-5">
-        <span class="flex items-center text-xs font-normal text-gray-900 dark:text-white"><span class="flex w-2 h-2 bg-green-500 dark:bg-error-500 rounded-full mr-2 flex-shrink-0"></span>Rejected</span>
-        <span class="flex items-center text-xs font-normal text-gray-900 dark:text-white"><span class="flex w-2 h-2 bg-red-500 dark:bg-success-500 rounded-full mr-2 flex-shrink-0"></span>Success</span>
-    </div>
     <TabGroup>
         <TabList class="max-w-xl flex py-1">
             <Tab
@@ -42,8 +38,8 @@ const updateTransactionType = (transaction_type) => {
                               'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                               'ring-white ring-offset-0 focus:outline-none focus:ring-0',
                               selected
-                                ? 'dark:text-white border-b-2'
-                                : 'border-b border-gray-400',
+                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                : 'border-b border-gray-300 dark:border-gray-700',
                            ]"
                 >
                     Deposit
@@ -58,9 +54,9 @@ const updateTransactionType = (transaction_type) => {
                     :class="[
                               'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                               'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                              selected
-                                ? 'dark:text-white border-b-2'
-                                : 'border-b border-gray-400',
+                               selected
+                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                : 'border-b border-gray-300 dark:border-gray-700',
                            ]"
                 >
                     Withdrawal
@@ -75,9 +71,9 @@ const updateTransactionType = (transaction_type) => {
                     :class="[
                               'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                               'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                              selected
-                                ? 'dark:text-white border-b-2'
-                                : 'border-b border-gray-400',
+                               selected
+                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                : 'border-b border-gray-300 dark:border-gray-700',
                            ]"
                 >
                     Wallet Adjustment
@@ -92,9 +88,9 @@ const updateTransactionType = (transaction_type) => {
                     :class="[
                               'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
                               'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                              selected
-                                ? 'dark:text-white border-b-2'
-                                : 'border-b border-gray-400',
+                               selected
+                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                : 'border-b border-gray-300 dark:border-gray-700',
                            ]"
                 >
                     Internal Transfer

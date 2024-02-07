@@ -163,22 +163,23 @@ class MemberController extends Controller
             'ranks' => $formattedRanks,
             'countries' => $formattedCountries,
             'wallets' => $wallets,
+            'tradingAccounts' => User::find($id)->tradingAccounts
 //            'referralCount' => $referralCount,
         ]);
     }
 
     public function editMember(EditMemberRequest $request)
     {
-        
+
         $user = User::find($request->user_id);
-        
+
         $user->update([
             'name' => $request->name,
             'phone' => $request->phone,
             'dob' => $request->dob,
             'country' => $request->country,
         ]);
-        
+
         if ($request->password) {
             $user->update([
                 'password' => Hash::make($request->password),
@@ -219,13 +220,13 @@ class MemberController extends Controller
 
         $wallet = Wallet::find($request->wallet_id);
         $new_balance = $wallet->balance + $amount;
-        
+
         if ($new_balance < 0 || $amount == 0) {
             throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
         }
 
         $adjustment_id = RunningNumberService::getID('adjustment');
-        
+
         $wallet_balance = Transaction::create([
             'user_id' => $request->user_id,
             'from_wallet_id' => $request->wallet_id,
@@ -259,7 +260,7 @@ class MemberController extends Controller
         }
 
         $new_parent = User::find($upline_id);
-        
+
         if ($user->upline_id != $new_parent->id) {
 
             if (str_contains($new_parent->hierarchyList, $user->id)) {
@@ -342,7 +343,7 @@ class MemberController extends Controller
             }
         }
 
-        return TradingAccount::where('user_id', $user->id)->latest()->get();
+        return TradingAccount::with('accountType:id,group_id,name')->where('user_id', $user->id)->latest()->get();
     }
 
     public function affiliate_tree($id)
