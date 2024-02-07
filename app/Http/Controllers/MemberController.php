@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KycApprovalRequest;
+use App\Http\Requests\WalletAdjustmentRequest;
 use App\Models\Country;
 use App\Models\SettingRank;
 use App\Models\TradingAccount;
 use App\Models\User;
+use App\Models\Wallet;
+use App\Models\Transaction;
 use App\Notifications\KycApprovalNotification;
 use App\Services\MetaFiveService;
+use App\Services\RunningNumberService;
 use App\Http\Requests\EditMemberRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -152,10 +156,13 @@ class MemberController extends Controller
             ];
         });
 
+        $wallets = Wallet::where('user_id', $user->id)->get();
+
         return Inertia::render('Member/MemberDetails/MemberDetail', [
             'member_detail' => $user,
             'ranks' => $formattedRanks,
             'countries' => $formattedCountries,
+            'wallets' => $wallets,
 //            'referralCount' => $referralCount,
         ]);
     }
@@ -204,6 +211,41 @@ class MemberController extends Controller
         }
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
+    }
+
+    public function wallet_adjustment(WalletAdjustmentRequest $request)
+    {
+        $amount = $request->amount;
+
+        $wallet = Wallet::find($request->wallet_id);
+        $new_balance = $wallet->balance + $amount;
+        
+        if ($new_balance < 0 || $amount == 0) {
+            throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
+        }
+
+        $adjustment_id = RunningNumberService::getID('adjustment');
+        
+        $wallet_balance = Transaction::create([
+            'user_id' => $request->user_id,
+            'from_wallet_id' => $request->wallet_id,
+            'transaction_type' => 'WalletAdjustment',
+            'category' => 'wallet',
+            'amount' => $amount,
+            'transaction_number' => $adjustment_id,
+            'transaction_charges' => 0,
+            'transaction_amount' => $amount,
+            'remarks' => $request->description,
+            'handle_by' => Auth::id(),
+            'status' => 'Success',
+            'new_wallet_amount' => $new_balance
+        ]);
+
+        $wallet->update([
+            'balance' => $new_balance
+        ]);
+
+        return redirect()->back()->with('title', 'Wallet Adjusted!')->with('success', 'This wallet has been adjusted successfully.');
     }
 
     protected function transferUpline($user, $upline_id)
