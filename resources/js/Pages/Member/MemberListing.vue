@@ -64,7 +64,7 @@ const updateKycCounts = () => {
             </div>
         </template>
 
-        <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900 ">
+        <div class="pt-3 md:flex md:justify-end items-center">
             <div class="flex items-center gap-5">
                 <div class="w-full lg:w-[280px]">
                     <InputIconWrapper class="md:col-span-2">

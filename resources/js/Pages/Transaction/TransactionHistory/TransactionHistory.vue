@@ -74,32 +74,43 @@ const exportTransaction = () => {
         </template>
 
         <div class="pt-3 md:flex md:justify-end items-center">
-            <div class="grid grid-cols-5 md:grid-cols-4 gap-3 mt-3 md:mt-0">
-                <div class="w-full col-span-5 md:col-span-2">
-                    <InputIconWrapper>
+            <div class="flex flex-wrap items-center md:flex-nowrap gap-3 mt-3 md:mt-0">
+                <div class="w-full">
+                    <InputIconWrapper class="w-full md:w-[280px]">
                         <template #icon>
                             <SearchIcon aria-hidden="true" class="w-5 h-5" />
                         </template>
                         <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
                     </InputIconWrapper>
                 </div>
-                <div class="w-full col-span-3 md:col-span-1">
+                <div class="w-full">
                     <vue-tailwind-datepicker
                         placeholder="Select dates"
                         :formatter="formatter"
                         separator=" - "
                         v-model="date"
                         input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                        class="w-full md:w-[230px]"
                     />
                 </div>
-                <div class="w-full col-span-2 md:col-span-1">
+                <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black dark:text-white dark:bg-gray-600"
+                        class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
                         v-model="filter"
                         :options="statusList"
                         placeholder="Filter status"
                     />
+                </div>
+                <div class="w-auto md:w-full">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="lg"
+                        @click="refreshTable"
+                    >
+                        <span class="text-lg">Clear</span>
+                    </Button>
                 </div>
             </div>
         </div>

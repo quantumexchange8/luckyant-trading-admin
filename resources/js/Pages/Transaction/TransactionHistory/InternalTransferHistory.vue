@@ -35,7 +35,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '') => {
     transferLoading.value = true
     try {
-        let url = `/transaction/getBalanceHistory/InternalTransfer?page=${page}`;
+        let url = `/transaction/getTransactionHistory/InternalTransfer?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -125,6 +125,9 @@ const closeModal = () => {
                     Name
                 </th>
                 <th scope="col" class="py-2">
+                    Transaction Number
+                </th>
+                <th scope="col" class="py-2">
                     Transfer To
                 </th>
                 <th scope="col" class="py-2">
@@ -132,9 +135,6 @@ const closeModal = () => {
                 </th>
                 <th scope="col" class="py-2">
                     Current Balance
-                </th>
-                <th scope="col" class="py-2">
-                    Remark
                 </th>
             </tr>
             </thead>
@@ -159,19 +159,16 @@ const closeModal = () => {
                     </div>
                 </td>
                 <td class="py-2">
-                    <div class="inline-flex items-center gap-2">
-                        <img :src="transfer.to_user.profile_photo_url ? transfer.to_user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
-                        {{ transfer.to_user.name }}
-                    </div>
+                    {{ transfer.transaction_number }}
+                </td>
+                <td class="py-2">
+                    {{ transfer.to_meta_login }}
                 </td>
                 <td class="py-2">
                     $ {{ formatAmount(transfer.amount) }}
                 </td>
                 <td class="py-2">
-                    $ {{ formatAmount(transfer.new_balance) }}
-                </td>
-                <td class="py-2">
-                    {{ transfer.description }}
+                    $ {{ formatAmount(transfer.amount) }}
                 </td>
             </tr>
             </tbody>
@@ -208,20 +205,20 @@ const closeModal = () => {
             <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transferDetail.created_at) }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer From</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.from_meta_login }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer To</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.to_user.name }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.to_meta_login }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer Amount</span>
             <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(transferDetail.amount) }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Current Balance</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(transferDetail.new_balance) }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Remark</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.description }}</span>
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Ticket</span>
+            <span class="col-span-2 text-black dark:text-white py-2"> {{ transferDetail.ticket }}</span>
         </div>
     </Modal>
 </template>

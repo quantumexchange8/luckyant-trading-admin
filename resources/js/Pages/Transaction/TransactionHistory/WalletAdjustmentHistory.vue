@@ -35,7 +35,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '') => {
     walletLoading.value = true
     try {
-        let url = `/transaction/getBalanceHistory/WalletAdjustment?page=${page}`;
+        let url = `/transaction/getTransactionHistory/WalletAdjustment?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -125,7 +125,10 @@ const closeModal = () => {
                     Name
                 </th>
                 <th scope="col" class="py-2">
-                    After Adjustment
+                    Transaction Number
+                </th>
+                <th scope="col" class="py-2">
+                    Adjustment Amount
                 </th>
                 <th scope="col" class="py-2">
                     Remark
@@ -152,11 +155,14 @@ const closeModal = () => {
                         {{ wallet.user.name }}
                     </div>
                 </td>
-                <td class="py-2">
-                    $ {{ formatAmount(wallet.new_balance) }}
+                <td class="pl-5 py-2">
+                    {{ wallet.transaction_number }}
                 </td>
                 <td class="py-2">
-                    {{ wallet.description }}
+                    $ {{ formatAmount(wallet.amount) }}
+                </td>
+                <td class="py-2">
+                    {{ wallet.remarks }}
                 </td>
             </tr>
             </tbody>
@@ -193,20 +199,20 @@ const closeModal = () => {
             <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(walletDetail.created_at) }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Before Adjustment</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(walletDetail.old_balance) }}</span>
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Number</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ walletDetail.transaction_number }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Adjust Amount</span>
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Adjustment Amount</span>
             <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(walletDetail.amount) }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">After Adjustment</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(walletDetail.new_balance) }}</span>
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Balance Amount</span>
+            <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(walletDetail.new_wallet_amount) }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Remark</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ walletDetail.description }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ walletDetail.remarks }}</span>
         </div>
     </Modal>
 </template>

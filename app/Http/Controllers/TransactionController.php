@@ -8,6 +8,7 @@ namespace App\Http\Controllers;
 // use App\Models\Payment;
 // use App\Models\Wallet;
 // use App\Models\BalanceAdjustment;
+use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,7 +28,7 @@ class TransactionController extends Controller
 
     public function getPendingTransaction(Request $request, $type)
     {
-        $query = Payment::query()->with(['user', 'wallet'])
+        $query = Transaction::query()->with(['user', 'wallet'])
             ->where('type', $type)
             ->where('status', 'Processing');
 
@@ -146,17 +147,21 @@ class TransactionController extends Controller
 
     public function getTransactionHistory(Request $request, $type)
     {
-        $query = Payment::query()->with(['user', 'wallet'])
-            ->where('type', $type)
-            ->whereNotIn('status', ['Processing', 'Pending']);
-
+        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet'])
+            ->whereNotIn('status', ['Processing', 'Pending'])
+            ->where('transaction_type', $type);
+        
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
             $query->where(function ($q) use ($search) {
-                $q->whereHas('wallet', function ($wallet_query) use ($search) {
-                    $wallet_query->where('name', 'like', $search);
+                // $q->whereHas('wallet', function ($wallet_query) use ($search) {
+                //     $wallet_query->where('name', 'like', $search);
+                // })
+                $q->WhereHas('user', function ($user) use ($search) {
+                    $user->where('name', 'like', $search)
+                         ->orWhere('email', 'like', $search);
                 })
-                    ->orWhere('transaction_id', 'like', $search)
+                    ->orWhere('transaction_number', 'like', $search)
                     ->orWhere('amount', 'like', $search);
             });
         }

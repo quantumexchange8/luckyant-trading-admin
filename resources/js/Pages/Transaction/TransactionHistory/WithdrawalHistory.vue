@@ -7,6 +7,7 @@ import Loading from "@/Components/Loading.vue";
 import {transactionFormat} from "@/Composables/index.js";
 import {TailwindPagination} from "laravel-vue-pagination";
 import Modal from "@/Components/Modal.vue";
+import Badge from "@/Components/Badge.vue";
 
 const props = defineProps({
     search: String,
@@ -54,6 +55,8 @@ const getResults = async (page = 1, search = '', date = '', filter = '') => {
 
         const response = await axios.get(url);
         withdrawals.value = response.data.Withdrawal;
+        totalAmount.value = response.data.totalAmount;
+        
     } catch (error) {
         console.error(error);
     } finally {
@@ -119,6 +122,12 @@ const openWithdrawalHistoryModal = (withdrawal) => {
 const closeModal = () => {
     withdrawalHistoryModal.value = false
 }
+
+const transactionVariant = (transactionStatus) => {
+    if (transactionStatus === 'Pending') return 'processing';
+    if (transactionStatus === 'Verified') return 'success';
+    if (transactionStatus === 'Unverified') return 'warning';
+}
 </script>
 
 <template>
@@ -129,14 +138,14 @@ const closeModal = () => {
         <table v-else class="w-[800px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
             <tr>
+                <th scope="col" class="py-2">
+                    Date
+                </th>
                 <th scope="col" class="pl-5 py-2">
                     Name
                 </th>
                 <th scope="col" class="py-2">
-                    Asset
-                </th>
-                <th scope="col" class="py-2">
-                    Date
+                    Type
                 </th>
                 <th scope="col" class="py-2">
                     Transaction ID
@@ -160,6 +169,9 @@ const closeModal = () => {
                 class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-600 hover:cursor-pointer dark:hover:bg-gray-800"
                 @click="openWithdrawalHistoryModal(withdrawal)"
             >
+                <td class="py-2">
+                    {{ formatDateTime(withdrawal.created_at) }}
+                </td>
                 <td class="pl-5 py-2">
                     <div class="inline-flex items-center gap-2">
                         <img :src="withdrawal.user.profile_photo_url ? withdrawal.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
@@ -168,26 +180,24 @@ const closeModal = () => {
                 </td>
                 <td class="py-2">
                     <div class="inline-flex items-center gap-2">
-                        <div class="bg-gradient-to-t from-pink-300 to-pink-600 dark:shadow-pink-500 rounded-full w-4 h-4 shrink-0 grow-0">
+                        <!-- <div class="bg-gradient-to-t from-pink-300 to-pink-600 dark:shadow-pink-500 rounded-full w-4 h-4 shrink-0 grow-0">
                             <InternalWalletIcon class="mt-0.5 ml-0.5"/>
-                        </div>
-                        {{ withdrawal.wallet.name }}
+                        </div> -->
+                        {{ withdrawal.category }}
                     </div>
                 </td>
                 <td class="py-2">
-                    {{ formatDateTime(withdrawal.created_at) }}
-                </td>
-                <td class="py-2">
-                    {{ withdrawal.transaction_id }}
+                    {{ withdrawal.transaction_number }}
                 </td>
                 <td class="py-2">
                     $ {{ withdrawal.amount }}
                 </td>
                 <td class="py-2 text-center">
-                    <span v-if="withdrawal.status === 'Success'" class="flex w-2 h-2 bg-green-500 dark:bg-success-500 mx-auto rounded-full"></span>
-                    <span v-else-if="withdrawal.status === 'Pending'" class="flex w-2 h-2 bg-red-500 dark:bg-warning-500 mx-auto rounded-full"></span>
-                    <span v-else-if="withdrawal.status === 'Processing'" class="flex w-2 h-2 bg-red-500 dark:bg-[#007AFF] mx-auto rounded-full"></span>
-                    <span v-else-if="withdrawal.status === 'Rejected'" class="flex w-2 h-2 bg-red-500 dark:bg-error-500 mx-auto rounded-full"></span>
+                    <Badge
+                        :variant="transactionVariant(withdrawal.status)"
+                    >
+                        {{ withdrawal.status }}
+                    </Badge>
                 </td>
             </tr>
             </tbody>
@@ -224,19 +234,35 @@ const closeModal = () => {
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.type }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_type }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_id }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_number }}</span>
         </div>
         <div class="grid grid-cols-3 items-cente gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(withdrawalDetail.created_at) }}</span>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
+        <div v-if="withdrawalDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_wallet.wallet_address }}</span>
+        </div>
+        <div v-if="withdrawalDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet_address }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet.wallet_address }}</span>
+        </div>
+        <div v-if="withdrawalDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
+            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_meta_login }}</span>
+        </div>
+        <div v-if="withdrawalDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
+            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_meta_login }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">ticket</span>
+            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.ticket }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
