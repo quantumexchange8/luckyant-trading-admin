@@ -35,10 +35,16 @@ class TransactionController extends Controller
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
             $query->where(function ($q) use ($search) {
-                $q->whereHas('wallet', function ($wallet_query) use ($search) {
-                    $wallet_query->where('name', 'like', $search);
+                $q->whereHas('user', function ($user) use ($search) {
+                    $user->where('name', 'like', $search);
                 })
-                    ->orWhere('transaction_id', 'like', $search)
+                ->orWhereHas('to_wallet', function ($to_wallet) use ($search) {
+                    $to_wallet->where('name', 'like', $search);
+                })
+                ->orWhereHas('from_wallet', function ($from_wallet) use ($search) {
+                    $from_wallet->where('name', 'like', $search);
+                })
+                ->orWhere('transaction_number', 'like', $search)
                     ->orWhere('amount', 'like', $search);
             });
         }
