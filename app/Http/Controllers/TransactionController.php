@@ -28,8 +28,8 @@ class TransactionController extends Controller
 
     public function getPendingTransaction(Request $request, $type)
     {
-        $query = Transaction::query()->with(['user', 'wallet'])
-            ->where('type', $type)
+        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet'])
+            ->where('transaction_type', $type)
             ->where('status', 'Processing');
 
         if ($request->filled('search')) {

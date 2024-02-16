@@ -80,7 +80,23 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon } from '@h
                 :active="route().current('transaction.transaction_history')"
             />
         </SidebarCollapsible>
+        <SidebarCollapsible
+            title="Master"
+            :active="route().current('master.*')"
+        >
+            <template #icon>
+                <UsersIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
 
+            <SidebarCollapsibleItem
+                :href="route('master.master_listing')"
+                title="Master Request"
+                :active="route().current('master.master_listing')"
+            />
+        </SidebarCollapsible>
 <!--        <SidebarCollapsible-->
 <!--            title="Components"-->
 <!--            :active="route().current('components.*')"-->

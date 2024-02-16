@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $totalWithdrawals = Transaction::where('category', 'wallet')->where('transaction_type', 'Withdrawal')->sum('amount');
         $pendingTransaction = Transaction::where('status', 'Pending')->count();
         
-        $kyc = User::where('kyc_approval', 'Pending')->count();
+        $kyc = User::where('role', '!=', 'admin')->where('kyc_approval', 'Pending')->count();
 
         return Inertia::render('Dashboard', [
             'announcements' => $announcements,

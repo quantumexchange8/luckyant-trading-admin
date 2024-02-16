@@ -4,10 +4,11 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\MasterController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
-use App\Http\Controllers\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,6 +71,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/listing', [AnnouncementController::class, 'index'])->name('announcement.announcement_listing');
         Route::get('/getAnnouncement', [AnnouncementController::class, 'getAnnouncement'])->name('getAnnouncement');
         Route::post('/addAnnouncement', [AnnouncementController::class, 'addAnnouncement'])->name('addAnnouncement');
+    });
+
+    /**
+     * ==============================
+     *         Master
+     * ==============================
+     */
+    Route::prefix('master')->group(function () {
+        Route::get('/master_listing', [MasterController::class, 'index'])->name('master.master_listing');
+        Route::get('/getMaster/{type}', [MasterController::class, 'getMaster'])->name('master.getMaster');
     });
 });
 
