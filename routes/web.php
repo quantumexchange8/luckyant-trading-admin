@@ -81,6 +81,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::prefix('master')->group(function () {
         Route::get('/master_listing', [MasterController::class, 'index'])->name('master.master_listing');
         Route::get('/getMaster/{type}', [MasterController::class, 'getMaster'])->name('master.getMaster');
+
+        Route::post('/approveRequest', [MasterController::class, 'approveRequest'])->name('master.approveRequest');
+        Route::post('/rejectRequest', [MasterController::class, 'rejectRequest'])->name('master.rejectRequest');
     });
 });
 

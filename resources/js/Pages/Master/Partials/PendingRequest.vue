@@ -8,7 +8,7 @@ import debounce from "lodash/debounce.js";
 import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import Checkbox from "@/Components/Checkbox.vue";
-import Action from "@/Pages/Transaction/PendingTransaction/Action.vue";
+import Action from "@/Pages/Master/Partials/Action.vue";
 import Button from "@/Components/Button.vue";
 import Modal from "@/Components/Modal.vue";
 import {useForm, usePage} from "@inertiajs/vue3";
@@ -50,7 +50,7 @@ const getResults = async (page = 1, search = '', date = '') => {
 
         const response = await axios.get(url);
         requests.value = response.data.Pending;
-        
+
     } catch (error) {
         console.error(error);
     } finally {
@@ -103,14 +103,12 @@ watch(() => props.refresh, (newVal) => {
                     <th scope="col" class="py-3">
                         Trading Account
                     </th>
-                    <th scope="col" class="py-3">
+                    <th scope="col" class="py-3 text-center">
                         Action
                     </th>
                 </tr>
             </thead>
             <tbody>
-            <tr>
-            </tr>
                 <tr v-if="requests.data.length === 0">
                     <th colspan="7" class="py-4 text-lg text-center">
                         No Pending
@@ -120,15 +118,20 @@ watch(() => props.refresh, (newVal) => {
                     v-for="request in requests.data"
                     class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
                 >
-                <td class="py-3">
-                    {{ request.user.name }}
-                </td>
-                <td class="py-3">
-                    {{ formatDateTime(request.created_at) }}
-                </td>
-                <td class="py-3">
-                    {{ request.trading_account_id.meta_login }}
-                </td>
+                    <td class="py-3">
+                        {{ request.user.name }}
+                    </td>
+                    <td class="py-3">
+                        {{ formatDateTime(request.created_at) }}
+                    </td>
+                    <td class="py-3">
+                        {{ request.trading_account.meta_login }}
+                    </td>
+                    <td class="py-3 flex justify-center">
+                        <Action
+                            :request="request"
+                        />
+                    </td>
                 </tr>
             </tbody>
         </table>

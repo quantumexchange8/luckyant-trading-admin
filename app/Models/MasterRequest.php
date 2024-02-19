@@ -27,7 +27,7 @@ class MasterRequest extends Model
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function trading_account_id(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function trading_account(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'trading_account_id', 'id');
     }

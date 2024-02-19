@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Master;
+use App\Models\TradingAccount;
 use Illuminate\Http\Request;
 use App\Models\MasterRequest;
 use Carbon\Carbon;
@@ -18,17 +20,18 @@ class MasterController extends Controller
     public function getMaster(Request $request, $type)
     {
         $query = MasterRequest::query()
-            ->with(['user:id,name,email', 'trading_account_id'])
+            ->with(['user:id,name,email', 'trading_account'])
             ->where('status', $type);
-        
+
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
             $query->where(function ($q) use ($search) {
-                $q->WhereHas('user', function ($user) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
                          ->orWhere('email', 'like', $search);
-                })
-                    ->orWhere('trading_account_id', 'like', $search);
+                })->orWhereHas('trading_account', function ($account) use ($search) {
+                    $account->where('meta_login', 'like', $search);
+                });
             });
         }
 
@@ -56,5 +59,25 @@ class MasterController extends Controller
         // dd($query);
 
         return response()->json([$type => $results]);
+    }
+
+    public function approveRequest(Request $request)
+    {
+        $masterRequest = MasterRequest::find($request->id);
+        $tradingAccount = TradingAccount::find($masterRequest->trading_account_id);
+
+        $masterRequest->update([
+            'status' => 'Success'
+        ]);
+
+        Master::create([
+            'user_id' => $masterRequest->user_id,
+            'trading_account_id' => $masterRequest->trading_account_id,
+            'meta_login' => $tradingAccount->meta_login,
+        ]);
+
+        return redirect()->back()
+            ->with('title', 'Success approve')
+            ->with('success', 'Successfully approved LOGIN: ' . $tradingAccount->meta_login . ' to MASTER');
     }
 }
