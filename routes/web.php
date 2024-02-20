@@ -79,11 +79,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      * ==============================
      */
     Route::prefix('master')->group(function () {
-        Route::get('/master_listing', [MasterController::class, 'index'])->name('master.master_listing');
+        // Master Request
+        Route::get('/master_request', [MasterController::class, 'index'])->name('master.master_request');
         Route::get('/getMaster/{type}', [MasterController::class, 'getMaster'])->name('master.getMaster');
-
+        Route::get('/getMasterHistory', [MasterController::class, 'getMasterHistroy'])->name('master.getMasterHistroy');
         Route::post('/approveRequest', [MasterController::class, 'approveRequest'])->name('master.approveRequest');
         Route::post('/rejectRequest', [MasterController::class, 'rejectRequest'])->name('master.rejectRequest');
+        // Master Listing
+        Route::get('/getMasterListing', [MasterController::class, 'getMasterListing'])->name('master.getMasterListing');
+        Route::get('/getAllMaster', [MasterController::class, 'getAllMaster'])->name('master.getAllMaster');
+        Route::get('/master_configuration/{id}', [MasterController::class, 'viewMasterConfiguration'])->name('master.viewMasterConfiguration');
+        Route::post('/updateMasterConfiguration', [MasterController::class, 'updateMasterConfiguration'])->name('master.updateMasterConfiguration');
     });
 });
 

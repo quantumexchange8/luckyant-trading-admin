@@ -61,7 +61,7 @@ const submitForm = () => {
 </script>
 
 <template>
-    <div class="flex inline-flex justify-center items-center gap-2">
+    <div class="inline-flex justify-center items-center gap-2">
         <Tooltip content="Approve" placement="bottom" class="relative">
             <Button
                 type="button"

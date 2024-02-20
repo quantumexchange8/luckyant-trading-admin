@@ -21,7 +21,6 @@ const props = defineProps({
     isLoading: Boolean,
     search: String,
     date: String,
-    exportStatus: Boolean,
 })
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -34,6 +33,7 @@ const requestLoading = ref(props.isLoading);
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 const isAllSelected = ref(false);
 const { formatDateTime, formatAmount } = transactionFormat();
+const refreshPending = ref(props.refresh);
 
 const getResults = async (page = 1, search = '', date = '') => {
     requestLoading.value = true
@@ -70,7 +70,7 @@ const handlePageChange = (newPage) => {
 };
 
 watch(() => props.refresh, (newVal) => {
-    refreshDeposit.value = newVal;
+    refreshPending.value = newVal;
     if (newVal) {
         // Call the getResults function when refresh is true
         getResults();

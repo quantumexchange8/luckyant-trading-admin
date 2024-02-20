@@ -92,9 +92,14 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon } from '@h
             </template>
 
             <SidebarCollapsibleItem
-                :href="route('master.master_listing')"
+                :href="route('master.master_request')"
                 title="Master Request"
-                :active="route().current('master.master_listing')"
+                :active="route().current('master.master_request')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('master.getMasterListing')"
+                title="Master Listing"
+                :active="route().current('master.getMasterListing')"
             />
         </SidebarCollapsible>
 <!--        <SidebarCollapsible-->

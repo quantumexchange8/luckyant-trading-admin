@@ -6,6 +6,7 @@ use App\Models\Master;
 use App\Models\TradingAccount;
 use Illuminate\Http\Request;
 use App\Models\MasterRequest;
+use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -61,13 +62,53 @@ class MasterController extends Controller
         return response()->json([$type => $results]);
     }
 
+    public function getMasterHistroy(Request $request)
+    {
+
+        $masterHistory = MasterRequest::query()
+            ->with(['user:id,name,email', 'trading_account'])
+            ->whereIn('status', ['Success', 'Rejected']);
+
+        if ($request->filled('filter')) {
+            $filter = $request->input('filter');
+            $masterHistory->where(function ($q) use ($filter) {
+                $q->where('status', $filter);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->input('search') . '%';
+            $masterHistory->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
+                    $user->where('name', 'like', $search);
+                })->orWhereHas('trading_account', function ($account) use ($search) {
+                    $account->where('meta_login', 'like', $search);
+                });
+            });
+        }
+
+        if ($request->filled('date')) {
+            $date = $request->input('date');
+            $dateRange = explode(' - ', $date);
+            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+
+            $masterHistory->whereBetween('created_at', [$start_date, $end_date]);
+        }
+        
+        $results = $masterHistory->latest()->paginate(10);
+        
+        return response()->json($results);
+    }
+
     public function approveRequest(Request $request)
     {
         $masterRequest = MasterRequest::find($request->id);
         $tradingAccount = TradingAccount::find($masterRequest->trading_account_id);
 
         $masterRequest->update([
-            'status' => 'Success'
+            'status' => 'Success',
+            'handle_by' => Auth::user()->id,
         ]);
 
         Master::create([
@@ -79,5 +120,82 @@ class MasterController extends Controller
         return redirect()->back()
             ->with('title', 'Success approve')
             ->with('success', 'Successfully approved LOGIN: ' . $tradingAccount->meta_login . ' to MASTER');
+    }
+
+    public function rejectRequest(Request $request)
+    {
+
+        $masterRequest = MasterRequest::find($request->id);
+
+        $masterRequest->update([
+            'status' => 'Rejected',
+            'remarks' => $request->remarks,
+            'handle_by' => Auth::user()->id,
+        ]);
+
+        return redirect()->back();
+    }
+
+    public function getMasterListing()
+    {
+        return Inertia::render('Master/MasterListing/MasterListing');
+    }
+
+    public function getAllMaster(Request $request)
+    {
+
+        $master = Master::query()->with(['trading_account', 'user']);
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->input('search') . '%';
+            $master->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
+                    $user->where('name', 'like', $search)
+                        ->orWhere('email', 'like', $search);
+                })->orWhereHas('trading_account', function ($account) use ($search) {
+                    $account->where('meta_login', 'like', $search);
+                });
+            });
+        }
+
+        $results = $master->latest()->paginate(10);
+
+        return response()->json($results);
+    }
+
+    public function viewMasterConfiguration($id)
+    {
+
+        $masterConfigurations = Master::find($id);
+        
+
+        return Inertia::render('Master/Configuration/MasterConfiguration', [
+            'masterConfigurations' => $masterConfigurations,
+        ]);
+    }
+
+    public function updateMasterConfiguration(Request $request)
+    {
+
+        $master = Master::find($request->master_id);
+
+        $master->update([
+            'min_join_equity' => $request->min_join_equity,
+            'sharing_profit' => $request->sharing_profit,
+            'subscription_fee' => $request->subscription_fee,
+            'signal_status' => $request->signal_status,
+        ]);
+
+        if ($master->min_join_equity != null &&
+            $master->sharing_profit != null &&
+            $master->subscription_fee != null) {
+            $master->update([
+                'status' => 'Active',
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('title', 'Success configure setting')
+            ->with('success', 'Successfully configure requirements to follow Master Account for LOGIN: ' . $master->meta_login);
     }
 }
