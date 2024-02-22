@@ -73,7 +73,7 @@ function dismiss() {
                     leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                     class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-80 md:w-full space-y-4"
                 >
-                    <div v-if="props.show" class="px-4 py-6 flex flex-col gap-5 dark:bg-gray-700 rounded-xl max-w-md">
+                    <div v-if="props.show" class="px-4 py-6 flex flex-col gap-5 bg-gray-100 dark:bg-gray-700 rounded-xl max-w-md">
                         <component :is="iconComponent" />
 
                         <div class="px-2 space-y-2">

@@ -6,6 +6,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterController;
+use App\Http\Controllers\SettingController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
@@ -90,6 +91,17 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/getAllMaster', [MasterController::class, 'getAllMaster'])->name('master.getAllMaster');
         Route::get('/master_configuration/{id}', [MasterController::class, 'viewMasterConfiguration'])->name('master.viewMasterConfiguration');
         Route::post('/updateMasterConfiguration', [MasterController::class, 'updateMasterConfiguration'])->name('master.updateMasterConfiguration');
+    });
+
+    /**
+     * ==============================
+     *         Setting
+     * ==============================
+     */
+    Route::prefix('setting')->group(function () {
+        Route::get('/payment_setting', [SettingController::class, 'paymentSetting'])->name('setting.payment_setting');
+        Route::post('/updatePaymentSetting', [SettingController::class, 'updatePaymentSetting'])->name('setting.updatePaymentSetting');
+        Route::get('/getPaymentHistory', [SettingController::class, 'getPaymentHistory'])->name('setting.getPaymentHistory');
     });
 });
 

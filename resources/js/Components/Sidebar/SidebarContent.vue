@@ -1,10 +1,10 @@
 <script setup>
 import PerfectScrollbar from '@/Components/PerfectScrollbar.vue'
 import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
-import { DashboardIcon } from '@/Components/Icons/outline'
+import { DashboardIcon, Setting } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
+import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@heroicons/vue/outline'
 </script>
 
 <template>
@@ -100,6 +100,23 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon } from '@h
                 :href="route('master.getMasterListing')"
                 title="Master Listing"
                 :active="route().current('master.getMasterListing')"
+            />
+        </SidebarCollapsible>
+        <SidebarCollapsible
+            title="Setting"
+            :active="route().current('setting.*')"
+        >
+            <template #icon>
+                <Setting
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('setting.payment_setting')"
+                title="Payment Setting"
+                :active="route().current('setting.*')"
             />
         </SidebarCollapsible>
 <!--        <SidebarCollapsible-->

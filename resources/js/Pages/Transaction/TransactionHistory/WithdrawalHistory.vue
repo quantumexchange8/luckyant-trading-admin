@@ -124,9 +124,8 @@ const closeModal = () => {
 }
 
 const transactionVariant = (transactionStatus) => {
-    if (transactionStatus === 'Pending') return 'processing';
-    if (transactionStatus === 'Verified') return 'success';
-    if (transactionStatus === 'Unverified') return 'warning';
+    if (transactionStatus === 'Success') return 'success';
+    if (transactionStatus === 'Rejected') return 'danger';
 }
 </script>
 

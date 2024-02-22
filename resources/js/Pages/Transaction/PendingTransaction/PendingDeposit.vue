@@ -291,9 +291,6 @@ const rejectTransaction = async () => {
                 </td>
                 <td class="py-3">
                     <div class="inline-flex items-center gap-2">
-                        <div class="bg-gradient-to-t from-pink-300 to-pink-600 dark:shadow-pink-500 rounded-full w-4 h-4 shrink-0 grow-0">
-                            <InternalWalletIcon class="mt-0.5 ml-0.5"/>
-                        </div>
                         {{ deposit.to_wallet.name }}
                     </div>
                 </td>

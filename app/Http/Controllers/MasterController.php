@@ -9,7 +9,7 @@ use App\Models\MasterRequest;
 use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Inertia;
-
+use Auth;
 class MasterController extends Controller
 {
     //

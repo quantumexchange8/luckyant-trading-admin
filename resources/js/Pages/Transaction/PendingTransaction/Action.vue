@@ -7,6 +7,9 @@ import Button from "@/Components/Button.vue";
 import Modal from "@/Components/Modal.vue";
 import {transactionFormat} from "@/Composables/index.js";
 import {useForm} from "@inertiajs/vue3";
+import Label from "@/Components/Label.vue";
+import Input from "@/Components/Input.vue";
+import InputError from "@/Components/InputError.vue";
 
 const props = defineProps({
     transaction: Object
@@ -22,6 +25,8 @@ const openTransactionModal = (ibId, componentType) => {
         modalComponent.value = 'Approve Transaction';
     } else if (componentType === 'reject') {
         modalComponent.value = 'Reject Transaction';
+    } else if (componentType === 'rejectRemarks') {
+        modalComponent.value = 'Reject Remark';
     } else if (componentType === 'view') {
         modalComponent.value = 'Transaction Details';
     }
@@ -35,13 +40,14 @@ const closeModal = () => {
 const form = useForm({
     id: props.transaction.id,
     type: 'single',
+    remarks: '',
 });
 
 const submitForm = () => {
     let submitRoute;
     if (modalComponent.value === 'Approve Transaction') {
         submitRoute = route('transaction.approveTransaction');
-    } else if (modalComponent.value === 'Reject Transaction') {
+    } else if (modalComponent.value === 'Reject Remark') {
         submitRoute = route('transaction.rejectTransaction');
     }
 
@@ -129,12 +135,37 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
+                <Button class="px-6 justify-center" @click="openTransactionModal(transaction.id, 'rejectRemarks')">Confirm</Button>
+            </div>
+        </div>
+
+        <!-- Reject Remarks -->
+        <div v-if="modalComponent === 'Reject Remark'">
+            <div class="flex gap-2 mt-3 mb-8">
+                <Label class="text-sm text-black dark:text-white w-1/4 pt-0.5" for="remark" value="Remark" />
+                <div class="flex flex-col w-full">
+                    <Input
+                        id="remark"
+                        type="text"
+                        placeholder="Enter remark (visible to member)"
+                        class="block w-full"
+                        :class="form.errors.remarks ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
+                        v-model="form.remarks"
+                    />
+                    <InputError :message="form.errors.remarks" class="mt-2" />
+                </div>
+            </div>
+            <div class="pt-5 px-2 grid grid-cols-2 gap-4 border-t dark:border-gray-700">
+                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
+                    Cancel
+                </Button>
                 <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
             </div>
         </div>
 
+
         <!-- View -->
-        <div v-if="modalComponent === 'Transaction Details'">
+        <div v-if="modalComponent === 'Transaction Details'" class="pb-3">
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">Name</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.name }}</span>
@@ -145,29 +176,39 @@ const submitForm = () => {
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">ID Number</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.transaction_id }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.transaction_number }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">Date & time</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transaction.created_at) }}</span>
             </div>
-            <div v-if="transaction.type === 'Deposit'" class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Transaction Hash</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.txn_hash }}</span>
-            </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">To Wallet Address</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet_address }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet.wallet_address }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">Amount</span>
                 <span class="col-span-2 text-black dark:text-white py-2">$ {{ transaction.amount }}</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <div class="grid grid-cols-3 items-center gap-2 pb-2">
                 <span class="text-sm font-semibold dark:text-gray-400">Transaction Status</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.status) }}</span>
             </div>
+
+            <div class="grid grid-cols-3 items-center gap-2 border-b pb-3">
+                <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
+            </div>
+
+            <div class="flex justify-center items-center gap-2 pb-2">
+                <img 
+                :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
+                alt=""
+                class="pt-5"
+                />
+            </div>
         </div>
+
+        
 
     </Modal>
 
