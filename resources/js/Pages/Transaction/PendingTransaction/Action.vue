@@ -182,9 +182,13 @@ const submitForm = () => {
                 <span class="text-sm font-semibold dark:text-gray-400">Date & time</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transaction.created_at) }}</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <div v-if="transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">To Wallet Address</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="transaction.transaction_type == 'Withdrawal'" class="grid grid-cols-3 items-center gap-2">
+                <span class="text-sm font-semibold dark:text-gray-400">From Wallet Address</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.from_wallet.wallet_address }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">Amount</span>

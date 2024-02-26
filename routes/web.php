@@ -99,9 +99,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      * ==============================
      */
     Route::prefix('setting')->group(function () {
+        //payment setting
         Route::get('/payment_setting', [SettingController::class, 'paymentSetting'])->name('setting.payment_setting');
         Route::post('/updatePaymentSetting', [SettingController::class, 'updatePaymentSetting'])->name('setting.updatePaymentSetting');
         Route::get('/getPaymentHistory', [SettingController::class, 'getPaymentHistory'])->name('setting.getPaymentHistory');
+    
+        //master setting
+        Route::get('/master_setting', [SettingController::class, 'masterSetting'])->name('setting.master_setting');
     });
 });
 

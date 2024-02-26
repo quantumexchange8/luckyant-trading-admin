@@ -259,10 +259,10 @@ const transactionVariant = (transactionStatus) => {
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
             <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_meta_login }}</span>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
+        <!-- <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">ticket</span>
             <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.ticket }}</span>
-        </div>
+        </div> -->
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
             <span class="col-span-2 text-black dark:text-white py-2">$ {{ withdrawalDetail.amount }}</span>

@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Auth;
 // use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionController extends Controller
@@ -82,32 +83,44 @@ class TransactionController extends Controller
         $type = $request->type;
 
         if ($type == 'approve_selected') {
-            $payments = Transction::whereIn('id', $request->id)->get();
+            $transactions = Transction::whereIn('id', $request->id)->get();
 
-            foreach ($payments as $payment) {
+            foreach ($transactions as $transaction) {
 
-                $payment->update([
-                    'status' => 'Success'
+                $transaction->update([
+                    'status' => 'Success',
+                    'handle_by' => Auth::user()->id,
                 ]);
 
-                if ($payment->transaction_type == 'Deposit') {
-                    $wallet = Wallet::find($payment->to_wallet_id);
-                    $wallet->balance += $payment->amount;
+                if ($transaction->transaction_type == 'Deposit') {
+                    $wallet = Wallet::find($transaction->to_wallet_id);
+                    $wallet->balance += $transaction->amount;
                     $wallet->save();
                 }
             }
         } else {
-            $payment = Transaction::find($request->id);
-            $wallet = Wallet::find($payment->to_wallet_id);
+            $transaction = Transaction::find($request->id);
+            
 
-            if ($payment->transaction_type == 'Deposit') {
-                $wallet->balance += $payment->amount;
+            if ($transaction->transaction_type == 'Deposit') {
+                $wallet = Wallet::find($transaction->to_wallet_id);
+                $wallet->balance += $transaction->amount;
                 $wallet->save();
+
+            }
+            if ($transaction->transaction_type == 'Withdrawal') {
+                $wallet = Wallet::find($transaction->from_wallet_id);
+                $wallet->balance -= $transaction->amount;
+                $wallet->save();
+
             }
 
-            $payment->update([
+            $transaction->update([
                 'status' => 'Success',
+                'handle_by' => Auth::user()->id,
+                'new_wallet_amount' => $wallet->balance,
             ]);
+            
         }
 
         return redirect()->back()->with('title', 'Approved successfully')->with('success', 'The transaction request has been approved successfully.');
@@ -118,37 +131,49 @@ class TransactionController extends Controller
         $type = $request->type;
 
         if ($type == 'reject_selected') {
-            $payments = Transaction::whereIn('id', $request->id)->get();
+            $transactions = Transaction::whereIn('id', $request->id)->get();
 
-            foreach ($payments as $payment) {
+            foreach ($transactions as $transaction) {
 
-                if ($payment->status == 'Processing') {
-                    $payment->update([
+                if ($transaction->status == 'Processing') {
+                    $transaction->update([
                         'status' => 'Rejected',
-                        'remarks' => 'MULTIPLE Reject by admin - ID ' . $payments->transaction_number
+                        'remarks' => 'MULTIPLE Reject by admin - ID ' . $transaction->transaction_number,
+                        'handle_by' => Auth::user()->id,
                     ]);
 
-                    if ($payment->transaction_type == 'Withdrawal') {
-                        $wallet = Wallet::find($payment->from_wallet_id);
+                    if ($transaction->transaction_type == 'Withdrawal') {
+                        $wallet = Wallet::find($transaction->from_wallet_id);
 
-                        $wallet->balance += $payment->amount;
+                        $wallet->balance += $transaction->amount;
                         $wallet->save();
                     }
                 }
             }
         } else {
-            $payment = Transaction::find($request->id);
+            $transaction = Transaction::find($request->id);
             
-            $payment->update([
-                'status' => 'Rejected',
-                'remarks'=> $request->remarks,
-                'new_wallet_amount' => $payment->new_wallet_amount += $payment->amount
-            ]);
+            if ($transaction->transaction_type == 'Deposit') {
+                $wallet = Wallet::find($transaction->to_wallet_id);
+                $transaction->update([
+                    'status' => 'Rejected',
+                    'remarks'=> $request->remarks,
+                    'handle_by' => Auth::user()->id,
+                    'new_wallet_amount' => $wallet->balance,
+                ]);
+            }
 
-            if ($payment->transaction_type == 'Withdrawal') {
-                $wallet = Wallet::find($payment->from_wallet_id);
+            if ($transaction->transaction_type == 'Withdrawal') {
 
-                $wallet->balance += $payment->amount;
+                $transaction->update([
+                    'status' => 'Rejected',
+                    'remarks'=> $request->remarks,
+                    'new_wallet_amount' => $transaction->new_wallet_amount += $transaction->amount,
+                    'handle_by' => Auth::user()->id,
+                ]);
+                
+                $wallet = Wallet::find($transaction->from_wallet_id);
+                $wallet->balance += $transaction->amount;
                 $wallet->save();
             }
         }
