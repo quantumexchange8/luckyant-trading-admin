@@ -48,8 +48,27 @@ const plans = [
   },
 ]
 
-const selected = ref(plans[0])
+const selected = ref(plans.find(plan => plan.value === props.paymentDetails.payment_method) || plans[0]);
 const configureSetting = ref(false)
+
+// Watch for changes in props.payment_method and update selected ref accordingly
+watch(() => props.paymentDetails.payment_method, (newValue) => {
+    const selectedPlan = plans.find(plan => plan.value === newValue);
+    if (selectedPlan) {
+        selected.value = selectedPlan;
+    }
+});
+
+watch((selected), (newSelect) => {
+    
+    if (newSelect && newSelect.value !== props.paymentDetails.payment_method)
+    {
+        form.payment_method = newSelect.value;
+        form.payment_account_name = '',
+        form.payment_platform_name = '',
+        form.account_no = ''
+    }
+});
 
 const configurePaymentSetting = () => {
     configureSetting.value = true
