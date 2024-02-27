@@ -83,7 +83,7 @@ class TransactionController extends Controller
         $type = $request->type;
 
         if ($type == 'approve_selected') {
-            $transactions = Transction::whereIn('id', $request->id)->get();
+            $transactions = Transaction::whereIn('id', $request->id)->get();
 
             foreach ($transactions as $transaction) {
 
