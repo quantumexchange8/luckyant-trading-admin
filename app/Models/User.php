@@ -73,4 +73,9 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->hasMany(TradingAccount::class, 'user_id', 'id');
     }
+
+    public function wallets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Wallet::class, 'user_id', 'id');
+    }
 }

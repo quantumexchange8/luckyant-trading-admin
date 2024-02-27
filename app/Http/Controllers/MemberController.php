@@ -77,7 +77,7 @@ class MemberController extends Controller
                 $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
                 $query->whereBetween('created_at', [$start_date, $end_date]);
             })
-            ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country', 'cash_wallet','created_at')
+            ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at')
             ->with(['rank:id,name', 'country:id,name'])
             ->orderByDesc('created_at')
             ->paginate(10)
@@ -96,6 +96,7 @@ class MemberController extends Controller
             $user->front_identity = $user->getFirstMediaUrl('front_identity');
             $user->back_identity = $user->getFirstMediaUrl('back_identity');
             $user->kyc_upload_date = $user->getMedia('back_identity')->first()->created_at ?? null;
+            $user->walletBalance = $user->wallets->sum('balance');
         });
 
         return response()->json($members);

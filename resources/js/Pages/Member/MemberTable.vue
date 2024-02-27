@@ -183,7 +183,7 @@ const kycVariant = (kycApprovalStatus) => {
                     {{ formatDateTime(member.created_at, false) }}
                 </td>
                 <td class="px-3 py-2.5 text-right" colspan="2">
-                    $ {{ formatAmount(member.cash_wallet) }}
+                    $ {{ formatAmount(member.walletBalance) }}
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     {{ member.country.name }}
