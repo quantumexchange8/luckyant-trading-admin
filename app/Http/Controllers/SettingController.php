@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Country;
 use App\Models\SettingPaymentMethod;
+use App\Models\Setting;
+use App\Http\Requests\PaymentSettingRequest;
 use Carbon\Carbon;
 use Auth;
 
@@ -40,15 +42,33 @@ class SettingController extends Controller
         ]);
     }
 
-    public function updatePaymentSetting(Request $request)
+    public function updatePaymentSetting(PaymentSettingRequest $request)
     {
+        
+        if ($request->payment_method == 'Bank') {
+            $request->validate([
+                'payment_account_name' => 'required|string|max:255',
+                'payment_platform_name' => 'required|string|max:255',
+                'account_no' => 'required',
+                'bank_swift_code' => 'required',
+            ]);
+        } else {
+            $request->validate([
+                'payment_account_name' => 'required|string|max:255',
+                'payment_platform_name' => 'required|string|max:255',
+                'account_no' => 'required',
+            ]);
+        }
         
         $countryname = Country::find($request->country);
 
         $updateOldSetting = SettingPaymentMethod::latest()->first();
-        $updateOldSetting = $updateOldSetting->update([
-            'status' => 'Inactive'
-        ]);
+        if ($updateOldSetting) {
+            $updateOldSetting = $updateOldSetting->update([
+                'status' => 'Inactive'
+            ]);
+        }
+        
         
         $paymentSetting = SettingPaymentMethod::create([
             'payment_method' => $request->payment_method,
@@ -79,7 +99,6 @@ class SettingController extends Controller
 
         if ($request->filled('date')) {
             $date = $request->input('date');
-            dd($date);
             $dateRange = explode(' - ', $date);
             $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
@@ -90,5 +109,31 @@ class SettingController extends Controller
         $results = $history->latest()->paginate(10);
 
         return response()->json($results);
+    }
+
+    public function masterSetting()
+    {
+
+        $settings = Setting::get();
+
+        $withdrawal = Setting::where('slug', 'withdrawal-fee')->first();
+        
+        return Inertia::render('Setting/Master/MasterSetting', [
+            'settings' => $settings,
+            'withdrawal' => $withdrawal,
+        ]);
+    }
+
+    public function updateMasterSetting(Request $request)
+    {
+
+
+        $setting = Setting::find($request->id);
+
+        $updateSetting = $setting->update([
+            'value' => $request->value,
+        ]);
+
+        return redirect()->back()->with('title', 'Updated successfully')->with('success', 'The payment configuaration has been updated successfully.');
     }
 }

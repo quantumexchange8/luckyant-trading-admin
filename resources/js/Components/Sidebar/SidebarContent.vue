@@ -118,6 +118,11 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@he
                 title="Payment Setting"
                 :active="route().current('setting.*')"
             />
+            <SidebarCollapsibleItem
+                :href="route('setting.master_setting')"
+                title="Master Setting"
+                :active="route().current('setting.*')"
+            />
         </SidebarCollapsible>
 <!--        <SidebarCollapsible-->
 <!--            title="Components"-->

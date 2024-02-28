@@ -106,6 +106,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     
         //master setting
         Route::get('/master_setting', [SettingController::class, 'masterSetting'])->name('setting.master_setting');
+        Route::post('/updateMasterSetting', [SettingController::class, 'updateMasterSetting'])->name('setting.updateMasterSetting');
     });
 });
 
