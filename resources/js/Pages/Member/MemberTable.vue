@@ -8,6 +8,11 @@ import {usePage} from "@inertiajs/vue3";
 import Action from "@/Pages/Member/Partials/Action.vue";
 import KycAction from "@/Pages/Member/Partials/KycAction.vue";
 import Badge from "@/Components/Badge.vue";
+import Button from "@/Components/Button.vue";
+import Tooltip from "@/Components/Tooltip.vue";
+import Modal from "@/Components/Modal.vue";
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
+import {CheckIcon, ChevronDownIcon} from '@heroicons/vue/solid'
 
 const props = defineProps({
     search: String,
@@ -28,6 +33,8 @@ const refreshDeposit = ref(props.refresh);
 const isLoading = ref(props.isLoading);
 const emit = defineEmits(['update:loading', 'update:refresh']);
 const { formatDateTime, formatAmount } = transactionFormat();
+const memberMT5Modal = ref(false);
+const mt5Details = ref(null);
 
 watch(
     [() => props.search, () => props.rank, () => props.date],
@@ -128,6 +135,16 @@ const kycVariant = (kycApprovalStatus) => {
     if (kycApprovalStatus === 'Verified') return 'success';
     if (kycApprovalStatus === 'Unverified') return 'warning';
 }
+
+const openMT5Modal = (member) => {
+    memberMT5Modal.value = true;
+    mt5Details.value = member;
+}
+
+
+const closeModal = () => {
+    memberMT5Modal.value = false
+}
 </script>
 
 <template>
@@ -143,6 +160,12 @@ const kycVariant = (kycApprovalStatus) => {
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-56">
                     Joining Date
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
+                    MT5 Account
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-40">
+                    First Leader
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-56">
                     Wallet Balance
@@ -181,6 +204,22 @@ const kycVariant = (kycApprovalStatus) => {
                 </td>
                 <td class="px-3 py-2.5 text-right" colspan="2">
                     {{ formatDateTime(member.created_at, false) }}
+                </td>
+                <td class="px-3 py-2.5 text-center" colspan="2">
+                    <Tooltip content="View MT5 account" placement="bottom">
+                        <Button 
+                            type="button"
+                            variant="gray"
+                            size="sm"
+                            @click="openMT5Modal(member)"
+                            class="flex justify-center"
+                        >
+                            <span class="text-xs">View</span>
+                        </Button>
+                    </Tooltip>
+                </td>
+                <td class="px-3 py-2.5 text-right" colspan="2">
+                    first
                 </td>
                 <td class="px-3 py-2.5 text-right" colspan="2">
                     $ {{ formatAmount(member.walletBalance) }}
@@ -228,4 +267,36 @@ const kycVariant = (kycApprovalStatus) => {
         </div>
     </div>
 
+    <Modal :show="memberMT5Modal" title="MT5 Account Listing" @close="closeModal" max-width="xl">
+    <div v-for="mt5Detail in mt5Details.trading_accounts" class="mb-2">
+        <Disclosure v-slot="{ open }">
+            <DisclosureButton
+                class="flex w-full justify-between items-center rounded-lg bg-primary-500 px-4 py-2 text-left text-sm font-medium text-white hover:bg-primary-600 focus:outline-none focus-visible:ring focus-visible:ring-purple-500/75"
+            >
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account No: </span>
+                <span class="col-span-2 text-white dark:text-white py-2">{{ mt5Detail.meta_login }}</span>
+            </div>
+            <ChevronDownIcon
+                :class="open ? 'rotate-180 transform' : ''"
+                class="h-5 w-5 text-white"
+            />
+            </DisclosureButton>
+            <DisclosurePanel class="px-4 pb-2 pt-4 text-sm text-gray-500">
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Equity</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">$ {{ mt5Detail.equity }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Margin Leverage</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ mt5Detail.margin_leverage }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Balance</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">$ {{ mt5Detail.balance }}</span>
+                </div>
+            </DisclosurePanel>
+        </Disclosure>
+    </div>
+    </Modal>
 </template>

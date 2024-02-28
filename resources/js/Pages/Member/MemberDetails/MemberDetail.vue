@@ -13,7 +13,8 @@ const props = defineProps({
     wallets: Object,
     countries: Array,
     ranks: Array,
-    tradingAccounts: Object
+    tradingAccounts: Object,
+    nationalities: Array,
 })
 
 const { formatAmount } = transactionFormat();
@@ -33,15 +34,16 @@ const { formatAmount } = transactionFormat();
             </div>
         </template>
 
-        <div class="flex gap-5 items-center">
+        <div class="flex gap-5 items-start">
             <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-3/4">
                 <EditMember
                     :member_detail="member_detail"
                     :countries="countries"
                     :ranks="ranks"
+                    :nationalities="nationalities"
                 />
             </div>
-            <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-1/4">
+            <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-1/4 self-stretch">
                 <AdvancedEdit
                     :member_detail="member_detail"
                     :ranks="ranks"

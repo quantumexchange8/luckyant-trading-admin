@@ -6,6 +6,8 @@ import {useForm} from "@inertiajs/vue3";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import Combobox from "@/Components/Combobox.vue";
 import Button from "@/Components/Button.vue";
+import { EyeIcon, EyeOffIcon } from '@heroicons/vue/outline'
+import { ref } from "vue";
 
 const props = defineProps({
     member_detail: Object,
@@ -16,7 +18,14 @@ const form = useForm({
     user_id: props.member_detail.id,
     rank: props.member_detail.setting_rank_id,
     upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.name } : {},
+    identification_number: props.member_detail.identification_number,
+    password: '',
 })
+
+const showPassword = ref(false)
+const togglePasswordVisibility = () => {
+    showPassword.value = !showPassword.value;
+};
 
 function loadUsers(query, setOptions) {
     fetch('/member/getAllUsers?query=' + query + '&id=' + props.member_detail.id)
@@ -47,6 +56,48 @@ const submit = () => {
     <form class="w-full">
         <div class="grid grid-cols-1 gap-3">
             <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="ic_number" value="Identity Number" />
+                <div class="md:col-span-3">
+                    <Input
+                        id="ic_number"
+                        type="text"
+                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                        v-model="form.identification_number"
+                    />
+                    <InputError :message="form.errors.identification_number" class="mt-1 col-span-4" />
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="password" value="Password" />
+                <div class="md:col-span-3">
+                    <div class="relative">
+                        <Input
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            class="block w-full"
+                            placeholder="New password"
+                            :invalid="form.errors.password"
+                            v-model="form.password"
+                        />
+                        <div
+                            class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
+                            @click="togglePasswordVisibility"
+                        >
+                            <template v-if="showPassword">
+                                <EyeIcon aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            </template>
+                            <template v-else>
+                                <EyeOffIcon aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            </template>
+                        </div>
+                    </div>
+
+                    <InputError :message="form.errors.password" class="mt-1 col-span-4" />
+                </div>
+            </div>
+            
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="rank" value="Rank" />
                 <div class="md:col-span-3">
                     <BaseListbox
@@ -68,6 +119,8 @@ const submit = () => {
                     />
                 </div>
             </div>
+
+            
         </div>
 
         <div class="mt-5 flex justify-end">

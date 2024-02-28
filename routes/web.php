@@ -47,8 +47,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/getTreeData/{id}', [MemberController::class, 'getTreeData'])->name('member.getTreeData');
         Route::post('/wallet_adjustment', [MemberController::class, 'wallet_adjustment'])->name('member.wallet_adjustment');
         Route::post('/verifyMember', [MemberController::class, 'verifyMember'])->name('member.verify_member');
+
+        Route::get('/impersonate/{user}', [MemberController::class, 'impersonate'])->name('member.impersonate');
     });
 
+    /**
+     * ==============================
+     *          Transaction
+     * ==============================
+     */
     Route::prefix('transaction')->group(function () {
         Route::get('/pendingTransaction', [TransactionController::class, 'pendingTransaction'])->name('transaction.pending_transaction');
         Route::get('/transactionHistory', [TransactionController::class, 'transactionHistory'])->name('transaction.transaction_history');

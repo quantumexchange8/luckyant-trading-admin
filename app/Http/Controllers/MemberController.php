@@ -14,6 +14,7 @@ use App\Notifications\KycApprovalNotification;
 use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
 use App\Http\Requests\EditMemberRequest;
+use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -78,7 +79,7 @@ class MemberController extends Controller
                 $query->whereBetween('created_at', [$start_date, $end_date]);
             })
             ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at')
-            ->with(['rank:id,name', 'country:id,name'])
+            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts'])
             ->orderByDesc('created_at')
             ->paginate(10)
             ->withQueryString();
@@ -157,12 +158,22 @@ class MemberController extends Controller
             ];
         });
 
+        $formattedNationalities = $countries->map(function ($country) {
+            return [
+                'value' => $country->nationality,
+                'label' => $country->nationality,
+            ];
+        });
+
         $wallets = Wallet::where('user_id', $user->id)->get();
+
+        $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
 
         return Inertia::render('Member/MemberDetails/MemberDetail', [
             'member_detail' => $user,
             'ranks' => $formattedRanks,
             'countries' => $formattedCountries,
+            'nationalities' => $formattedNationalities,
             'wallets' => $wallets,
             'tradingAccounts' => User::find($id)->tradingAccounts
 //            'referralCount' => $referralCount,
@@ -179,6 +190,8 @@ class MemberController extends Controller
             'phone' => $request->phone,
             'dob' => $request->dob,
             'country' => $request->country,
+            'nationality' => $request->nationality,
+            'address_1' => $request->address_1,
         ]);
 
         if ($request->password) {
@@ -197,6 +210,16 @@ class MemberController extends Controller
         $upline_id = $request->upline_id['value'];
 
         $currentRank = $request->rank;
+
+        if ($request->password) {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+        }
+        $user->update([
+            'identification_number' => $request->identification_number,
+        ]);
+
 
         if ($currentRank != $user->setting_rank_id) {
             $user->rank_up_status = 'manual';
@@ -418,5 +441,23 @@ class MemberController extends Controller
         }
 
         return $mappedUser;
+    }
+
+    public function impersonate(User $user)
+    {
+        $dataToHash = $user->name . $user->email . $user->id;
+        $hashedToken = md5($dataToHash);
+
+        $domain = $_SERVER['HTTP_HOST'];
+
+        if ($domain === 'secure-admin.luckyantfxasia.com') {
+            $url = "https://member.luckyantfxasia.com/admin_login/{$hashedToken}";
+        } elseif ($domain === 'testadmin.luckyantfxasia.com') {
+            $url = "https://testmember.luckyantfxasia.com/admin_login/{$hashedToken}";
+        } else {
+            return back();
+        }
+
+        return Inertia::location($url);
     }
 }

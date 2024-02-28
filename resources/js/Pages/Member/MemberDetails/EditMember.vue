@@ -8,11 +8,31 @@ import BaseListbox from "@/Components/BaseListbox.vue";
 import { ref } from "vue";
 import { EyeIcon, EyeOffIcon } from '@heroicons/vue/outline'
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
+import {
+  RadioGroup,
+  RadioGroupLabel,
+  RadioGroupDescription,
+  RadioGroupOption,
+} from '@headlessui/vue'
 
 const props = defineProps({
     member_detail: Object,
     countries: Array,
+    nationalities: Array,
 })
+
+const plans = [
+  {
+    name: 'Male',
+    value: 'male',
+  },
+  {
+    name: 'Female',
+    value: 'female',
+  },
+]
+
+const selected = ref(plans.find(plan => plan.value === props.member_detail.gender) || plans[0]);
 
 const form = useForm({
     user_id: props.member_detail.id,
@@ -22,8 +42,11 @@ const form = useForm({
     dob: props.member_detail.dob,
     country: props.member_detail.country,
     password: '',
+    gender: '',
+    address_1: props.member_detail.address_1,
+    identification_number: props.member_detail.identification_number,
+    nationality: props.member_detail.nationality,
 })
-
 
 const formatter = ref({
   date: 'YYYY-MM-DD',
@@ -36,6 +59,7 @@ const togglePasswordVisibility = () => {
 };
 
 const submit = () => {
+    form.gender = selected.value.value;
     form.patch(route('member.edit_member'), {
         onSuccess: () => {
             form.reset();
@@ -43,125 +67,208 @@ const submit = () => {
     })
 }
 
+const openInNewTab = (url) => {
+    window.open(url, '_blank');
+}
+
 </script>
 
 <template>
-    <form class="w-full">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="name" value="Name" />
-                <div class="md:col-span-3">
-                    <Input
-                        id="name"
-                        type="text"
-                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                        v-model="form.name"
-                        autofocus
-                        autocomplete="name"
-                        :invalid="form.errors.name"
-                    />
-                    <InputError :message="form.errors.name" class="mt-1 col-span-4" />
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="email" value="Email" />
-                <div class="md:col-span-3">
-                    <Input
-                        id="email"
-                        type="email"
-                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                        v-model="form.email"
-                        disabled
-                    />
-                    <InputError :message="form.errors.email" class="mt-1 col-span-4" />
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="country" value="Country" />
-                <div class="md:col-span-3">
-                    <BaseListbox
-                        v-model="form.country"
-                        :options="countries"
-                    />
-                    <InputError :message="form.errors.country" class="mt-1 col-span-4" />
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="phone" value="Phone" />
-                <div class="md:col-span-3">
-                    <Input
-                        id="phone"
-                        type="text"
-                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                        v-model="form.phone"
-                        :invalid="form.errors.phone"
-                    />
-                    <InputError :message="form.errors.phone" class="mt-1 col-span-4" />
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="dob" value="Date of Birth" />
-                <div class="md:col-span-3">
-                    <!-- <Input
-                        id="dob"
-                        type="text"
-                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                        v-model="form.dob"
-                        :invalid="form.errors.dob"
-                    />
-                    <InputError :message="form.errors.dob" class="mt-1 col-span-4" /> -->
-                    <vue-tailwind-datepicker
-                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
-                        v-model="form.dob"
-                        as-single
-                        :formatter="formatter"
-                    />
-                </div>
-            </div>
-
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="password" value="Password" />
-                <div class="md:col-span-3">
-                    <div class="relative">
-                        <Input
-                            id="password"
-                            :type="showPassword ? 'text' : 'password'"
-                            class="block w-full"
-                            placeholder="New password"
-                            :invalid="form.errors.password"
-                            v-model="form.password"
+    <div class="w-full">
+        <form class="w-full">
+            <div class="flex justify-between items-center self-stretch pb-2">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <img 
+                        class="object-cover w-16 h-16 rounded-full"
+                        :src="props.member_detail.profile_photo_url ? props.member_detail.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
                         />
-                        <div
-                            class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
-                            @click="togglePasswordVisibility"
-                        >
-                            <template v-if="showPassword">
-                                <EyeIcon aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                            </template>
-                            <template v-else>
-                                <EyeOffIcon aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                            </template>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="font-semibold">
+                            {{ props.member_detail.name }}
+                        </div>
+                        <div>
+                            {{ props.member_detail.email }}
                         </div>
                     </div>
-
-                    <InputError :message="form.errors.password" class="mt-1 col-span-4" />
                 </div>
+                <div>
+                    <Button
+                        type="button"
+                        variant="success"
+                        size="base"
+                        class="items-center gap-2 max-w-md"
+                        @click="openInNewTab(route('member.impersonate', props.member_detail.id))"
+                    >
+                        <span>Access</span>
+                    </Button>
+                </div>
+                
             </div>
-        </div>
-        <div class="flex justify-end mt-5">
-            <Button
-                variant="primary"
-                :disabled="form.processing"
-                @click.prevent="submit"
-            >
-                <span>Save</span>
-            </Button>
-        </div>
-    </form>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="name" value="Name" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="name"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="form.name"
+                            autofocus
+                            autocomplete="name"
+                            :disabled="props.member_detail.kyc_approval === 'Verified'"
+                            :invalid="form.errors.name"
+                        />
+                        <InputError :message="form.errors.name" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="email" value="Email" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="email"
+                            type="email"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="form.email"
+                            :disabled="props.member_detail.kyc_approval === 'Verified'"
+                        />
+                        <InputError :message="form.errors.email" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="country" value="Country" />
+                    <div class="md:col-span-3">
+                        <BaseListbox
+                            v-model="form.country"
+                            :options="countries"
+                        />
+                        <InputError :message="form.errors.country" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="phone" value="Phone" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="phone"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="form.phone"
+                            :invalid="form.errors.phone"
+                        />
+                        <InputError :message="form.errors.phone" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="dob" value="Date of Birth" />
+                    <div class="md:col-span-3">
+                        <!-- <Input
+                            id="dob"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="form.dob"
+                            :invalid="form.errors.dob"
+                        />
+                        <InputError :message="form.errors.dob" class="mt-1 col-span-4" /> -->
+                        <vue-tailwind-datepicker
+                            input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                            v-model="form.dob"
+                            as-single
+                            :formatter="formatter"
+                        />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="gender" value="Gender" />
+                    <div class="md:col-span-3">
+                        <!-- <Input
+                            id="gender"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="form.gender"
+                            
+                        />-->
+                        <RadioGroup v-model="selected">
+                            <RadioGroupLabel class="sr-only">Signal Status</RadioGroupLabel>
+                            <div class="flex gap-3 items-center self-stretch w-full">
+                                <RadioGroupOption
+                                    as="template"
+                                    v-for="(plan, index) in plans"
+                                    :key="index"
+                                    :value="plan"
+                                    v-slot="{ active, checked }"
+                                >
+                                    <div
+                                        :class="[
+                                            active
+                                                ? 'ring-0 ring-white ring-offset-0'
+                                                : '',
+                                            checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 bg-white dark:bg-gray-800 dark:text-white',
+                                        ]"
+                                        class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
+                                    >
+                                        <div class="flex items-center w-full">
+                                            <div class="text-sm flex flex-col gap-3 w-full">
+                                                <RadioGroupLabel
+                                                    as="div"
+                                                    class="font-medium"
+                                                >
+                                                    <div class="flex justify-center items-center gap-3">
+                                                        {{ plan.name }}
+                                                    </div>
+                                                </RadioGroupLabel>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </RadioGroupOption>
+                            </div>
+                        </RadioGroup>
+                        <InputError :message="form.errors.gender" class="mt-1 col-span-4" /> 
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="nationality" value="Nationality" />
+                    <div class="md:col-span-3">
+                        <BaseListbox
+                            v-model="form.nationality"
+                            :options="nationalities"
+                        />
+                        <InputError :message="form.errors.nationality" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="address" value="Address" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="address"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="form.address_1"
+                            
+                        />
+                        <InputError :message="form.errors.address_1" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+                
+            </div>
+            <div class="flex justify-end mt-5">
+                <Button
+                    variant="primary"
+                    :disabled="form.processing"
+                    @click.prevent="submit"
+                >
+                    <span>Save</span>
+                </Button>
+            </div>
+        </form>
+    </div>
 </template>
 
 <style scoped>
