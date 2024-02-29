@@ -78,7 +78,7 @@ class MemberController extends Controller
                 $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
                 $query->whereBetween('created_at', [$start_date, $end_date]);
             })
-            ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at')
+            ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList')
             ->with(['rank:id,name', 'country:id,name', 'tradingAccounts'])
             ->orderByDesc('created_at')
             ->paginate(10)
@@ -91,6 +91,14 @@ class MemberController extends Controller
         //         return Excel::download(new MemberListingExport($members), Carbon::now() . '-' . '-report.xlsx');
         //     }
         // }
+
+        $members->getCollection()->transform(function ($member) {
+            $userId = explode('-', $member->hierarchyList)[1] ?? null;
+            $userName = User::where('id', $userId)->value('name');
+            $member->userId = $userId;
+            $member->userName = $userName;
+            return $member;
+        });
 
         $members->each(function ($user) {
             $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');

@@ -158,16 +158,16 @@ const closeModal = () => {
                 <th scope="col" colspan="4" class="px-3 py-2.5">
                     Name
                 </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-56">
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
                     Joining Date
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
                     MT5 Account
                 </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-40">
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
                     First Leader
                 </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-right w-56">
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
                     Wallet Balance
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-24">
@@ -202,7 +202,7 @@ const closeModal = () => {
                         </div>
                     </div>
                 </td>
-                <td class="px-3 py-2.5 text-right" colspan="2">
+                <td class="px-3 py-2.5 text-center" colspan="2">
                     {{ formatDateTime(member.created_at, false) }}
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
@@ -218,10 +218,10 @@ const closeModal = () => {
                         </Button>
                     </Tooltip>
                 </td>
-                <td class="px-3 py-2.5 text-right" colspan="2">
-                    first
+                <td class="px-3 py-2.5 text-center" colspan="2">
+                    {{ member.userName ? member.userName : 'LuckyAnt Admin' }}
                 </td>
-                <td class="px-3 py-2.5 text-right" colspan="2">
+                <td class="px-3 py-2.5 text-center" colspan="2">
                     $ {{ formatAmount(member.walletBalance) }}
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
@@ -268,6 +268,9 @@ const closeModal = () => {
     </div>
 
     <Modal :show="memberMT5Modal" title="MT5 Account Listing" @close="closeModal" max-width="xl">
+    <div v-if="mt5Details.trading_accounts == ''" class="py-4 text-lg text-center">
+        No MT5 account
+    </div>
     <div v-for="mt5Detail in mt5Details.trading_accounts" class="mb-2">
         <Disclosure v-slot="{ open }">
             <DisclosureButton
