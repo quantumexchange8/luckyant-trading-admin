@@ -219,7 +219,7 @@ const closeModal = () => {
                     </Tooltip>
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
-                    {{ member.userName ? member.userName : 'LuckyAnt Admin' }}
+                    {{ member.userName ? member.userName : 'LuckyAnt Trading' }}
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     $ {{ formatAmount(member.walletBalance) }}
