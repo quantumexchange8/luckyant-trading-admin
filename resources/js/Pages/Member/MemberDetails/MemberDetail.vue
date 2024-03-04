@@ -7,6 +7,10 @@ import AdvancedEdit from "@/Pages/Member/MemberDetails/AdvancedEdit.vue";
 import TradingAccount from "@/Pages/Member/MemberDetails/TradingAccount.vue";
 import Action from "@/Pages/Member/MemberDetails/Partials/Action.vue";
 import {transactionFormat} from "@/Composables/index.js";
+import Badge from "@/Components/Badge.vue";
+import { ref } from "vue";
+import Modal from "@/Components/Modal.vue";
+import PaymentAccount from "@/Pages/Member/MemberDetails/Partials/PaymentAccount.vue"
 
 const props = defineProps({
     member_detail: Object,
@@ -15,9 +19,27 @@ const props = defineProps({
     ranks: Array,
     tradingAccounts: Object,
     nationalities: Array,
+    paymentAccounts: Array,
+    currencies: Array,
 })
 
 const { formatAmount } = transactionFormat();
+const paymentModal = ref(false);
+const paymentDetails = ref(null);
+
+const statusVariant = (transactionStatus) => {
+    if (transactionStatus === 'Active') return 'success';
+    if (transactionStatus === 'Inactive') return 'danger';
+}
+
+const openModal = (paymentAccount) => {
+    paymentModal.value = true;
+    paymentDetails.value = paymentAccount;
+}
+
+const closeModal = () => {
+    paymentModal.value = false
+}
 </script>
 
 <template>
@@ -51,7 +73,7 @@ const { formatAmount } = transactionFormat();
             </div>
         </div>
 
-        <div class="flex flex-col my-8">
+        <!-- <div class="flex flex-col my-8">
             <div class="text-lg pb-4 border-b border-gray-600 mb-5">
                 Trading Accounts
             </div>
@@ -59,10 +81,10 @@ const { formatAmount } = transactionFormat();
                 :member_detail="member_detail"
                 :tradingAccounts="tradingAccounts"
             />
-        </div>
+        </div> -->
 
         <div class="flex flex-col my-8">
-            <h3 class="text-lg pb-4 border-b border-gray-600 mb-5">
+            <h3 class="pb-4 border-b border-gray-600 mb-5 text-xl font-semibold">
                 Wallet
             </h3>
             <div class="overflow-x-auto grid grid-flow-col justify-start relative gap-5">
@@ -91,5 +113,44 @@ const { formatAmount } = transactionFormat();
                 </div>
             </div>
         </div>
+
+        <div class="flex flex-col my-8">
+            <h3 class="text-lg pb-4 border-b border-gray-600 mb-5 text-xl font-semibold">
+                Payment Account 
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div v-for="paymentAccount in paymentAccounts" 
+                    class="card text-gray-300 w-full hover:brightness-90 transition-all cursor-pointer group bg-gradient-to-tl from-gray-600 to-gray-800 hover:from-gray-800 hover:to-gray-700 dark:from-gray-900 dark:to-gray-950 dark:hover:from-gray-800 dark:hover:to-gray-950 border-r-2 border-t-2 border-gray-600 dark:border-gray-900 rounded-lg overflow-hidden relative"
+                    @click="openModal(paymentAccount)"
+                >
+                    <div class="px-8 py-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="bg-orange-500 w-10 h-10 rounded-full rounded-tl-none group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-red-900 transition-all"></div>
+                            <Badge :variant="statusVariant(paymentAccount.status)" class="mx-0">{{ paymentAccount.status }}</Badge>
+                        </div>
+
+                        <div class="uppercase font-bold text-xl">
+                            {{ paymentAccount.payment_platform_name }}
+                        </div>
+                        <div class="text-gray-300 uppercase tracking-widest">
+                            {{ paymentAccount.payment_account_name }}
+                        </div>
+                        <div class="text-gray-400 mt-6">
+                            <p class="font-bold">{{ paymentAccount.currency }}</p>
+                            <p>{{ paymentAccount.account_no }}</p>
+                        </div>
+                    </div>
+
+                    <div class="h-2 w-full bg-gradient-to-l via-yellow-500 group-hover:blur-xl blur-2xl m-auto rounded transition-all absolute bottom-0"></div>
+                    <div class="h-0.5 group-hover:w-full bg-gradient-to-l via-yellow-700 dark:via-yellow-950 group-hover:via-yellow-500 w-[70%] m-auto rounded transition-all"></div>
+                </div>
+            </div>
+        </div>
+
+        <Modal :show="paymentModal" title="Payment Account Details" @close="closeModal" max-width="lg">
+            <PaymentAccount :paymentDetails="paymentDetails" :countries="countries" :currencies="currencies" @closeModal="closeModal"/>
+        </Modal>
+
+        
     </AuthenticatedLayout>
 </template>

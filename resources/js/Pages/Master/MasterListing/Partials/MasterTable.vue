@@ -117,7 +117,7 @@ const transactionVariant = (transactionStatus) => {
                         {{ master.trading_account.meta_login }}
                     </td>
                     <td class="p-3">
-                        $ {{ master.min_join_equity }}
+                        $ {{ master.min_join_equity ? master.min_join_equity : '0.00' }}
                     </td>
                     <td class="p-3">
                         {{ master.sharing_profit }}

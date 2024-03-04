@@ -10,10 +10,12 @@ use App\Models\TradingAccount;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Transaction;
+use App\Models\PaymentAccount;
 use App\Notifications\KycApprovalNotification;
 use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
 use App\Http\Requests\EditMemberRequest;
+use App\Http\Requests\PaymentAccountRequest;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -173,9 +175,18 @@ class MemberController extends Controller
             ];
         });
 
+        $paymentAccounts = PaymentAccount::where('user_id', $id)->get();
+
         $wallets = Wallet::where('user_id', $user->id)->get();
 
         $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
+
+        $formattedCurrencies = Country::whereIn('id', [132, 233])->get()->map(function ($country) {
+            return [
+                'value' => $country->currency,
+                'label' => $country->currency_name . ' (' . $country->currency . ')',
+            ];
+        });
 
         return Inertia::render('Member/MemberDetails/MemberDetail', [
             'member_detail' => $user,
@@ -183,14 +194,15 @@ class MemberController extends Controller
             'countries' => $formattedCountries,
             'nationalities' => $formattedNationalities,
             'wallets' => $wallets,
-            'tradingAccounts' => User::find($id)->tradingAccounts
-//            'referralCount' => $referralCount,
+            'tradingAccounts' => User::find($id)->tradingAccounts,
+            'paymentAccounts' => $paymentAccounts,
+            'currencies' => $formattedCurrencies,
         ]);
     }
 
     public function editMember(EditMemberRequest $request)
     {
-
+        
         $user = User::find($request->user_id);
 
         $user->update([
@@ -202,6 +214,11 @@ class MemberController extends Controller
             'address_1' => $request->address_1,
         ]);
 
+        if ($request->hasFile('profile_photo')) {
+            $user->clearMediaCollection('profile_photo');
+            $user->addMedia($request->profile_photo)->toMediaCollection('profile_photo');
+        }
+
         if ($request->password) {
             $user->update([
                 'password' => Hash::make($request->password),
@@ -209,6 +226,23 @@ class MemberController extends Controller
         }
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
+    }
+
+    public function paymentAccount(PaymentAccountRequest $request)
+    {
+        
+        $paymentAccount = PaymentAccount::find($request->id);
+       
+        $PaymentAccount = $paymentAccount->update([
+            'payment_account_name' => $request->payment_account_name,
+            'payment_platform_name' => $request->payment_platform_name,
+            'account_no' => $request->account_no,
+            'bank_swift_code' => $request->bank_swift_code,
+            'currency' => $request->currency,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->back()->with('title', 'Payment Account!')->with('toast', 'The payment account has been updated successfully.');
     }
 
     public function advanceEditMember(Request $request)

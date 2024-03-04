@@ -14,6 +14,7 @@ import {
   RadioGroupDescription,
   RadioGroupOption,
 } from '@headlessui/vue'
+import AvatarInput from "@/Pages/Member/MemberDetails/Partials/AvatarInput.vue";
 
 const props = defineProps({
     member_detail: Object,
@@ -46,6 +47,7 @@ const form = useForm({
     address_1: props.member_detail.address_1,
     identification_number: props.member_detail.identification_number,
     nationality: props.member_detail.nationality,
+    profile_photo: null,
 })
 
 const formatter = ref({
@@ -60,7 +62,7 @@ const togglePasswordVisibility = () => {
 
 const submit = () => {
     form.gender = selected.value.value;
-    form.patch(route('member.edit_member'), {
+    form.post(route('member.edit_member'), {
         onSuccess: () => {
             form.reset();
         },
@@ -79,10 +81,11 @@ const openInNewTab = (url) => {
             <div class="flex justify-between items-center self-stretch pb-2">
                 <div class="flex items-center gap-4">
                     <div>
-                        <img 
+                        <AvatarInput class="w-16 h-16 rounded-full" v-model="form.profile_photo" :default-src="member_detail.profile_photo_url ? member_detail.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" />
+                        <!-- <img 
                         class="object-cover w-16 h-16 rounded-full"
                         :src="props.member_detail.profile_photo_url ? props.member_detail.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
-                        />
+                        /> -->
                     </div>
                     <div class="flex flex-col">
                         <div class="font-semibold">

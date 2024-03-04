@@ -51,24 +51,23 @@ const closeModal = () => {
         </div>
     </template>
 
-    <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900">
-        <div class="flex justify-end items-center self-stretch pb-2">
-            <div>
-                <InputIconWrapper class="w-full md:w-[280px]">
-                    <template #icon>
-                        <SearchIcon aria-hidden="true" class="w-5 h-5" />
-                    </template>
-                    <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
-                </InputIconWrapper>
-            </div>
+    <div class="flex justify-end items-center self-stretch pb-2">
+        <div>
+            <InputIconWrapper class="w-full md:w-[280px]">
+                <template #icon>
+                    <SearchIcon aria-hidden="true" class="w-5 h-5" />
+                </template>
+                <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
+            </InputIconWrapper>
         </div>
+    </div>
 
+    <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900">
         <MasterTable 
             :settings="settings" 
             :withdrawal="withdrawal" 
             :search="search"
         />
-          
     </div>
 
 </AuthenticatedLayout>

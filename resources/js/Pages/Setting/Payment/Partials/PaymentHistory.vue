@@ -11,6 +11,7 @@ import debounce from "lodash/debounce.js";
 import Loading from "@/Components/Loading.vue";
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import Button from "@/Components/Button.vue";
+import BaseListbox from "@/Components/BaseListbox.vue";
 
 const props = defineProps({
     paymentHistories: Array,
@@ -20,6 +21,7 @@ const refresh = ref(false);
 const isLoading = ref(false);
 const search = ref('');
 const date = ref('');
+const filter = ref('');
 const { formatDateTime } = transactionFormat();
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -88,6 +90,8 @@ watch(() => refresh, (newVal) => {
 function refreshTable() {
     search.value = '';
     date.value = '';
+    filter.value = '';
+    isLoading.value = !isLoading.value;
     refresh.value = true;
 }
 const paginationClass = [
@@ -129,6 +133,15 @@ const paginationActiveClass = [
                             class="w-full md:w-[230px]"
                         />
                     </div>
+                    <!-- <div class="w-full">
+                        <BaseListbox
+                            id="statusID"
+                            class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
+                            v-model="filter"
+                            :options="statusList"
+                            placeholder="Filter status"
+                        />
+                    </div> -->
                     <div>
                         <Button
                             type="button"
@@ -200,7 +213,7 @@ const paginationActiveClass = [
                                 {{ history.account_no }}
                             </td>
                             <td class="px-3 py-2.5 text-center" colspan="2">
-                                {{ history.bank_swift_code ?  history.bank_swift_code : 'N/A'}}
+                                {{ history.bank_swift_code ?  history.bank_swift_code : '-'}}
                             </td>
                             <td class="px-3 py-2.5 text-center" colspan="2">
                                 {{ history.user.name }}
