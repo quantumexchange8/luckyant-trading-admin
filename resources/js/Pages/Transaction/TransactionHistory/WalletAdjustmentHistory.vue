@@ -125,6 +125,9 @@ const closeModal = () => {
                     Name
                 </th>
                 <th scope="col" class="py-2">
+                    Wallet
+                </th>
+                <th scope="col" class="py-2">
                     Transaction Number
                 </th>
                 <th scope="col" class="py-2">
@@ -154,6 +157,9 @@ const closeModal = () => {
                         <img :src="wallet.user.profile_photo_url ? wallet.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
                         {{ wallet.user.name }}
                     </div>
+                </td>
+                <td class="py-2">
+                    {{ wallet.from_wallet.name }}
                 </td>
                 <td class="pl-5 py-2">
                     {{ wallet.transaction_number }}
@@ -197,6 +203,10 @@ const closeModal = () => {
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(walletDetail.created_at) }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Wallet</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ walletDetail.from_wallet.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Number</span>

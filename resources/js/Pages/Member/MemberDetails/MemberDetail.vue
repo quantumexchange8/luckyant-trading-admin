@@ -14,7 +14,7 @@ import PaymentAccount from "@/Pages/Member/MemberDetails/Partials/PaymentAccount
 
 const props = defineProps({
     member_detail: Object,
-    wallets: Object,
+    wallets: Array,
     countries: Array,
     ranks: Array,
     tradingAccounts: Object,
@@ -115,7 +115,7 @@ const closeModal = () => {
         </div>
 
         <div class="flex flex-col my-8">
-            <h3 class="text-lg pb-4 border-b border-gray-600 mb-5 text-xl font-semibold">
+            <h3 class="pb-4 border-b border-gray-600 mb-5 text-xl font-semibold">
                 Payment Account 
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -126,7 +126,11 @@ const closeModal = () => {
                     <div class="px-8 py-5">
                         <div class="flex justify-between items-center mb-4">
                             <div class="bg-orange-500 w-10 h-10 rounded-full rounded-tl-none group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-red-900 transition-all"></div>
-                            <Badge :variant="statusVariant(paymentAccount.status)" class="mx-0">{{ paymentAccount.status }}</Badge>
+                            <div>
+                                <Badge :variant="statusVariant(paymentAccount.status)">
+                                    {{ paymentAccount.status }}
+                                </Badge>
+                            </div>
                         </div>
 
                         <div class="uppercase font-bold text-xl">
