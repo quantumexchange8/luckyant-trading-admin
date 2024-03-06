@@ -42,32 +42,17 @@ class SettingController extends Controller
         ]);
     }
 
-    public function updatePaymentSetting(PaymentSettingRequest $request)
+    public function updatePaymentSetting(Request $request)
     {
-        
-        if ($request->payment_method == 'Bank') {
-            $request->validate([
-                'payment_account_name' => 'required|string|max:255',
-                'payment_platform_name' => 'required|string|max:255',
-                'account_no' => 'required',
-                'bank_swift_code' => 'required',
-            ]);
-        } else {
-            $request->validate([
-                'payment_account_name' => 'required|string|max:255',
-                'payment_platform_name' => 'required|string|max:255',
-                'account_no' => 'required',
-            ]);
-        }
         
         $countryname = Country::find($request->country);
 
-        $updateOldSetting = SettingPaymentMethod::latest()->first();
-        if ($updateOldSetting) {
-            $updateOldSetting = $updateOldSetting->update([
-                'status' => 'Inactive'
-            ]);
-        }
+        // $updateOldSetting = SettingPaymentMethod::latest()->first();
+        // if ($updateOldSetting) {
+        //     $updateOldSetting = $updateOldSetting->update([
+        //         'status' => 'Inactive'
+        //     ]);
+        // }
         
         
         $paymentSetting = SettingPaymentMethod::create([
@@ -75,7 +60,7 @@ class SettingController extends Controller
             'payment_account_name' => $request->payment_account_name,
             'payment_platform_name' => $request->payment_platform_name,
             'account_no' => $request->account_no,
-            'country' => $countryname->name,
+            'country' => $request->country,
             'currency' => $request->currency,
             'bank_swift_code' => $request->bank_swift_code,
             'status' => 'Active',
@@ -84,16 +69,23 @@ class SettingController extends Controller
 
         return redirect()->back()->with('title', 'Updated successfully')->with('success', 'The payment configuaration has been updated successfully.');
     }
-    public function getPaymentHistory(Request $request)
+    public function getPaymentHistory(Request $request, $status)
     {
+        if ($status == 'Active') {
+            $history = SettingPaymentMethod::query()
+            ->with(['user:id,name,email'])
+            ->where('status', [$status]);
+        } else {
+            $history = SettingPaymentMethod::query()
+            ->with(['user:id,name,email']);
+        }
         
-        $history = SettingPaymentMethod::query()->with(['user:id,name,email']);
-
         if ($request->filled('search'))
         {
             $search = '%' . $request->input('search') . '%';
             $history->where(function ($q) use ($search) {
-                $q->where('account_no', 'like', $search);
+                $q->where('payment_account_name', 'like', $search)
+                    ->orWhere('account_no', 'like', $search);
             });
         }
 

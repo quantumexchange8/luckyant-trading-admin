@@ -40,7 +40,9 @@ const closeModal = () => {
 
 <template>
     <form>
-        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md bg-gradient-to-bl from-primary-400 to-primary-600 rounded-[20px]">
+        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md bg-gradient-to-bl from-warning-300 to-warning-600 rounded-[20px]"
+            
+        >
             <div class="space-y-2">
                 <div class="text-base font-semibold text-gray-100 dark:text-white">
                     {{ wallet.name }}

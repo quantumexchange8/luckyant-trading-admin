@@ -45,7 +45,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '') => {
     historyLoading.value = true
     try {
-        let url = `/setting/getPaymentHistory/History?page=${page}`;
+        let url = `/setting/getPaymentHistory/Active?page=${page}`;
         
         if (search) {
             url += `&search=${search}`;

@@ -199,21 +199,19 @@ const submitForm = () => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.status) }}</span>
             </div>
 
-            <div class="grid grid-cols-3 items-center gap-2 border-b pb-3">
+            <div v-if="transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2 border-b pb-3">
                 <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
             </div>
 
-            <div class="flex justify-center items-center gap-2 pb-2">
-                <img 
+            <div  class="flex justify-center items-center gap-2 pb-2">
+                <img v-if="transaction.transaction_type == 'Deposit'"
                 :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
                 alt=""
                 class="pt-5"
                 />
+
             </div>
         </div>
-
-        
-
     </Modal>
 
 </template>

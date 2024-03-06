@@ -181,7 +181,7 @@ class MemberController extends Controller
 
         $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
 
-        $formattedCurrencies = Country::whereIn('id', [132, 233])->get()->map(function ($country) {
+        $formattedCurrencies = Country::whereIn('id', [132, 233, 102, 101, 45, 240])->get()->map(function ($country) {
             return [
                 'value' => $country->currency,
                 'label' => $country->currency_name . ' (' . $country->currency . ')',

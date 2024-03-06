@@ -56,8 +56,8 @@ const closeModal = () => {
             </div>
         </template>
 
-        <div class="flex gap-5 items-start">
-            <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-3/4">
+        <div class="flex flex-wrap gap-5 items-start md:flex-nowrap">
+            <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-full md:w-3/4">
                 <EditMember
                     :member_detail="member_detail"
                     :countries="countries"
@@ -65,7 +65,7 @@ const closeModal = () => {
                     :nationalities="nationalities"
                 />
             </div>
-            <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-1/4 self-stretch">
+            <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-full md:w-1/4 md:self-stretch">
                 <AdvancedEdit
                     :member_detail="member_detail"
                     :ranks="ranks"
@@ -88,9 +88,13 @@ const closeModal = () => {
                 Wallet
             </h3>
             <div class="overflow-x-auto grid grid-flow-col justify-start relative gap-5">
-                <div v-for="wallet in props.wallets" class="flex flex-col overflow-hidden rounded-[20px] w-96 border border-gray-300 dark:border-gray-800">
+                <div v-for="wallet in props.wallets" class="flex flex-col overflow-hidden rounded-[20px] w-96 border border-gray-00 dark:border-gray-800">
                     <div
-                        class="flex justify-between bg-gradient-to-bl from-primary-400 to-primary-600"
+                        class="flex justify-between h-32"
+                        :class="{
+                            'bg-gradient-to-bl from-primary-400 to-primary-600': wallet.type === 'cash_wallet',
+                            'bg-gradient-to-bl from-warning-300 to-warning-600': wallet.type === 'rebate_wallet',
+                        }"
                     >
                         <div class="py-5 px-4 flex flex-col gap-2">
                             <div class="flex flex-col">
