@@ -52,6 +52,11 @@ const type = ref('Active');
 const updateTransactionType = (transaction_type) => {
     type.value = transaction_type
 };
+
+const statusList = [
+    {value:'Bank', label:"Bank"},
+    {value:'Crypto', label:"Crypto"},
+];
 </script>
 
 <template>
@@ -92,15 +97,15 @@ const updateTransactionType = (transaction_type) => {
                         class="w-full"
                     />
                 </div>
-                <!-- <div class="w-full">
+                <div class="w-full">
                     <BaseListbox
-                        id="statusID"
-                        class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
+                        id="method"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
                         v-model="filter"
                         :options="statusList"
-                        placeholder="Filter status"
+                        placeholder="Filter method"
                     />
-                </div> -->
+                </div>
                 <div>
                     <Button
                         type="button"
@@ -159,6 +164,7 @@ const updateTransactionType = (transaction_type) => {
                         <TabPanel>
                             <PaymentActive
                                 :paymentHistories="paymentHistories"
+                                :countries="countries"
                                 :refresh="refresh"
                                 :isLoading="isLoading"
                                 :search="search"

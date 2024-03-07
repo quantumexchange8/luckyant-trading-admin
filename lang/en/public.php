@@ -385,6 +385,7 @@ return [
     "Reset Portal Password" => "Reset Portal Password",
     "Create Payment Account" => "Create Payment Account",
     "Payment Account" => "Payment Account",
+    "Payment Account Name" => "Payment Account Name",
     "Bank Swift Code" => "Bank Swift Code",
     "Bank Holder Name" => "Bank Holder Name",
     "No Account" => "No Account",

@@ -111,6 +111,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/payment_setting', [SettingController::class, 'paymentSetting'])->name('setting.payment_setting');
         Route::get('/getCryptoNetworks', [SettingController::class, 'getCryptoNetworks'])->name('setting.getCryptoNetworks');
         Route::post('/addPaymentSetting', [SettingController::class, 'addPaymentSetting'])->name('setting.addPaymentSetting');
+        Route::post('/updatePaymentSetting', [SettingController::class, 'updatePaymentSetting'])->name('setting.updatePaymentSetting');
+        Route::delete('/deletePayment', [SettingController::class, 'deletePayment'])->name('setting.deletePayment');
         Route::get('/getPaymentHistory/{status}', [SettingController::class, 'getPaymentHistory'])->name('setting.getPaymentHistory');
 
         //master setting

@@ -13,9 +13,11 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import {usePage} from "@inertiajs/vue3";
+import Action from "@/Pages/Setting/Payment/Partials/Action.vue";
 
 const props = defineProps({
     paymentHistories: Array,
+    countries: Array,
     refresh: Boolean,
     isLoading: Boolean,
     search: String,
@@ -37,13 +39,13 @@ const transactionVariant = (transactionStatus) => {
 }
 
 watch(
-    [() => props.search, () => props.date,],
-    debounce(([searchValue, dateValue]) => {
-        getResults(1, searchValue, dateValue);
+    [() => props.search, () => props.date, () => props.filter],
+    debounce(([searchValue, dateValue, filterValue]) => {
+        getResults(1, searchValue, dateValue, filterValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '') => {
+const getResults = async (page = 1, search = '', date = '', filter = '') => {
     historyLoading.value = true
     try {
         let url = `/setting/getPaymentHistory/Active?page=${page}`;
@@ -55,6 +57,10 @@ const getResults = async (page = 1, search = '', date = '') => {
         if (date) {
             console.log(date)
             url += `&date=${date}`;
+        }
+
+        if (filter) {
+            url += `&filter=${filter}`;
         }
 
         const response = await axios.get(url);
@@ -165,9 +171,9 @@ watchEffect(() => {
                     <th scope="col" colspan="2" class="px-3 py-2.5 text-center">
                         Date
                     </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center">
+                    <!-- <th scope="col" colspan="2" class="px-3 py-2.5 text-center">
                         Payment Method
-                    </th>
+                    </th> -->
                     <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
                         Payment Account Name
                     </th>
@@ -186,6 +192,9 @@ watchEffect(() => {
                     <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
                         Status
                     </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
+                        Action
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -201,9 +210,9 @@ watchEffect(() => {
                     <td class="px-3 py-2.5 text-center" colspan="2">
                         {{ formatDateTime(history.created_at) }}
                     </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
+                    <!-- <td class="px-3 py-2.5 text-center" colspan="2">
                         {{ history.payment_method }}
-                    </td>
+                    </td> -->
                     <td class="px-3 py-2.5 text-center" colspan="2">
                         {{ history.payment_account_name }}
                     </td>
@@ -225,6 +234,12 @@ watchEffect(() => {
                         >
                             {{ history.status }}
                         </Badge>
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        <Action
+                            :bank="history"
+                            :countries="countries"
+                        />
                     </td>
                 </tr>
             </tbody>

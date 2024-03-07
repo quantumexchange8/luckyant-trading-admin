@@ -36,13 +36,13 @@ const transactionVariant = (transactionStatus) => {
 }
 
 watch(
-    [() => props.search, () => props.date,],
-    debounce(([searchValue, dateValue]) => {
-        getResults(1, searchValue, dateValue);
+    [() => props.search, () => props.date, () => props.filter ],
+    debounce(([searchValue, dateValue, filterValue]) => {
+        getResults(1, searchValue, dateValue, filterValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '') => {
+const getResults = async (page = 1, search = '', date = '', filter = '') => {
     historyLoading.value = true
     try {
         let url = `/setting/getPaymentHistory/History?page=${page}`;
@@ -52,8 +52,11 @@ const getResults = async (page = 1, search = '', date = '') => {
         }
 
         if (date) {
-            console.log(date)
             url += `&date=${date}`;
+        }
+
+        if (filter) {
+            url += `&filter=${filter}`;
         }
 
         const response = await axios.get(url);

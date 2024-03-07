@@ -70,6 +70,42 @@ class SettingController extends Controller
             ->with('success', 'The payment method has been added successfully.');
     }
 
+    public function updatePaymentSetting(PaymentSettingRequest $request)
+    {
+        
+        $payment = SettingPaymentMethod::find($request->id);
+
+        $payment->update([
+            'payment_account_name' => $request->payment_account_name,
+            'payment_platform_name' => $request->payment_platform_name,
+            'account_no' => $request->account_no,
+            'country' => $request->country,
+            'bank_swift_code' => $request->bank_swift_code,
+            'bank_code' => $request->bank_code,
+            'network' => $request->network,
+            'status' => $request->status,
+            'handle_by' => Auth::user()->id,
+        ]);
+
+        if ($request->hasFile('payment_logo')) {
+            $payment->clearMediaCollection('payment_logo');
+            $payment->addMedia($request->payment_logo)->toMediaCollection('payment_logo');
+        }
+
+        return redirect()->back()
+            ->with('title', 'Success Updated Payment')
+            ->with('success', 'The payment has been updated successfully.');
+    }
+
+    public function deletePayment(Request $request)
+    {
+        $payment = SettingPaymentMethod::find($request->id);
+
+        $payment->delete();
+
+        return redirect()->back();
+    }
+
     public function getPaymentHistory(Request $request, $status)
     {
         if ($status == 'Active') {
@@ -99,7 +135,18 @@ class SettingController extends Controller
             $history->whereBetween('created_at', [$start_date, $end_date]);
         }
 
+        if ($request->filled('filter')) {
+            $filter = $request->input('filter') ;
+            $history->where(function ($q) use ($filter) {
+                $q->where('payment_method', $filter);
+            });
+        }
+
         $results = $history->latest()->paginate(10);
+
+        $results->each(function ($payment) {
+            $payment->bank_logo_url = $payment->getFirstMediaUrl('payment_logo');
+        });
 
         return response()->json($results);
     }
