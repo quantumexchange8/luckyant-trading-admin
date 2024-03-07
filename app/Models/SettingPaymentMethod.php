@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class SettingPaymentMethod extends Model
+class SettingPaymentMethod extends Model implements HasMedia
 {
-    use SoftDeletes;
+    use SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'payment_method',
@@ -19,6 +21,7 @@ class SettingPaymentMethod extends Model
         'bank_code_type',
         'country',
         'currency',
+        'crypto_network',
         'status',
         'handle_by'
     ];

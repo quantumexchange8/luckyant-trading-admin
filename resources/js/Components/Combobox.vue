@@ -202,10 +202,10 @@ function clearSelection() {
                 :displayValue="option => (props.multiple ? query : option?.label)"
                 :placeholder="
                     (props.multiple ? (!props.modelValue || !props.modelValue.length) : !props.modelValue)
-                      ? props.placeholder
-                      : 'Please Select'
-                  "
-                class="-mx-1 min-w-0 flex-grow cursor-pointer disabled:cursor-not-allowed border-none bg-transparent py-1 px-2 dark:text-white placeholder-gray-400 focus:ring-0 dark:disabled:placeholder-gray-600"
+                        ? props.placeholder
+                        : ''
+                "
+                class="-mx-1 min-w-0 flex-grow cursor-pointer disabled:cursor-not-allowed border-none bg-transparent py-1.5 px-2 dark:text-white placeholder-gray-400 focus:ring-0 dark:disabled:placeholder-gray-600"
                 size="1"
                 @change="query = $event.target.value"
                 @keydown.delete="props.multiple ? handleQueryDelete : undefined"

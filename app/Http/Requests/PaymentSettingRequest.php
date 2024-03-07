@@ -22,6 +22,7 @@ class PaymentSettingRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'payment_method' => ['required'],
             'payment_account_name' => ['required'],
             'payment_platform_name' => ['required'],
             'account_no' => ['required'],
@@ -29,6 +30,8 @@ class PaymentSettingRequest extends FormRequest
 
         if ($this->payment_method == 'Bank') {
             $rules['bank_swift_code'] = ['required'];
+            $rules['country'] = ['required'];
+            $rules['payment_logo'] = ['nullable', 'image'];
         }
 
         return $rules;
@@ -36,13 +39,13 @@ class PaymentSettingRequest extends FormRequest
 
     public function attributes(): array
     {
-        $attributes = [
+        return [
             'payment_account_name' => $this->payment_method == 'Bank' ? 'Bank Account name' : 'Wallet address',
             'payment_platform_name' => $this->payment_method == 'Bank' ? 'Bank name' : 'Tether',
             'account_no' => $this->payment_method == 'Bank' ? 'Account Number' : 'Wallet Address',
             'bank_swift_code' => 'Bank Swift Code',
+            'country' => 'Country',
+            'payment_logo' => $this->payment_method == 'Bank' ? 'Bank Logo' : 'Crypto Logo',
         ];
-    
-        return $attributes;
     }
 }

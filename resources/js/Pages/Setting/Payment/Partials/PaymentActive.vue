@@ -1,6 +1,6 @@
 <script setup>
 import {transactionFormat} from "@/Composables/index.js";
-import {ref, watch} from "vue";
+import {ref, watch, watchEffect} from "vue";
 import Badge from "@/Components/Badge.vue";
 import {TailwindPagination} from "laravel-vue-pagination";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
@@ -12,6 +12,7 @@ import Loading from "@/Components/Loading.vue";
 import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     paymentHistories: Array,
@@ -46,7 +47,7 @@ const getResults = async (page = 1, search = '', date = '') => {
     historyLoading.value = true
     try {
         let url = `/setting/getPaymentHistory/Active?page=${page}`;
-        
+
         if (search) {
             url += `&search=${search}`;
         }
@@ -100,6 +101,11 @@ const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
 ];
 
+watchEffect(() => {
+    if (usePage().props.title !== null) {
+        getResults();
+    }
+});
 </script>
 
 <template>
@@ -240,5 +246,5 @@ const paginationActiveClass = [
             </TailwindPagination>
         </div>
     </div>
-        
+
 </template>
