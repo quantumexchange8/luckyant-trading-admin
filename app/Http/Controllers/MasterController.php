@@ -109,6 +109,7 @@ class MasterController extends Controller
 
         $masterRequest->update([
             'status' => 'Success',
+            'approval_date' => now(),
             'handle_by' => Auth::user()->id,
         ]);
 
@@ -131,6 +132,7 @@ class MasterController extends Controller
         $masterRequest->update([
             'status' => 'Rejected',
             'remarks' => $request->remarks,
+            'approval_date' => now(),
             'handle_by' => Auth::user()->id,
         ]);
 
