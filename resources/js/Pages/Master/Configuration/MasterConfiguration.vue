@@ -24,7 +24,11 @@ const form = useForm({
     min_join_equity: props.masterConfigurations.min_join_equity,
     sharing_profit: props.masterConfigurations.sharing_profit,
     subscription_fee: props.masterConfigurations.subscription_fee,
-    signal_status: ''
+    signal_status: '',
+    eta_montly_return: props.masterConfigurations.estimated_monthly_returns,
+    eta_lot_size: props.masterConfigurations.estimated_lot_size,
+    extra_fund: props.masterConfigurations.extra_fund,
+    total_fund: props.masterConfigurations.total_fund,
 })
 
 const plans = [
@@ -177,6 +181,70 @@ const badgeVariant = (status) => {
                                     </RadioGroupOption>
                                 </div>
                             </RadioGroup>
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="eta_montly_return"
+                                value="Estimated Monthly Return (%)"
+                            />
+                            <Input
+                                id="eta_montly_return"
+                                type="number"
+                                min="0.01"
+                                placeholder="0.0%"
+                                class="block w-full"
+                                v-model="form.eta_montly_return"
+                                :invalid="form.errors.eta_montly_return"
+                            />
+                            <InputError :message="form.errors.eta_montly_return" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="eta_lot_size"
+                                value="Estimated Lot Size"
+                            />
+                            <Input
+                                id="eta_lot_size"
+                                type="number"
+                                min="0.01"
+                                placeholder="0.0"
+                                class="block w-full"
+                                v-model="form.eta_lot_size"
+                                :invalid="form.errors.eta_lot_size"
+                            />
+                            <InputError :message="form.errors.eta_lot_size" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="extra_fund"
+                                value="Extra Fund"
+                            />
+                            <Input
+                                id="extra_fund"
+                                type="number"
+                                min="0"
+                                placeholder="$ 0.00"
+                                class="block w-full"
+                                v-model="form.extra_fund"
+                                :invalid="form.errors.extra_fund"
+                            />
+                            <InputError :message="form.errors.extra_fund" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="total_fund"
+                                value="Total Fund"
+                            />
+                            <Input
+                                id="total_fund"
+                                type="number"
+                                min="0"
+                                placeholder="$ 0.00"
+                                class="block w-full"
+                                v-model="form.total_fund"
+                                :invalid="form.errors.total_fund"
+                            />
+                            <InputError :message="form.errors.total_fund" />
                         </div>
                     </div>
 

@@ -103,6 +103,28 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@he
             />
         </SidebarCollapsible>
         <SidebarCollapsible
+            title="Subscription"
+            :active="route().current('subscription.*')"
+        >
+            <template #icon>
+                <UsersIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('subscription.subscription')"
+                title="Subscription Request"
+                :active="route().current('master.subscription')"
+            />
+            <!-- <SidebarCollapsibleItem
+                :href="route('subscription.getMasterListing')"
+                title="Master Listing"
+                :active="route().current('master.getMasterListing')"
+            /> -->
+        </SidebarCollapsible>
+        <SidebarCollapsible
             title="Setting"
             :active="route().current('setting.*')"
         >
@@ -116,12 +138,12 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@he
             <SidebarCollapsibleItem
                 :href="route('setting.payment_setting')"
                 title="Payment Setting"
-                :active="route().current('setting.*')"
+                :active="route().current('setting.payment_setting')"
             />
             <SidebarCollapsibleItem
                 :href="route('setting.master_setting')"
                 title="Master Setting"
-                :active="route().current('setting.*')"
+                :active="route().current('setting.master_setting')"
             />
         </SidebarCollapsible>
 <!--        <SidebarCollapsible-->

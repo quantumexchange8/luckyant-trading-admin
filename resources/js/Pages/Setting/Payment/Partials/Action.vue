@@ -19,6 +19,7 @@ import {
   RadioGroupDescription,
   RadioGroupOption,
 } from '@headlessui/vue'
+import Combobox from "@/Components/Combobox.vue";
 
 const props = defineProps({
     bank: Object,
@@ -40,6 +41,7 @@ const openEditModal = (paymentId, componentType) => {
 const closeModal = () => {
     editDetailModal.value = false
     modalComponent.value = null;
+    selectedNetworks.value = [];
 }
 
 const status = [
@@ -67,10 +69,40 @@ const form = useForm({
     network: null,
     payment_logo: '',
     status: '',
+    crypto_network: '',
 });
+
+const selectedNetworks = ref([]);
+
+async function loadNetworks(query, setOptions) {
+    const response = await fetch('/setting/getCryptoNetworks?query=' + query);
+    const results = await response.json();
+
+    const options = results.map(network => ({
+        value: network.id,
+        label: network.crypto_network,
+    }));
+
+    setOptions(options);
+
+    const cryptoNetworks = props.bank.crypto_network.split(',').map(network => network.trim());
+    
+    cryptoNetworks.forEach(network => {
+        const selectedOption = options.find(option => option.label === network);
+        
+        if (selectedOption) {
+            selectedNetworks.value.push(selectedOption);
+        }
+    });
+
+    // if (selectedNetworks.value.length === 0 && options.length > 0) {
+    //     selectedNetworks.value.push(...options);
+    // }
+}
 
 const submit = () => {
     form.status = selected.value.value;
+    form.network = selectedNetworks.value.map(network => network.label)
     form.post(route('setting.updatePaymentSetting'), {
         onSuccess: () => {
             closeModal();
@@ -113,7 +145,7 @@ const submit = () => {
     <Modal :show="editDetailModal" :title="modalComponent" @close="closeModal" max-width="xl">
         <template v-if="modalComponent === 'Edit Payment'">
             <form>
-                <div class="flex flex-col gap-2">
+                <div v-if="props.bank.payment_method == 'Bank'" class="flex flex-col gap-2">
                     <div class="space-y-2">
                         <AvatarInput class="w-20 h-20 rounded-full" v-model="form.payment_logo" :default-src="bank.bank_logo_url ? bank.bank_logo_url : BankImg" />
                     </div>
@@ -240,15 +272,76 @@ const submit = () => {
                         </RadioGroup>
                         <InputError :message="form.errors.bank_code" />
                     </div>
-                    <div class="pt-5 flex justify-end">
-                        <Button
-                            class="flex justify-center"
-                            @click="submit"
-                            :disabled="form.processing"
-                        >
-                            {{ $t('public.Save') }}
-                        </Button>
+                </div>
+
+                <div v-if="props.bank.payment_method == 'Crypto'" class="flex flex-col gap-2">
+                    <div class="space-y-2">
+                        <Label
+                            for="tether"
+                            :value="$t('Tether')"
+                        />
+                        <Input
+                            id="tether"
+                            type="text"
+                            class="block w-full"
+                            v-model="form.payment_platform_name"
+                            :invalid="form.errors.payment_platform_name"
+                        />
+                        <InputError :message="form.errors.payment_platform_name" />
                     </div>
+                    <div class="space-y-2">
+                        <Label
+                            for="network"
+                            :value="$t('Network')"
+                        />
+                        <Combobox
+                            multiple
+                            :disabled="form.crypto_network==='everyone'"
+                            placeholder="Please Select"
+                            :load-options="loadNetworks"
+                            v-model="selectedNetworks"
+                            :error="form.errors.network"
+                        />
+                        <InputError :message="form.errors.payment_platform_name" />
+                    </div>
+                    <div class="space-y-2">
+                        <Label
+                            for="crypto_wallet_name"
+                            :value="$t('Crypto Wallet Name')"
+                        />
+                        <Input
+                            id="crypto_wallet_name"
+                            type="text"
+                            class="block w-full"
+                            v-model="form.payment_account_name"
+                            :invalid="form.errors.payment_account_name"
+                        />
+                        <InputError :message="form.errors.payment_account_name" />
+                    </div>
+                    <div class="space-y-2">
+                        <Label
+                            for="wallet_addres"
+                            :value="$t('Wallet Address')"
+                        />
+                        <Input
+                            id="wallet_addres"
+                            type="text"
+                            class="block w-full"
+                            v-model="form.account_no"
+                            :invalid="form.errors.account_no"
+                        />
+                        <InputError :message="form.errors.account_no" />
+                    </div>
+                </div>
+
+                <div class="pt-5 flex justify-end">
+                    <Button
+                        class="flex justify-center"
+                        @click="submit"
+                        :disabled="form.processing"
+                    >
+                        {{ $t('public.Save') }}
+                    </Button>
                 </div>
             </form>
         </template>

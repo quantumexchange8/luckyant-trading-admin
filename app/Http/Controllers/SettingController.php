@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Country;
 use App\Models\SettingPaymentMethod;
 use App\Models\Setting;
+use Spatie\Activitylog\Models\Activity;
 use App\Http\Requests\PaymentSettingRequest;
 use Carbon\Carbon;
 use Auth;
@@ -72,7 +73,7 @@ class SettingController extends Controller
 
     public function updatePaymentSetting(PaymentSettingRequest $request)
     {
-        
+
         $payment = SettingPaymentMethod::find($request->id);
 
         $payment->update([
@@ -82,15 +83,26 @@ class SettingController extends Controller
             'country' => $request->country,
             'bank_swift_code' => $request->bank_swift_code,
             'bank_code' => $request->bank_code,
-            'network' => $request->network,
             'status' => $request->status,
             'handle_by' => Auth::user()->id,
         ]);
+
+        if ($request->network) {
+            $payment->update([
+                'crypto_network' => implode(', ', $request->network),
+            ]);
+        }
 
         if ($request->hasFile('payment_logo')) {
             $payment->clearMediaCollection('payment_logo');
             $payment->addMedia($request->payment_logo)->toMediaCollection('payment_logo');
         }
+
+        // Activity::create([
+        //     'subject_id' => Auth::id(),
+        //     'causer_type' => 'App\Models\SettingPaymentMethod',
+        //     'causer_id' => auth()->id(),
+        // ]);
 
         return redirect()->back()
             ->with('title', 'Success Updated Payment')
@@ -106,16 +118,10 @@ class SettingController extends Controller
         return redirect()->back();
     }
 
-    public function getPaymentHistory(Request $request, $status)
+    public function getPaymentHistory(Request $request)
     {
-        if ($status == 'Active') {
-            $history = SettingPaymentMethod::query()
-            ->with(['user:id,name,email'])
-            ->where('status', [$status]);
-        } else {
-            $history = SettingPaymentMethod::query()
+        $history = SettingPaymentMethod::query()
             ->with(['user:id,name,email']);
-        }
 
         if ($request->filled('search'))
         {
@@ -149,6 +155,16 @@ class SettingController extends Controller
         });
 
         return response()->json($results);
+    }
+
+    public function getPaymentActivity(Request $request)
+    {
+
+        $historyActivity = Activity::with('causer');
+
+        $result = $historyActivity->latest()->paginate(10);
+
+        return response()->json($result);
     }
 
     public function masterSetting()

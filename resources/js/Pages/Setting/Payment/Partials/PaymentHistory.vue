@@ -6,12 +6,13 @@ import {TailwindPagination} from "laravel-vue-pagination";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
-import {SearchIcon, RefreshIcon} from "@heroicons/vue/outline";
 import debounce from "lodash/debounce.js";
 import Loading from "@/Components/Loading.vue";
-import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
+import {ArrowLeftIcon, ArrowRightIcon, ClipboardListIcon} from "@heroicons/vue/outline";
 import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
+import Tooltip from "@/Components/Tooltip.vue";
+import Modal from "@/Components/Modal.vue";
 
 const props = defineProps({
     paymentHistories: Array,
@@ -45,7 +46,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '', filter = '') => {
     historyLoading.value = true
     try {
-        let url = `/setting/getPaymentHistory/History?page=${page}`;
+        let url = `/setting/getPaymentActivity?page=${page}`;
         
         if (search) {
             url += `&search=${search}`;
@@ -103,6 +104,17 @@ const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
 ];
 
+const paymentDetailModal = ref(false);
+const paymentDetail = ref();
+
+const openEditModal = (history) => {
+    paymentDetailModal.value = true;
+    paymentDetail.value = history;
+}
+
+const closeModal = () => {
+    paymentDetailModal.value = false
+}
 </script>
 
 <template>
@@ -159,29 +171,17 @@ const paginationActiveClass = [
         <table v-else class="w-[850px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
                 <tr>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center">
+                    <th scope="col" colspan="2" class="p-3 text-center">
                         Date
                     </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center">
-                        Payment Method
+                    <th scope="col" colspan="2" class="p-3 text-center w-56">
+                        Description
                     </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                        Payment Account Name
-                    </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                        Platform Name
-                    </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                        Account No / Wallet Address
-                    </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                        Bank Swift Code
-                    </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
+                    <th scope="col" colspan="2" class="p-3 text-center w-56">
                         Updated By
                     </th>
-                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                        Status
+                    <th scope="col" colspan="2" class="p-3 text-center w-56">
+                        Action
                     </th>
                 </tr>
             </thead>
@@ -195,33 +195,29 @@ const paginationActiveClass = [
                     v-for="history in histories.data"
                     class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-600 dark:hover:bg-gray-800"
                 >
-                    <td class="px-3 py-2.5 text-center" colspan="2">
+                    <td class="p-3 text-center" colspan="2">
                         {{ formatDateTime(history.created_at) }}
                     </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        {{ history.payment_method }}
+                    <td class="p-3 text-center" colspan="2">
+                        {{ history.description }}
+                        <!-- {{ history.properties.old.payment_account_name }} - {{ history.properties.attributes.payment_account_name }} -->
                     </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        {{ history.payment_account_name }}
+                    <td class="p-3 text-center" colspan="2">
+                        {{ history.causer.name }}
                     </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        {{ history.payment_platform_name }}
-                    </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        {{ history.account_no }}
-                    </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        {{ history.bank_swift_code ?  history.bank_swift_code : '-'}}
-                    </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        {{ history.user.name }}
-                    </td>
-                    <td class="px-3 py-2.5 text-center" colspan="2">
-                        <Badge
-                            :variant="transactionVariant(history.status)"
-                        >
-                            {{ history.status }}
-                        </Badge>
+                    <td class="p-3 text-center" colspan="2">
+                        <Tooltip content="View Details" placement="bottom">
+                            <Button
+                                type="button"
+                                class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
+                                variant="gray"
+                                pill
+                                @click="openEditModal(history)"
+                            >
+                                <ClipboardListIcon aria-hidden="true" class="w-5 h-5 absolute" />
+                                <span class="sr-only">View Details</span>
+                            </Button>
+                        </Tooltip>
                     </td>
                 </tr>
             </tbody>
@@ -243,5 +239,42 @@ const paginationActiveClass = [
             </TailwindPagination>
         </div>
     </div>
+
+    <Modal :show="paymentDetailModal" title="Payment Details" @close="closeModal">
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(paymentDetail.created_at) }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Description</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ paymentDetail.description }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span v-if="paymentDetail.event != 'deleted'" class="col-span-1 text-sm font-semibold dark:text-gray-400">Properties</span>
+            
+            <span v-if="paymentDetail.event == 'updated'" class="col-span-2 text-black dark:text-white py-2">
+                <b>Old</b>
+                <!-- {{ paymentDetail.properties.old }}
+                {{ paymentDetail.properties.attributes }} -->
+                <div v-for="old in paymentDetail.properties.old" class="pl-3">
+                    <li>{{ old }}</li>
+                </div>
+                <b>New</b>
+                <div v-for="attributes in paymentDetail.properties.attributes" class="pl-3">
+                    <li>{{ attributes }}</li>
+                </div>
+            </span>
+
+            <span v-if="paymentDetail.event == 'created'" class="col-span-2 text-black dark:text-white py-2">
+                <div v-for="attributes in paymentDetail.properties.attributes" class="pl-3">
+                    <li>{{ attributes }}</li>
+                </div>
+            </span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Updated By</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ paymentDetail.causer.name }}</span>
+        </div>
+    </Modal>
         
 </template>

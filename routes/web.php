@@ -7,6 +7,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SubscriptionController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
@@ -103,6 +104,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     /**
      * ==============================
+     *         Subscription
+     * ==============================
+     */
+    Route::prefix('subscription')->group(function () {
+        Route::get('/subscription', [SubscriptionController::class, 'subscription'])->name('subscription.subscription');
+        Route::get('/getPendingSubscriber', [SubscriptionController::class, 'getPendingSubscriber'])->name('subscription.getPendingSubscriber');
+        Route::get('/getHistorySubscriber', [SubscriptionController::class, 'getHistorySubscriber'])->name('subscription.getHistorySubscriber');
+        Route::post('/approveSubscribe', [SubscriptionController::class, 'approveSubscribe'])->name('subscription.approveSubscribe');
+        Route::post('/rejectSubscribe', [SubscriptionController::class, 'rejectSubscribe'])->name('subscription.rejectSubscribe');
+    });
+
+    /**
+     * ==============================
      *         Setting
      * ==============================
      */
@@ -113,7 +127,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/addPaymentSetting', [SettingController::class, 'addPaymentSetting'])->name('setting.addPaymentSetting');
         Route::post('/updatePaymentSetting', [SettingController::class, 'updatePaymentSetting'])->name('setting.updatePaymentSetting');
         Route::delete('/deletePayment', [SettingController::class, 'deletePayment'])->name('setting.deletePayment');
-        Route::get('/getPaymentHistory/{status}', [SettingController::class, 'getPaymentHistory'])->name('setting.getPaymentHistory');
+        Route::get('/getPaymentHistory', [SettingController::class, 'getPaymentHistory'])->name('setting.getPaymentHistory');
+        Route::get('/getPaymentActivity', [SettingController::class, 'getPaymentActivity'])->name('setting.getPaymentActivity');
 
         //master setting
         Route::get('/master_setting', [SettingController::class, 'masterSetting'])->name('setting.master_setting');

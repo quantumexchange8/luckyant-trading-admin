@@ -48,14 +48,13 @@ watch(
 const getResults = async (page = 1, search = '', date = '', filter = '') => {
     historyLoading.value = true
     try {
-        let url = `/setting/getPaymentHistory/Active?page=${page}`;
+        let url = `/setting/getPaymentHistory?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
         }
 
         if (date) {
-            console.log(date)
             url += `&date=${date}`;
         }
 

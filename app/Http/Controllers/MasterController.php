@@ -7,6 +7,7 @@ use App\Models\TradingAccount;
 use Illuminate\Http\Request;
 use App\Models\MasterRequest;
 use App\Models\User;
+use App\Http\Requests\MasterConfigurationRequest;
 use Carbon\Carbon;
 use Inertia\Inertia;
 use Auth;
@@ -174,9 +175,9 @@ class MasterController extends Controller
         ]);
     }
 
-    public function updateMasterConfiguration(Request $request)
+    public function updateMasterConfiguration(MasterConfigurationRequest $request)
     {
-
+        
         $master = Master::find($request->master_id);
 
         $master->update([
@@ -184,6 +185,10 @@ class MasterController extends Controller
             'sharing_profit' => $request->sharing_profit,
             'subscription_fee' => $request->subscription_fee,
             'signal_status' => $request->signal_status,
+            'estimated_monthly_returns' => $request->eta_montly_return,
+            'estimated_lot_size' => $request->eta_lot_size,
+            'extra_fund' => $request->extra_fund,
+            'total_fund' => $request->total_fund,
         ]);
 
         if ($master->min_join_equity != null &&

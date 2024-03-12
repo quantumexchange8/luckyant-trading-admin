@@ -13,6 +13,10 @@ class MasterConfigurationRequest extends FormRequest
             'sharing_profit' => ['required', 'numeric'],
             'subscription_fee' => ['required', 'numeric'],
             'signal_status' => ['required'],
+            'eta_montly_return' => ['required'],
+            'eta_lot_size' => ['required'],
+            'extra_fund' => ['required'],
+            'total_fund' => ['required'],
         ];
     }
 
@@ -28,6 +32,10 @@ class MasterConfigurationRequest extends FormRequest
             'sharing_profit' => 'Sharing Profit (%)',
             'subscription_fee' => 'Subscription Fee (Month)',
             'signal_status' => 'Trade Signal Status',
+            'eta_montly_return' => 'Estimated Monthly Return',
+            'eta_lot_size' => 'Estimated Lot Size',
+            'extra_fund' => 'Extra Size',
+            'total_fund' => 'Total Fund',
         ];
     }
 }
