@@ -3,7 +3,7 @@ import Loading from "@/Components/Loading.vue";
 import {ref} from "vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import PendingSubscriber from "@/Pages/Subscription/Partials/PendingSubscribers.vue"
-import HistorySubscriber from "@/Pages/Subscription/Partials/HistorySubscriber.vue"
+import ActiveSubscriber from "@/Pages/Subscription/Partials/ActiveSubscriber.vue"
 
 const props = defineProps({
     refresh: Boolean,
@@ -54,7 +54,7 @@ const updateTransactionType = (transaction_type) => {
                                     : 'border-b border-gray-300 dark:border-gray-700',
                             ]"
                     >
-                        Subscriber Pending History
+                        Active Subscriber
                     </button>
                 </Tab>
             </TabList>
@@ -70,7 +70,7 @@ const updateTransactionType = (transaction_type) => {
                     />
                 </TabPanel>
                 <TabPanel>
-                    <HistorySubscriber
+                    <ActiveSubscriber
                         :refresh="refresh"
                         :isLoading="isLoading"
                         :search="search"

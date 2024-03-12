@@ -103,7 +103,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@he
             />
         </SidebarCollapsible>
         <SidebarCollapsible
-            title="Subscription"
+            title="Subscriber"
             :active="route().current('subscription.*')"
         >
             <template #icon>
@@ -114,15 +114,15 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@he
             </template>
 
             <SidebarCollapsibleItem
-                :href="route('subscription.subscription')"
-                title="Subscription Request"
-                :active="route().current('master.subscription')"
+                :href="route('subscription.subscribers')"
+                title="Subscriber Request"
+                :active="route().current('subscription.subscribers')"
             />
-            <!-- <SidebarCollapsibleItem
-                :href="route('subscription.getMasterListing')"
-                title="Master Listing"
-                :active="route().current('master.getMasterListing')"
-            /> -->
+            <SidebarCollapsibleItem
+                :href="route('subscription.subscriptionHistory')"
+                title="Subscription History"
+                :active="route().current('subscription.subscriptionHistory')"
+            />
         </SidebarCollapsible>
         <SidebarCollapsible
             title="Setting"

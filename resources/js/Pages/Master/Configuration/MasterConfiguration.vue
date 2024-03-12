@@ -29,6 +29,7 @@ const form = useForm({
     eta_lot_size: props.masterConfigurations.estimated_lot_size,
     extra_fund: props.masterConfigurations.extra_fund,
     total_fund: props.masterConfigurations.total_fund,
+    roi_period: props.masterConfigurations.roi_period,
 })
 
 const plans = [
@@ -143,44 +144,18 @@ const badgeVariant = (status) => {
                         </div>
                         <div class="space-y-2">
                             <Label
-                                for="signal_status"
-                                value="Trade Signal Status"
+                                for="roi_period"
+                                value="ROI Period"
                             />
-                            <RadioGroup v-model="selected">
-                                <RadioGroupLabel class="sr-only">Signal Status</RadioGroupLabel>
-                                <div class="flex gap-3 items-center self-stretch w-full">
-                                    <RadioGroupOption
-                                        as="template"
-                                        v-for="(plan, index) in plans"
-                                        :key="index"
-                                        :value="plan"
-                                        v-slot="{ active, checked }"
-                                    >
-                                        <div
-                                            :class="[
-                                                active
-                                                  ? 'ring-0 ring-white ring-offset-0'
-                                                  : '',
-                                                checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 bg-white dark:bg-gray-700',
-                                            ]"
-                                            class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
-                                        >
-                                            <div class="flex items-center w-full">
-                                                <div class="text-sm flex flex-col gap-3 w-full">
-                                                    <RadioGroupLabel
-                                                        as="div"
-                                                        class="font-medium"
-                                                    >
-                                                        <div class="flex justify-center items-center gap-3">
-                                                            {{ plan.name }}
-                                                        </div>
-                                                    </RadioGroupLabel>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </RadioGroupOption>
-                                </div>
-                            </RadioGroup>
+                            <Input
+                                id="roi_period"
+                                type="number"
+                                min="7"
+                                placeholder="Days"
+                                class="block w-full"
+                                v-model="form.roi_period"
+                                :invalid="form.errors.roi_period"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label
@@ -245,6 +220,47 @@ const badgeVariant = (status) => {
                                 :invalid="form.errors.total_fund"
                             />
                             <InputError :message="form.errors.total_fund" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="signal_status"
+                                value="Trade Signal Status"
+                            />
+                            <RadioGroup v-model="selected">
+                                <RadioGroupLabel class="sr-only">Signal Status</RadioGroupLabel>
+                                <div class="flex gap-3 items-center self-stretch w-full">
+                                    <RadioGroupOption
+                                        as="template"
+                                        v-for="(plan, index) in plans"
+                                        :key="index"
+                                        :value="plan"
+                                        v-slot="{ active, checked }"
+                                    >
+                                        <div
+                                            :class="[
+                                                active
+                                                  ? 'ring-0 ring-white ring-offset-0'
+                                                  : '',
+                                                checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 bg-white dark:bg-gray-700',
+                                            ]"
+                                            class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
+                                        >
+                                            <div class="flex items-center w-full">
+                                                <div class="text-sm flex flex-col gap-3 w-full">
+                                                    <RadioGroupLabel
+                                                        as="div"
+                                                        class="font-medium"
+                                                    >
+                                                        <div class="flex justify-center items-center gap-3">
+                                                            {{ plan.name }}
+                                                        </div>
+                                                    </RadioGroupLabel>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </RadioGroupOption>
+                                </div>
+                            </RadioGroup>
                         </div>
                     </div>
 

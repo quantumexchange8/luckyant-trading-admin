@@ -8,6 +8,7 @@ import {transactionFormat} from "@/Composables/index.js";
 import Badge from "@/Components/Badge.vue";
 import Modal from "@/Components/Modal.vue";
 import debounce from "lodash/debounce.js";
+import Action from "@/Pages/Subscription/Partials/Action.vue";
 
 const props = defineProps({
     refresh: Boolean,
@@ -36,7 +37,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '') => {
     depositLoading.value = true
     try {
-        let url = `/subscription/getHistorySubscriber?page=${page}`;
+        let url = `/subscription/getActiveSubscriber?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -96,26 +97,27 @@ const closeModal = () => {
                     <th scope="col" class="p-3">
                         Date
                     </th>
+                    
                     <th scope="col" class="p-3">
-                        Approval Date
+                        User
                     </th>
                     <th scope="col" class="p-3">
                         Meta Login
                     </th>
                     <th scope="col" class="p-3">
-                        Meta Balance
+                        Master
                     </th>
                     <th scope="col" class="p-3">
                         Master Meta Login
                     </th>
                     <th scope="col" class="p-3">
-                        Master
-                    </th>
-                    <th scope="col" class="p-3">
                         Subscription Fee
                     </th>
+                    <th scope="col" class="p-3">
+                        Approval Date
+                    </th>
                     <th scope="col" class="p-3 text-center">
-                        Status
+                        Action
                     </th>
                 </tr>
             </thead>
@@ -127,36 +129,32 @@ const closeModal = () => {
                 </tr>
                 <tr
                     v-for="subscriber in subscribers.data"
-                    class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800 hover:cursor-pointer"
-                    @click="openSubscriberModal(subscriber)"
+                    class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
+                    
                 >
-                    <td class="p-2.5">
+                    <td class="p-3">
                         {{ formatDateTime(subscriber.created_at) }}
                     </td>
-                    <td class="p-2.5">
-                        {{ formatDateTime(subscriber.approval_date) }}
+                    <td class="p-3">
+                        {{ subscriber.user.name }}
                     </td>
-                    <td class="p-2.5">
+                    <td class="p-3">
                         {{ subscriber.meta_login }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.meta_balance }}
-                    </td>
-                    <td class="p-2.5">
-                        {{ subscriber.master.meta_login }}
-                    </td>
-                    <td class="p-2.5">
+                    <td class="p-3">
                         {{ subscriber.master.user.name }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.subscription_fee ? subscriber.subscription_fee : '-' }}
+                    <td class="p-3">
+                        {{ subscriber.master_meta_login }}
                     </td>
-                    <td class="p-2.5 text-center">
-                        <Badge
-                            :variant="transactionVariant(subscriber.status)"
-                        >
-                            {{ subscriber.status }}
-                        </Badge>
+                    <td class="p-3">
+                        $ {{ subscriber.subscription.subscription_fee ? subscriber.subscription.subscription_fee : '0.00' }}
+                    </td>
+                    <td class="p-3">
+                        {{ formatDateTime(subscriber.subscription.approval_date) }}
+                    </td>
+                    <td class="p-3 text-center">
+                        <Action :subscriber="subscriber"/>
                     </td>
                 </tr>
             </tbody>

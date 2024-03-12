@@ -86,9 +86,6 @@ const handlePageChange = (newPage) => {
                         Meta Login
                     </th>
                     <th scope="col" class="p-3">
-                        Meta Balance
-                    </th>
-                    <th scope="col" class="p-3">
                         Master
                     </th>
                     <th scope="col" class="p-3">
@@ -122,16 +119,13 @@ const handlePageChange = (newPage) => {
                         {{ subscriber.meta_login }}
                     </td>
                     <td class="p-2.5">
-                        {{ subscriber.meta_balance }}
-                    </td>
-                    <td class="p-2.5">
                         {{ subscriber.master.user.name }}
                     </td>
                     <td class="p-2.5">
                         {{ subscriber.master.meta_login }}
                     </td>
                     <td class="p-2.5">
-                        {{ subscriber.subscription_fee }}
+                        {{ subscriber.subscription.subscription_fee }}
                     </td>
                     <td class="p-2.5 text-center">
                         <Action :subscriber="subscriber"/>

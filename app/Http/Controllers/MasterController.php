@@ -189,10 +189,12 @@ class MasterController extends Controller
             'estimated_lot_size' => $request->eta_lot_size,
             'extra_fund' => $request->extra_fund,
             'total_fund' => $request->total_fund,
+            'roi_period' => $request->roi_period,
         ]);
 
         if ($master->min_join_equity != null &&
             $master->sharing_profit != null &&
+            $master->subscription_fee != null &&
             $master->subscription_fee != null) {
             $master->update([
                 'status' => 'Active',

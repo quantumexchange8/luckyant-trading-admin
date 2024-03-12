@@ -38,10 +38,10 @@ const exportTransaction = () => {
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-2xl font-semibold leading-tight">
-                        Subscription Request
+                        Subscribers Request
                     </h2>
                     <p class="text-base font-normal dark:text-gray-400">
-                        Manage all pending subscription.
+                        Manage all pending subscribers.
                     </p>
                 </div>
 
