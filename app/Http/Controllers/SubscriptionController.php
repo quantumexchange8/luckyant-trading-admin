@@ -64,7 +64,7 @@ class SubscriptionController extends Controller
         $subscriptionId = Subscription::find($request->subscriptionId);
 
         $cashWallet = Wallet::where('user_id', $request->userId)->where('type', 'cash_wallet')->first();
-        // dd($cashWallet->balance - $subscriptionId->subscription_fee);
+        
         $subscribe->update([
             'status' => 'Subscribing'
         ]);
@@ -78,7 +78,6 @@ class SubscriptionController extends Controller
 
             $transactionId->update([
                 'status' => 'Success',
-                'from_wallet_id' => $cashWallet->id,
                 'transaction_amount' => $subscriptionId->subscription_fee,
                 'new_wallet_amount' => $cashWallet->balance - $subscriptionId->subscription_fee
             ]);
