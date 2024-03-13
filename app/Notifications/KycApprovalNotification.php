@@ -24,11 +24,14 @@ class KycApprovalNotification extends Notification
 
     public function toMail($notifiable): MailMessage
     {
+
+        $url = url('https://member.luckyantfxasia.com/login');
+
         return (new MailMessage)
             ->subject('KYC Approval Status')
             ->greeting('Dear ' . $this->user->name)
             ->line($this->getMessage())
-            ->action('Login Portal', url('/'))
+            ->action('Login Portal', $url)
             ->line('Thank you for using our application!');
     }
 
