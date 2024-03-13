@@ -113,13 +113,17 @@ class MasterController extends Controller
             'handle_by' => Auth::user()->id,
         ]);
 
-        Master::create([
+        $master = Master::create([
             'user_id' => $masterRequest->user_id,
             'trading_account_id' => $masterRequest->trading_account_id,
             'meta_login' => $tradingAccount->meta_login,
+            'min_join_equity' => $masterRequest->min_join_equity,
+            'sharing_profit' => $masterRequest->sharing_profit,
+            'subscription_fee' => $masterRequest->subscription_fee,
+            'roi_period' => $masterRequest->roi_period,
         ]);
-
-        return redirect()->back()
+    
+        return redirect()->route('master.viewMasterConfiguration', ['id' => $master->id])
             ->with('title', 'Success approve')
             ->with('success', 'Successfully approved LOGIN: ' . $tradingAccount->meta_login . ' to MASTER');
     }
@@ -128,6 +132,7 @@ class MasterController extends Controller
     {
 
         $masterRequest = MasterRequest::find($request->id);
+        $tradingAccount = TradingAccount::find($masterRequest->trading_account_id);
 
         $masterRequest->update([
             'status' => 'Rejected',
@@ -136,7 +141,9 @@ class MasterController extends Controller
             'handle_by' => Auth::user()->id,
         ]);
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('title', 'Success reject')
+            ->with('success', 'Successfully rejected LOGIN: ' . $tradingAccount->meta_login . ' to MASTER');
     }
 
     public function getMasterListing()

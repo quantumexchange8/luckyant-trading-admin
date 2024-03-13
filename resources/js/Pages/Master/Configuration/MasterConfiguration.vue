@@ -164,7 +164,7 @@ const badgeVariant = (status) => {
                             />
                             <Input
                                 id="eta_montly_return"
-                                type="number"
+                                type="text"
                                 min="0.01"
                                 placeholder="0.0%"
                                 class="block w-full"
@@ -180,7 +180,7 @@ const badgeVariant = (status) => {
                             />
                             <Input
                                 id="eta_lot_size"
-                                type="number"
+                                type="text"
                                 min="0.01"
                                 placeholder="0.0"
                                 class="block w-full"
