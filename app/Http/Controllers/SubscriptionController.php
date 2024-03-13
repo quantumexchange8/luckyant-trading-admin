@@ -8,6 +8,7 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\Subscriber;
 use App\Models\Wallet;
+use App\Models\Master;
 use Auth;
 use Carbon\Carbon;
 
@@ -64,12 +65,17 @@ class SubscriptionController extends Controller
         $subscriptionId = Subscription::find($request->subscriptionId);
 
         $cashWallet = Wallet::where('user_id', $request->userId)->where('type', 'cash_wallet')->first();
+
+        $masterPeriod = Master::find($subscribe->master_id);
         
         $subscribe->update([
             'status' => 'Subscribing'
         ]);
+
         $subscriptionId->update([
             'status' => 'Active',
+            'next_pay_date' => now()->addDays($masterPeriod->roi_period + 1)->startOfDay()->toDateString(),
+            'expired_date' => now()->addDays($masterPeriod->roi_period + 1)->startOfDay(),
             'approval_date' => now(),
             'handle_by' => Auth::user()->id,
         ]);
