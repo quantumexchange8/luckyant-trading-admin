@@ -5,8 +5,8 @@ import { GithubIcon } from '@/Components/Icons/brands'
 import {transactionFormat} from "@/Composables/index.js";
 
 const props = defineProps({
-    totalDeposits: Number, 
-    totalWithdrawals: Number, 
+    totalDeposits: String, 
+    totalWithdrawals: String, 
     kyc: Number, 
     pendingTransaction: Number, 
 });

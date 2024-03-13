@@ -20,7 +20,7 @@ class DashboardController extends Controller
 
         $totalDeposits = Transaction::where('category', 'wallet')->where('transaction_type', 'Deposit')->sum('amount');
         $totalWithdrawals = Transaction::where('category', 'wallet')->where('transaction_type', 'Withdrawal')->sum('amount');
-        $pendingTransaction = Transaction::where('status', 'Pending')->count();
+        $pendingTransaction = Transaction::where('status', 'Processing')->count();
 
         $kyc = User::whereNot('role', 'admin')->where('kyc_approval', 'Pending')->count();
 

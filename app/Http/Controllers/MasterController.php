@@ -181,6 +181,7 @@ class MasterController extends Controller
 
         return Inertia::render('Master/Configuration/MasterConfiguration', [
             'masterConfigurations' => $masterConfigurations,
+            'subscriberCount' => $masterConfigurations->subscribers->count(),
         ]);
     }
 

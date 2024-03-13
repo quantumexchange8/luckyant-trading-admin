@@ -34,5 +34,10 @@ class Master extends Model
         return $this->belongsTo(TradingAccount::class, 'trading_account_id', 'id');
     }
 
+    public function subscribers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscriber::class, 'master_id', 'id');
+    }
+
 
 }

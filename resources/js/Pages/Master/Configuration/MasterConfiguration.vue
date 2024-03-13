@@ -17,8 +17,9 @@ import {
 
 const props = defineProps({
     masterConfigurations: Object,
+    subscriberCount: Number,
 })
-
+console.log(props.masterConfigurations)
 const form = useForm({
     master_id: props.masterConfigurations.id,
     min_join_equity: props.masterConfigurations.min_join_equity,
@@ -277,7 +278,12 @@ const badgeVariant = (status) => {
             </div>
 
             <div class="flex flex-col gap-4 items-start bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 p-5 w-1/4 rounded-lg shadow-lg">
-                Total Subscribers
+                <div>
+                    Total Subscribers
+                </div>
+                <div>
+                    {{ subscriberCount }}
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>
