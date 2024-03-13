@@ -12,7 +12,7 @@ import Button from "@/Components/Button.vue";
 import Tooltip from "@/Components/Tooltip.vue";
 import Modal from "@/Components/Modal.vue";
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import {CheckIcon, ChevronDownIcon} from '@heroicons/vue/solid'
+import {CheckIcon, ChevronDownIcon, SortAscendingIcon, SortDescendingIcon } from '@heroicons/vue/solid'
 
 const props = defineProps({
     search: String,
@@ -36,14 +36,26 @@ const { formatDateTime, formatAmount } = transactionFormat();
 const memberMT5Modal = ref(false);
 const mt5Details = ref(null);
 
+const sortDescending = ref(null);
+const types = ref('')
+const sortASC = (type) => {
+  sortDescending.value = 'asc';
+  types.value = type;
+}
+
+const sortDESC = (type) => {
+  sortDescending.value = 'desc';
+  types.value = type;
+}
+
 watch(
-    [() => props.search, () => props.rank, () => props.date],
-    debounce(([searchValue, rankValue, dateValue]) => {
-        getResults(1, searchValue, rankValue, dateValue);
+    [() => props.search, () => props.rank, () => props.date, () => sortDescending.value, () => types.value],
+    debounce(([searchValue, rankValue, dateValue, sortValue, typeValue]) => {
+        getResults(1, searchValue, rankValue, dateValue, sortValue, typeValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = props.kycStatus) => {
+const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, sort = sortDescending.value, type = types.value) => {
     isLoading.value = true
     try {
         let url = `/member/getMemberDetails?page=${page}`;
@@ -52,9 +64,9 @@ const getResults = async (page = 1, search = props.search , rank = props.rank, d
             url += `&search=${search}`;
         }
 
-        if (type) {
-            url += `&type=${type}`;
-        }
+        // if (type) {
+        //     url += `&type=${type}`;
+        // }
 
         if (rank) {
             url += `&rank=${rank}`;
@@ -62,6 +74,11 @@ const getResults = async (page = 1, search = props.search , rank = props.rank, d
 
         if (date) {
             url += `&date=${date}`;
+        }
+        
+        if (type) {
+            url += `&type=${type}`;
+            url += `&sort=${sort}`;
         }
 
         const response = await axios.get(url);
@@ -156,10 +173,46 @@ const closeModal = () => {
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
             <tr>
                 <th scope="col" colspan="4" class="px-3 py-2.5">
-                    Name
+                    <div class="flex gap-2">
+                        <div>
+                            <span>Name</span>
+                        </div>
+                        <div>
+                            <SortAscendingIcon
+                                v-if="sortDescending === null || sortDescending === 'desc'"
+                                aria-hidden="true"
+                                class="w-5 h-5 hover:cursor-pointer"
+                                @click="sortASC('name')"
+                            />
+                            <SortDescendingIcon
+                                v-else
+                                aria-hidden="true"
+                                class="w-5 h-5 hover:cursor-pointer"
+                                @click="sortDESC('name')"
+                            />
+                        </div>
+                    </div>
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                    Joining Date
+                    <div class="flex gap-2 justify-center">
+                        <div>
+                            <span>Joining Date</span>
+                        </div>
+                        <div>
+                            <SortAscendingIcon
+                                v-if="sortDescending === null || sortDescending === 'desc'"
+                                aria-hidden="true"
+                                class="w-5 h-5 hover:cursor-pointer"
+                                @click="sortASC('created_at')"
+                                />
+                            <SortDescendingIcon
+                                v-else
+                                aria-hidden="true"
+                                class="w-5 h-5 hover:cursor-pointer"
+                                @click="sortDESC('created_at')"
+                            />
+                        </div>
+                    </div>
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
                     MT5 Account
@@ -171,7 +224,25 @@ const closeModal = () => {
                     Wallet Balance
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-24">
-                    Country
+                    <div class="flex gap-2 justify-center">
+                        <div>
+                            <span>Country</span>
+                        </div>
+                        <div>
+                            <SortAscendingIcon
+                                v-if="sortDescending === null || sortDescending === 'desc'"
+                                aria-hidden="true"
+                                class="w-5 h-5 hover:cursor-pointer"
+                                @click="sortASC('country')"
+                                />
+                                <SortDescendingIcon
+                                v-else
+                                aria-hidden="true"
+                                class="w-5 h-5 hover:cursor-pointer"
+                                @click="sortDESC('country')"
+                            />
+                        </div>
+                    </div>
                 </th>
                 <th scope="col" colspan="1" class="px-3 py-2.5 text-center w-24">
                     Rank
@@ -286,6 +357,10 @@ const closeModal = () => {
             />
             </DisclosureButton>
             <DisclosurePanel class="px-4 pb-2 pt-4 text-sm text-gray-500">
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ mt5Details.name }}</span>
+                </div>
                 <div class="grid grid-cols-3 items-center gap-2">
                     <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Equity</span>
                     <span class="col-span-2 text-black dark:text-white py-2">$ {{ mt5Detail.equity }}</span>

@@ -5,6 +5,7 @@ import {ref, computed } from "vue";
 import Modal from "@/Components/Modal.vue";
 import WalletAdjustment from "@/Pages/Member/MemberDetails/Partials/WalletAdjustment.vue";
 import RebateAdjustment from "@/Pages/Member/MemberDetails/Partials/RebateAdjustment.vue";
+import EWalletAdjustment from "@/Pages/Member/MemberDetails/Partials/EWalletAdjustment.vue";
 import Tooltip from "@/Components/Tooltip.vue";
 
 const props = defineProps({
@@ -20,8 +21,10 @@ const openMemberModal = (componentType) => {
     memberDetailModal.value = true;
     if (componentType === 'cash_wallet') {
         modalComponent.value = 'Wallet Adjustment';
-    } else if (componentType === 'rebate_wallet') {
-        modalComponent.value = 'Rebate Adjustment';
+    } else if (componentType === 'bonus_wallet') {
+        modalComponent.value = 'Bonus Wallet Adjustment';
+    } else if (componentType === 'e_wallet') {
+        modalComponent.value = 'E-Wallet Adjustment';
     }
 }
 
@@ -33,8 +36,10 @@ const closeModal = () => {
 const tooltipContent = computed(() => {
   if (props.wallet.type === 'cash_wallet') {
     return 'Wallet Adjustment';
-  } else if (props.wallet.type === 'rebate_wallet') {
-    return 'Rebate Wallet';
+  } else if (props.wallet.type === 'bonus_wallet') {
+    return 'Bonus Wallet';
+  } else if (props.wallet.type === 'e_wallet') {
+    return 'E-Wallet';
   } else {
     // Handle other cases or return a default value
     return 'Unknown Wallet Type';
@@ -68,8 +73,15 @@ const tooltipContent = computed(() => {
                 @update:memberDetailModal="memberDetailModal = $event"
             />
         </template>
-        <template v-if="modalComponent === 'Rebate Adjustment'">
+        <template v-if="modalComponent === 'Bonus Wallet Adjustment'">
             <RebateAdjustment
+                :member_detail="member_detail"
+                :wallet="wallet"
+                @update:memberDetailModal="memberDetailModal = $event"
+            />
+        </template>
+        <template v-if="modalComponent === 'E-Wallet Adjustment'">
+            <EWalletAdjustment
                 :member_detail="member_detail"
                 :wallet="wallet"
                 @update:memberDetailModal="memberDetailModal = $event"

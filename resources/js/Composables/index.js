@@ -88,7 +88,7 @@ export function transactionFormat() {
     }
 
     const formatType = (type) => {
-        const formattedType = type.replace(/([a-z])([A-Z])/g, '$1 $2');
+        const formattedType = type.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
         return formattedType.charAt(0).toUpperCase() + formattedType.slice(1);
     };
 

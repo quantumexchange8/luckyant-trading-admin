@@ -93,7 +93,8 @@ const closeModal = () => {
                         class="flex justify-between h-32"
                         :class="{
                             'bg-gradient-to-bl from-primary-400 to-primary-600': wallet.type === 'cash_wallet',
-                            'bg-gradient-to-bl from-warning-300 to-warning-600': wallet.type === 'rebate_wallet',
+                            'bg-gradient-to-bl from-purple-300 to-purple-500': wallet.type === 'bonus_wallet',
+                            'bg-gradient-to-bl from-gray-300 to-gray-500': wallet.type === 'e_wallet',
                         }"
                     >
                         <div class="py-5 px-4 flex flex-col gap-2">

@@ -19,7 +19,7 @@ const props = defineProps({
     masterConfigurations: Object,
     subscriberCount: Number,
 })
-console.log(props.masterConfigurations)
+
 const form = useForm({
     master_id: props.masterConfigurations.id,
     min_join_equity: props.masterConfigurations.min_join_equity,
@@ -166,8 +166,7 @@ const badgeVariant = (status) => {
                             <Input
                                 id="eta_montly_return"
                                 type="text"
-                                min="0.01"
-                                placeholder="0.0%"
+                                placeholder="%"
                                 class="block w-full"
                                 v-model="form.eta_montly_return"
                                 :invalid="form.errors.eta_montly_return"
@@ -182,8 +181,7 @@ const badgeVariant = (status) => {
                             <Input
                                 id="eta_lot_size"
                                 type="text"
-                                min="0.01"
-                                placeholder="0.0"
+                                placeholder="0"
                                 class="block w-full"
                                 v-model="form.eta_lot_size"
                                 :invalid="form.errors.eta_lot_size"

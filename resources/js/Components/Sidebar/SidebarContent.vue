@@ -4,7 +4,7 @@ import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
 import { DashboardIcon, Setting } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@heroicons/vue/outline'
+import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentReportIcon } from '@heroicons/vue/outline'
 </script>
 
 <template>
@@ -124,6 +124,24 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon} from '@he
                 :active="route().current('subscription.subscriptionHistory')"
             />
         </SidebarCollapsible>
+        <!-- <SidebarCollapsible
+            title="Report"
+            :active="route().current('report.*')"
+        >
+            <template #icon>
+                <DocumentReportIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template> -->
+
+            <!-- <SidebarCollapsibleItem
+                :href="route('setting.payment_setting')"
+                title="Payment Setting"
+                :active="route().current('setting.payment_setting')"
+            /> -->
+            <!-- <SidebarCollapsibleItem title="In Progress..."/>
+        </SidebarCollapsible> -->
         <SidebarCollapsible
             title="Setting"
             :active="route().current('setting.*')"

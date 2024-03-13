@@ -41,7 +41,7 @@ const closeModal = () => {
 
 <template>
     <form>
-        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md bg-gradient-to-bl from-purple-300 to-purple-600 rounded-[20px]"
+        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md bg-gradient-to-bl from-gray-300 to-gray-600 rounded-[20px]"
             
         >
             <div class="space-y-2">

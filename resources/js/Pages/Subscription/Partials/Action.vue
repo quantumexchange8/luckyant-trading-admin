@@ -2,7 +2,7 @@
 import {ref} from "vue";
 import Tooltip from "@/Components/Tooltip.vue";
 import {MemberDetailIcon, alertTriangle} from "@/Components/Icons/outline.jsx";
-import {CheckIcon, XIcon, ExclamationIcon} from "@heroicons/vue/outline";
+import {CheckIcon, XIcon, BanIcon } from "@heroicons/vue/outline";
 import Button from "@/Components/Button.vue";
 import Modal from "@/Components/Modal.vue";
 import {transactionFormat} from "@/Composables/index.js";
@@ -120,7 +120,7 @@ const submitForm = () => {
             variant="danger"
             @click="openTransactionModal(subscriber.id, 'termination')"
         >
-            <ExclamationIcon aria-hidden="true" class="w-6 h-6 absolute" />
+            <BanIcon aria-hidden="true" class="w-6 h-6 absolute" />
             <span class="sr-only">Reset</span>
         </Button>
     </Tooltip>
@@ -247,7 +247,7 @@ const submitForm = () => {
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscription.subscription_fee }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscription.subscription_fee ? subscriber.subscription.subscription_fee : '0.00' }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>

@@ -61,12 +61,12 @@ class MemberController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when($request->filled('type'), function ($query) use ($request) {
-                $type = $request->input('type');
-                $query->where(function ($innerQuery) use ($type) {
-                    $innerQuery->where('kyc_approval', $type);
-                });
-            })
+            // ->when($request->filled('type'), function ($query) use ($request) {
+            //     $type = $request->input('type');
+            //     $query->where(function ($innerQuery) use ($type) {
+            //         $innerQuery->where('kyc_approval', $type);
+            //     });
+            // })
             ->when($request->filled('rank'), function ($query) use ($request) {
                 $rank_id = $request->input('rank');
                 $query->where(function ($innerQuery) use ($rank_id) {
@@ -80,9 +80,15 @@ class MemberController extends Controller
                 $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
                 $query->whereBetween('created_at', [$start_date, $end_date]);
             })
+            ->when($request->filled('type'), function($query) use ($request) {
+                $type = $request->input('type');
+                $sort = $request->input('sort');
+               
+                $query->orderBy($type, $sort);
+            })
             ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList')
-            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts'])
-            ->orderByDesc('created_at')
+            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
+            ->latest()
             ->paginate(10)
             ->withQueryString();
 

@@ -14,6 +14,7 @@ const props = defineProps({
     refresh: Boolean,
     isLoading: Boolean,
     search: String,
+    filter: String,
     date: String,
     exportStatus: Boolean,
 })
@@ -28,13 +29,13 @@ const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 
 watch(
-    [() => props.search, () => props.date],
-    debounce(([searchValue, dateValue]) => {
-        getResults(1, searchValue, dateValue);
+    [() => props.search, () => props.date, () => props.filter],
+    debounce(([searchValue, dateValue, filterValue]) => {
+        getResults(1, searchValue, dateValue, filterValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '') => {
+const getResults = async (page = 1, search = '', date = '', filter = '') => {
     depositLoading.value = true
     try {
         let url = `/subscription/getHistorySubscriber?page=${page}`;
@@ -45,6 +46,10 @@ const getResults = async (page = 1, search = '', date = '') => {
 
         if (date) {
             url += `&date=${date}`;
+        }
+
+        if (filter) {
+            url += `&filter=${filter}`;
         }
 
         const response = await axios.get(url);
@@ -148,7 +153,7 @@ const closeModal = () => {
                         {{ subscriber.master.meta_login }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.subscription_fee ?  subscriber.subscription_fee : '0.00' }}
+                       $ {{ subscriber.subscription_fee ?  subscriber.subscription_fee : '0.00' }}
                     </td>
                     <td class="p-3">
                         {{ subscriber.approval_date ? subscriber.approval_date : '-' }}

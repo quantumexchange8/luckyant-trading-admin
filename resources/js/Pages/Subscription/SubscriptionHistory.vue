@@ -8,6 +8,7 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
 import SubscriptionHistoryTable from "@/Pages/Subscription/Partials/SubscriptionHistoryTable.vue";
+import BaseListbox from "@/Components/BaseListbox.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
@@ -20,9 +21,16 @@ const formatter = ref({
     month: 'MM'
 });
 
+const statusList = [
+    {value:'Active', label:"Active"},
+    {value:'Rejected', label:"Rejected"},
+    {value:'Terminated', label:"Terminated"},
+];
+
 function refreshTable() {
     search.value = '';
     date.value = '';
+    filter.value = '';
     isLoading.value = !isLoading.value;
     refresh.value = true;
 }
@@ -63,9 +71,9 @@ const exportTransaction = () => {
         </div>
     </template>
 
-    <div class="pt-3 md:flex md:justify-end items-center">
+    <div class="pt-3 flex md:flex md:justify-end items-center">
             <div class="flex flex-wrap md:flex-nowrap md:items-center gap-3 mt-3 md:mt-0">
-                <div class="w-full col-span-5 md:col-span-2">
+                <div class="w-full">
                     <InputIconWrapper>
                         <template #icon>
                             <SearchIcon aria-hidden="true" class="w-5 h-5" />
@@ -73,7 +81,7 @@ const exportTransaction = () => {
                         <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
                     </InputIconWrapper>
                 </div>
-                <div class="w-full col-span-3 md:col-span-1">
+                <div class="w-full">
                     <vue-tailwind-datepicker
                         placeholder="Select dates"
                         :formatter="formatter"
@@ -83,13 +91,22 @@ const exportTransaction = () => {
                     />
                 </div>
                 <div>
+                    <BaseListbox
+                        id="statusID"
+                        class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
+                        v-model="filter"
+                        :options="statusList"
+                        placeholder="Filter status"
+                    />
+                </div>
+                <div>
                     <Button
                         type="button"
                         variant="secondary"
                         @click="refreshTable"
                         class="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
                     >
-                        Clear
+                        <span class="text-lg">Clear</span>
                     </Button>
                 </div>
             </div>
@@ -101,6 +118,7 @@ const exportTransaction = () => {
                 :isLoading="isLoading"
                 :search="search"
                 :date="date"
+                :filter="filter"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"
                 @update:refresh="refresh = $event"

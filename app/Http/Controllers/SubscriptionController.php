@@ -224,6 +224,13 @@ class SubscriptionController extends Controller
             $historySubscriber->whereBetween('created_at', [$start_date, $end_date]);
         }
 
+        if ($request->filled('filter')) {
+            $filter = $request->input('filter') ;
+            $historySubscriber->where(function ($q) use ($filter) {
+                $q->where('status', $filter);
+            });
+        }
+
         $results = $historySubscriber->latest()->paginate(10);
 
         return response()->json($results);
