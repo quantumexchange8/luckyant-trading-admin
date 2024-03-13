@@ -24,11 +24,11 @@ class KycApprovalNotification extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-
+        $status = $this->user->kyc_approval == 'Unverified' ? 'Rejected' : 'Approved';
         $url = url('https://member.luckyantfxasia.com/login');
 
         return (new MailMessage)
-            ->subject('KYC Approval Status')
+            ->subject('LuckyAnt Trading KYC Status - ' . $status)
             ->greeting('Dear ' . $this->user->name)
             ->line($this->getMessage())
             ->action('Login Portal', $url)
