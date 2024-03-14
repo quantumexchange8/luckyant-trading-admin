@@ -230,7 +230,7 @@ const submitForm = () => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.user.name }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Meta Login</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.meta_login }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
@@ -238,7 +238,7 @@ const submitForm = () => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master.user.name }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Meta Login</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Trading Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master_meta_login }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
@@ -253,11 +253,11 @@ const submitForm = () => {
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_period }} Days</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <div v-if="subscriber.subscription.approval_date != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.approval_date }}</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <div v-if="subscriber.subscription.expired_date != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.expired_date ?  subscriber.subscription.expired_date : '-'}}</span>
             </div>

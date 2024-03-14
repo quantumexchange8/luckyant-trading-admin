@@ -12,7 +12,7 @@ import Button from "@/Components/Button.vue";
 import Tooltip from "@/Components/Tooltip.vue";
 import Modal from "@/Components/Modal.vue";
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
-import {CheckIcon, ChevronDownIcon, SortAscendingIcon, SortDescendingIcon } from '@heroicons/vue/solid'
+import {CheckIcon, ChevronDownIcon, SortAscendingIcon } from '@heroicons/vue/solid'
 
 const props = defineProps({
     search: String,
@@ -36,15 +36,12 @@ const { formatDateTime, formatAmount } = transactionFormat();
 const memberMT5Modal = ref(false);
 const mt5Details = ref(null);
 
-const sortDescending = ref(null);
+const sortDescending = ref('desc');
 const types = ref('')
-const sortASC = (type) => {
-  sortDescending.value = 'asc';
-  types.value = type;
-}
 
-const sortDESC = (type) => {
-  sortDescending.value = 'desc';
+const toggleSort = (type) => {
+    console.log(sortDescending.value)
+  sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
   types.value = type;
 }
 
@@ -96,7 +93,6 @@ getResults()
 const handlePageChange = (newPage) => {
     if (newPage >= 1) {
 
-        console.log(sortDescending.value)
         currentPage.value = newPage;
 
         getResults(currentPage.value, props.search, props.rank, props.date, props.kycStatus, types.value, sortDescending.value);
@@ -179,19 +175,12 @@ const closeModal = () => {
                         <div>
                             <span>Name</span>
                         </div>
-                        <div>
-                            <SortAscendingIcon
-                                v-if="sortDescending === null || sortDescending === 'desc'"
-                                aria-hidden="true"
-                                class="w-5 h-5 hover:cursor-pointer"
-                                @click="sortASC('name')"
-                            />
-                            <SortDescendingIcon
-                                v-else
-                                aria-hidden="true"
-                                class="w-5 h-5 hover:cursor-pointer"
-                                @click="sortDESC('name')"
-                            />
+                        <div 
+                            class="transition-transform transform"
+                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            @click="toggleSort('name')"
+                        >
+                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
                         </div>
                     </div>
                 </th>
@@ -200,19 +189,12 @@ const closeModal = () => {
                         <div>
                             <span>Joining Date</span>
                         </div>
-                        <div>
-                            <SortAscendingIcon
-                                v-if="sortDescending === null || sortDescending === 'desc'"
-                                aria-hidden="true"
-                                class="w-5 h-5 hover:cursor-pointer"
-                                @click="sortASC('created_at')"
-                                />
-                            <SortDescendingIcon
-                                v-else
-                                aria-hidden="true"
-                                class="w-5 h-5 hover:cursor-pointer"
-                                @click="sortDESC('created_at')"
-                            />
+                        <div
+                            class="transition-transform transform"
+                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            @click="toggleSort('created_at')"
+                        >
+                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
                         </div>
                     </div>
                 </th>
@@ -230,19 +212,12 @@ const closeModal = () => {
                         <div>
                             <span>Country</span>
                         </div>
-                        <div>
-                            <SortAscendingIcon
-                                v-if="sortDescending === null || sortDescending === 'desc'"
-                                aria-hidden="true"
-                                class="w-5 h-5 hover:cursor-pointer"
-                                @click="sortASC('country')"
-                                />
-                                <SortDescendingIcon
-                                v-else
-                                aria-hidden="true"
-                                class="w-5 h-5 hover:cursor-pointer"
-                                @click="sortDESC('country')"
-                            />
+                        <div
+                            class="transition-transform transform"
+                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            @click="toggleSort('country')"
+                        >
+                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
                         </div>
                     </div>
                 </th>

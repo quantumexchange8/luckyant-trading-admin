@@ -102,13 +102,13 @@ const closeModal = () => {
                         User
                     </th>
                     <th scope="col" class="p-3">
-                        Meta Login
+                        Trading Account
                     </th>
                     <th scope="col" class="p-3">
                         Master
                     </th>
                     <th scope="col" class="p-3">
-                        Master Meta Login
+                        Master Trading Account
                     </th>
                     <th scope="col" class="p-3">
                         Subscription Fee
@@ -171,7 +171,7 @@ const closeModal = () => {
             <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.user.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Meta Login</span>
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.meta_login }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
@@ -183,7 +183,7 @@ const closeModal = () => {
             <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.master.user.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Meta Login</span>
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Trading Account</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.master.meta_login }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">

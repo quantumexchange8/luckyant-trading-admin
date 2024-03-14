@@ -1,7 +1,7 @@
 <script setup>
 import debounce from "lodash/debounce.js";
 import {ref, watch} from "vue";
-import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
+import {ArrowLeftIcon, ArrowRightIcon, SortAscendingIcon} from "@heroicons/vue/outline";
 import {InternalWalletIcon} from "@/Components/Icons/outline.jsx";
 import Loading from "@/Components/Loading.vue";
 import {transactionFormat} from "@/Composables/index.js";
@@ -28,15 +28,23 @@ const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 const { formatDateTime } = transactionFormat();
 const depositHistoryModal = ref(false);
 const depositDetail = ref();
+const sortDescending = ref('desc');
+const types = ref('')
+
+const toggleSort = (type) => {
+    console.log(sortDescending.value)
+  sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
+  types.value = type;
+}
 
 watch(
-    [() => props.search, () => props.date, () => props.filter],
-    debounce(([searchValue, dateValue, filterValue]) => {
-        getResults(1, searchValue, dateValue, filterValue);
+    [() => props.search, () => props.date, () => props.filter, () => types.value, () => sortDescending.value],
+    debounce(([searchValue, dateValue, filterValue, typeValue, sortValue]) => {
+        getResults(1, searchValue, dateValue, filterValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '', filter = '') => {
+const getResults = async (page = 1, search = '', date = '', filter = '', type = types.value, sort = sortDescending.value) => {
     depositLoading.value = true
     try {
         let url = `/transaction/getTransactionHistory/Deposit?page=${page}`;
@@ -51,6 +59,11 @@ const getResults = async (page = 1, search = '', date = '', filter = '') => {
 
         if (filter) {
             url += `&filter=${filter}`;
+        }
+
+        if (type) {
+            url += `&type=${type}`;
+            url += `&sort=${sort}`;
         }
 
         const response = await axios.get(url);
@@ -70,7 +83,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date);
+        getResults(currentPage.value, props.search, props.date, props.filter, types.value, sortDescending.value);
     }
 };
 
@@ -139,10 +152,32 @@ const transactionVariant = (transactionStatus) => {
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
             <tr>
                 <th scope="col" class="py-2">
-                    Date
+                    <div class="flex gap-2">
+                        <div>
+                            <span>Date</span>
+                        </div>
+                        <div 
+                            class="transition-transform transform"
+                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            @click="toggleSort('created_at')"
+                        >
+                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
+                        </div>
+                    </div>
                 </th>
                 <th scope="col" class="pl-5 py-2">
-                    Name
+                    <div class="flex gap-2">
+                        <div>
+                            <span>Name</span>
+                        </div>
+                        <!-- <div 
+                            class="transition-transform transform"
+                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            @click="toggleSort('name')"
+                        > -->
+                            <!-- <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" /> -->
+                        <!-- </div> -->
+                    </div>
                 </th>
                 <th scope="col" class="py-2">
                     Type

@@ -107,13 +107,13 @@ const closeModal = () => {
                         User
                     </th>
                     <th scope="col" class="p-3">
-                        Meta Login
+                        Trading Account
                     </th>
                     <th scope="col" class="p-3">
                         Master
                     </th>
                     <th scope="col" class="p-3">
-                        Master Meta Login
+                        Master Trading Account
                     </th>
                     <th scope="col" class="p-3">
                         Subscription Fee

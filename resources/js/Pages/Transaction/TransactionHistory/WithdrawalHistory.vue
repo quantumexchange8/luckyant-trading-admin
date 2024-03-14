@@ -18,14 +18,13 @@ const props = defineProps({
     exportStatus: Boolean,
 })
 
-const { formatAmount } = transactionFormat();
 const withdrawals = ref({data: []});
 const totalAmount = ref(0);
 const currentPage = ref(1);
 const refreshDeposit = ref(props.refresh);
 const depositLoading = ref(props.isLoading);
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
-const { formatDateTime } = transactionFormat();
+const { formatAmount, formatDateTime, formatType } = transactionFormat();
 const withdrawalHistoryModal = ref(false);
 const withdrawalDetail = ref();
 
@@ -182,7 +181,7 @@ const transactionVariant = (transactionStatus) => {
                         <!-- <div class="bg-gradient-to-t from-pink-300 to-pink-600 dark:shadow-pink-500 rounded-full w-4 h-4 shrink-0 grow-0">
                             <InternalWalletIcon class="mt-0.5 ml-0.5"/>
                         </div> -->
-                        {{ withdrawal.category }}
+                        {{ formatType(withdrawal.category) }}
                     </div>
                 </td>
                 <td class="py-2">

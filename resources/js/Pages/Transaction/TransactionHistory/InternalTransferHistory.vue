@@ -162,13 +162,13 @@ const closeModal = () => {
                     {{ transfer.transaction_number }}
                 </td>
                 <td class="py-2">
-                    {{ transfer.to_meta_login }}
+                    {{ transfer.to_meta_login ? transfer.to_meta_login : transfer.to_wallet.name }} 
                 </td>
                 <td class="py-2">
                     $ {{ formatAmount(transfer.amount) }}
                 </td>
                 <td class="py-2">
-                    $ {{ formatAmount(transfer.amount) }}
+                    {{ transfer.new_wallet_amount ? '$ ' + formatAmount(transfer.new_wallet_amount) : '' }}
                 </td>
             </tr>
             </tbody>
@@ -206,17 +206,17 @@ const closeModal = () => {
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer From</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.from_meta_login }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.from_meta_login ? transferDetail.from_meta_login : transferDetail.from_wallet.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer To</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.to_meta_login }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.to_meta_login ? transferDetail.to_meta_login : transferDetail.to_wallet.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer Amount</span>
             <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(transferDetail.amount) }}</span>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
+        <div v-if="transferDetail.ticket != null" class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Ticket</span>
             <span class="col-span-2 text-black dark:text-white py-2"> {{ transferDetail.ticket }}</span>
         </div>

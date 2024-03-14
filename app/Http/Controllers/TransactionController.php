@@ -218,6 +218,13 @@ class TransactionController extends Controller
             });
         }
 
+        if ($request->filled('type')) {
+            $sorttype = $request->input('type');
+            $sort = $request->input('sort');
+            
+            $query->orderBy($sorttype, $sort);
+        }
+
         // if ($request->has('exportStatus')) {
         //     if ($type == 'Deposit') {
         //         return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
