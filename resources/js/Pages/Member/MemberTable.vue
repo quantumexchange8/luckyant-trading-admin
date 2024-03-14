@@ -49,13 +49,13 @@ const sortDESC = (type) => {
 }
 
 watch(
-    [() => props.search, () => props.rank, () => props.date, () => sortDescending.value, () => types.value],
-    debounce(([searchValue, rankValue, dateValue, sortValue, typeValue]) => {
-        getResults(1, searchValue, rankValue, dateValue, sortValue, typeValue);
+    [() => props.search, () => props.rank, () => props.date, () => types.value, () => sortDescending.value],
+    debounce(([searchValue, rankValue, dateValue, typeValue, sortValue]) => {
+        getResults(1, searchValue, rankValue, dateValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, sort = sortDescending.value, type = types.value) => {
+const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = types.value, sort = sortDescending.value) => {
     isLoading.value = true
     try {
         let url = `/member/getMemberDetails?page=${page}`;
@@ -95,9 +95,11 @@ getResults()
 
 const handlePageChange = (newPage) => {
     if (newPage >= 1) {
+
+        console.log(sortDescending.value)
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.rank, props.date, props.kycStatus);
+        getResults(currentPage.value, props.search, props.rank, props.date, props.kycStatus, types.value, sortDescending.value);
     }
 };
 
