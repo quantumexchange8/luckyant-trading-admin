@@ -19,6 +19,7 @@ class Master extends Model
         'estimated_lot_size',
         'subscription_fee',
         'total_fund',
+        'extra_fund',
         'roi_period',
         'signal_status',
         'status',
