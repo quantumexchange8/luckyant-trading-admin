@@ -340,7 +340,6 @@ class MemberController extends Controller
     {
 
         $user = User::find($request->user_id);
-        $upline_id = $request->upline_id['value'];
 
         $currentRank = $request->rank;
 
@@ -363,25 +362,31 @@ class MemberController extends Controller
             'setting_rank_id' => $request->rank,
         ]);
 
-        if($user->upline_id != $upline_id)
-        {
-            $topLead = User::find($upline_id);
+        if ($request->upline_id != null) {
+            $upline_id = $request->upline_id['value'];
 
-            if ($topLead) {
-                if ($topLead->top_leader_id == null) {
-                    $user->update([
-                        'top_leader_id' => $topLead->id
-                    ]);
-                } else {
-                    $user->update([
-                        'top_leader_id' => $topLead->top_leader_id
-                    ]);
+            if($user->upline_id != $upline_id)
+            {
+                $topLead = User::find($upline_id);
+
+                if ($topLead) {
+                    if ($topLead->top_leader_id == null) {
+                        $user->update([
+                            'top_leader_id' => $topLead->id
+                        ]);
+                    } else {
+                        $user->update([
+                            'top_leader_id' => $topLead->top_leader_id
+                        ]);
+                    }
+                    
                 }
-                
-            }
 
-            $this->transferUpline($user, $upline_id);
+                $this->transferUpline($user, $upline_id);
+            }
         }
+
+        
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
     }
@@ -556,7 +561,8 @@ class MemberController extends Controller
             'level' => $level,
             'direct_affiliate' => count($user->children),
             'total_affiliate' => count($user->getChildrenIds()),
-//            'self_deposit' => $this->getSelfDeposit($user),
+           'self_deposit' => $this->getSelfDeposit($user),
+           'total_group_deposit' => $this->getTotalGroupDeposit($user),
 //            'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
             'children' => $users->map(function ($user) {
                 return $this->mapUser($user, 0);
@@ -564,6 +570,26 @@ class MemberController extends Controller
         ];
 
         return response()->json($rootNode);
+    }
+
+    protected function getSelfDeposit($user)
+    {
+        return Transaction::query()
+            ->where('user_id', $user->id)
+            ->where('category', 'wallet')
+            ->where('transaction_type', 'Deposit')
+            ->sum('amount');
+    }
+
+    protected function getTotalGroupDeposit($user)
+    {
+        $ids = $user->getChildrenIds();
+
+        return Transaction::query()
+            ->whereIn('user_id', $ids)
+            ->where('category', 'wallet')
+            ->where('transaction_type', 'Deposit')
+            ->sum('amount');
     }
 
     protected function mapUser($user, $level) {
