@@ -32,7 +32,6 @@ const sortDescending = ref('desc');
 const types = ref('')
 
 const toggleSort = (type) => {
-    console.log(sortDescending.value)
   sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
   types.value = type;
 }

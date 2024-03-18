@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-// use App\Exports\DepositExport;
+use App\Exports\DepositExport;
 // use App\Exports\WithdrawalExport;
 // use App\Exports\BalanceAdjustmentExport;
 use App\Models\Wallet;
@@ -12,7 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Auth;
-// use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionController extends Controller
 {
@@ -225,13 +225,13 @@ class TransactionController extends Controller
             $query->orderBy($sorttype, $sort);
         }
 
-        // if ($request->has('exportStatus')) {
-        //     if ($type == 'Deposit') {
-        //         return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-        //     } elseif ($type == 'Withdrawal') {
-        //         return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-        //     }
-        // }
+        if ($request->has('exportStatus')) {
+            if ($type == 'Deposit') {
+                return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
+            } elseif ($type == 'Withdrawal') {
+                return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
+            }
+        }
 
         $results = $query->latest()->paginate(10);
 

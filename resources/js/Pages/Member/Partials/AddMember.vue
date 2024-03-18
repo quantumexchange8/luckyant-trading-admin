@@ -4,29 +4,37 @@ import Input from "@/Components/Input.vue";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import {useForm} from "@inertiajs/vue3";
 import {ref, watch} from "vue";
-// import {IdNoIcon, PhoneIcon} from "@/Components/Icons/outline.jsx";
+import {IdNoIcon, PhoneIcon} from "@/Components/Icons/outline.jsx";
 import { MailIcon, KeyIcon, EyeOffIcon, EyeIcon } from '@heroicons/vue/outline';
 import BaseListbox from "@/Components/BaseListbox.vue";
 import InputError from "@/Components/InputError.vue";
-// import Combobox from "@/Components/Combobox.vue";
+import Combobox from "@/Components/Combobox.vue";
 import Label from "@/Components/Label.vue";
+import VueTailwindDatepicker from "vue-tailwind-datepicker";
 
 const props = defineProps({
-    settingRanks: Array,
+    rankLists: Array,
     countries: Array
 })
 const emit = defineEmits(['update:memberDetailModal']);
 
 const form = useForm({
     name: "",
-    country: null,
+    country: 132,
+    dial_code: '+60',
     phone: "",
     email: "",
+    dob: '',
     verification_type: "nric",
     identity_number: "",
     password: "",
     ranking: "",
     upline_id: {},
+})
+
+const formatter = ref({
+  date: 'YYYY-MM-DD',
+  month: 'MMM'
 })
 
 const showPassword = ref(false);
@@ -86,8 +94,8 @@ const closeModal = () => {
     <form
         @submit.prevent="submit"
     >
-        <div class="flex flex-col gap-4 md:gap-8 mb-8">
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+        <div class="flex flex-col gap-4 md:gap-4 mb-8">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="name" value="Name" />
                 <div class="md:col-span-3">
                     <Input
@@ -103,7 +111,7 @@ const closeModal = () => {
                     <InputError :message="form.errors.name" class="mt-1 col-span-4" />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="email" value="Email" />
                 <div class="md:col-span-3">
                     <InputIconWrapper class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600">
@@ -118,17 +126,28 @@ const closeModal = () => {
                     <InputError :message="form.errors.email" class="mt-1 col-span-4" />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="country" value="Country" />
                 <div class="md:col-span-3">
                     <BaseListbox
-                        v-model="selectedCountry"
-                        :options="props.countries"
-                        :error="form.errors.country"
+                        v-model="form.country"
+                        :options="countries"
                     />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="date" value="Date Of Birth" />
+                <div class="md:col-span-3">
+                    <vue-tailwind-datepicker
+                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                        v-model="form.dob"
+                        as-single
+                        :formatter="formatter"
+                    />
+                    <InputError :message="form.errors.dob" class="mt-1 col-span-4" />
+                </div>
+            </div>
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="phone" value="Phone Number" />
                 <div class="md:col-span-3">
                     <InputIconWrapper class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600">
@@ -143,21 +162,21 @@ const closeModal = () => {
                     <InputError :message="form.errors.phone" class="mt-1 col-span-4" />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="verification_type" value="Verification Type" />
                 <div class="flex gap-x-12">
                     <div class="flex">
-                        <input type="radio" name="verification_type" v-model="form.verification_type" class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-pink-500 dark:bg-gray-800 dark:border-gray-400 dark:checked:bg-pink-500 dark:checked:border-pink-500 dark:focus:ring-offset-gray-800" id="hs-radio-group-1" value="nric">
+                        <input type="radio" name="verification_type" v-model="form.verification_type" class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-400 dark:checked:bg-pink-500 dark:checked:border-pink-500 dark:focus:ring-offset-gray-800" id="hs-radio-group-1" value="nric">
                         <label for="hs-radio-group-1" class="text-sm text-gray-300 ml-2 dark:text-white">NRIC</label>
                     </div>
 
                     <div class="flex">
-                        <input type="radio" name="verification_type" v-model="form.verification_type" class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-pink-500 dark:bg-gray-800 dark:border-gray-400 dark:checked:bg-pink-500 dark:checked:border-pink-500 dark:focus:ring-offset-gray-800" id="hs-radio-group-2" value="passport">
+                        <input type="radio" name="verification_type" v-model="form.verification_type" class="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-400 dark:checked:bg-pink-500 dark:checked:border-pink-500 dark:focus:ring-offset-gray-800" id="hs-radio-group-2" value="passport">
                         <label for="hs-radio-group-2" class="text-sm text-gray-500 ml-2 dark:text-white">Passport</label>
                     </div>
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="identity_number" value="Identity Number" />
                 <div class="md:col-span-3">
                     <InputIconWrapper class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600">
@@ -172,7 +191,7 @@ const closeModal = () => {
                     <InputError :message="form.errors.identity_number" class="mt-1 col-span-4" />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="password" value="Password" />
                 <div class="md:col-span-3">
                     <InputIconWrapper class="relative flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600">
@@ -204,7 +223,7 @@ const closeModal = () => {
                     <InputError :message="form.errors.password" class="mt-1 col-span-4" />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="rankID" value="Ranking" />
                 <div class="md:col-span-3">
                     <BaseListbox
@@ -212,13 +231,13 @@ const closeModal = () => {
                         class="w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600"
                         :class="form.errors.ranking? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
                         v-model="form.ranking"
-                        :options="props.settingRanks"
+                        :options="props.rankLists"
                         placeholder = "Please Select"
                     />
                     <InputError :message="form.errors.ranking" class="mt-1 col-span-4" />
                 </div>
             </div>
-            <div class="flex flex-col gap-1 md:grid md:grid-cols-4">
+            <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="upline" value="Upline" />
                 <div class="md:col-span-3">
                     <Combobox

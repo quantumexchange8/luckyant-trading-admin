@@ -120,7 +120,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
             />
             <SidebarCollapsibleItem
                 :href="route('subscription.subscriptionHistory')"
-                title="Subscription History"
+                title="Subscription Listing"
                 :active="route().current('subscription.subscriptionHistory')"
             />
         </SidebarCollapsible>
@@ -164,6 +164,23 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :active="route().current('setting.master_setting')"
             />
         </SidebarCollapsible>
+        <!-- <SidebarCollapsible
+            title="Admin"
+            :active="route().current('admin.*')"
+        >
+            <template #icon>
+                <Setting
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('admin.admin')"
+                title="Admin Listing"
+                :active="route().current('admin.admin')"
+            />
+        </SidebarCollapsible> -->
 <!--        <SidebarCollapsible-->
 <!--            title="Components"-->
 <!--            :active="route().current('components.*')"-->

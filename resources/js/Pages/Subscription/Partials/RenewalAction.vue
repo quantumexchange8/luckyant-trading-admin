@@ -28,14 +28,8 @@ const openTransactionModal = (ibId, componentType) => {
     } else if (componentType === 'rejectRemarks') {
         modalComponent.value = 'Reject Remark';
     } else if (componentType === 'view') {
-        // modalComponent.value = 'Renewal Details';
-        modalComponent.value = 'Subscriber Details';
-
-    } else if (componentType === 'termination') {
-        modalComponent.value = 'Termination';
-    } else if (componentType === 'terminateRemarks') {
-        modalComponent.value = 'Terminate Remark';
-    }
+        modalComponent.value = 'Renewal Details';
+    } 
 }
 
 const closeModal = () => {
@@ -45,7 +39,6 @@ const closeModal = () => {
 
 const form = useForm({
     id: props.subscriber.id,
-    transactionId: props.subscriber.subscription.transaction_id,
     subscriptionId: props.subscriber.subscription_id,
     userId: props.subscriber.user_id,
     remarks: '',
@@ -54,12 +47,10 @@ const form = useForm({
 const submitForm = () => {
     let submitRoute;
     if (modalComponent.value === 'Approve subscription') {
-        submitRoute = route('subscription.approveSubscribe');
+        submitRoute = route('subscription.approveRenewalSubscription');
     } else if (modalComponent.value === 'Reject Remark') {
-        submitRoute = route('subscription.rejectSubscribe');
-    } else if (modalComponent.value === 'Terminate Remark') {
-        submitRoute = route('subscription.terminateSubscribe');
-    }
+        submitRoute = route('subscription.rejectRenewalSubscription');
+    } 
 
     if (submitRoute) {
         form.post(submitRoute, {
@@ -222,50 +213,7 @@ const submitForm = () => {
             </div>
         </div>
         
-        <div v-if="modalComponent == 'Subscriber Details'">
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.created_at)}}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">User</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.meta_login }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master.user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master_meta_login }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription ID</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_number }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscription.subscription_fee ? subscriber.subscription.subscription_fee : '0.00' }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_period }} Days</span>
-            </div>
-            <div v-if="subscriber.subscription.approval_date != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.approval_date }}</span>
-            </div>
-            <div v-if="subscriber.subscription.expired_date != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.expired_date ?  subscriber.subscription.expired_date : '-'}}</span>
-            </div>
-        </div>
-
-        <!-- <div v-if="modalComponent == 'Renewal Details'">
+        <div v-if="modalComponent == 'Renewal Details'">
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.created_at) }}</span>
@@ -302,6 +250,6 @@ const submitForm = () => {
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.subscription.expired_date) }}</span>
             </div>
-        </div> -->
+        </div>
     </Modal>
 </template>

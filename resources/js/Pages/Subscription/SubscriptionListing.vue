@@ -9,6 +9,7 @@ import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
 import SubscriptionHistoryTable from "@/Pages/Subscription/Partials/SubscriptionHistoryTable.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
+import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
@@ -46,7 +47,7 @@ const exportTransaction = () => {
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <h2 class="text-2xl font-semibold leading-tight">
-                    Subscription History
+                    Subscription Listing
                 </h2>
                
             </div>
@@ -113,6 +114,8 @@ const exportTransaction = () => {
         </div>
 
         <div class="p-5 my-8 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-gray-900">
+            
+            
             <SubscriptionHistoryTable
                 :refresh="refresh"
                 :isLoading="isLoading"

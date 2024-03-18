@@ -83,4 +83,19 @@ class User extends Authenticatable implements HasMedia
     {
         return $this->hasMany(Wallet::class, 'user_id', 'id');
     }
+
+    public function setReferralId(): void
+    {
+        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $randomString = 'LAT';
+
+        $length = 10 - strlen($randomString); // Remaining length after 'LAT'
+
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+
+        $this->referral_code = $randomString;
+        $this->save();
+    }
 }

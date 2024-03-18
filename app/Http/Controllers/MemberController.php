@@ -16,6 +16,7 @@ use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
 use App\Http\Requests\EditMemberRequest;
 use App\Http\Requests\PaymentAccountRequest;
+use App\Http\Requests\AddMemberRequest;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -37,6 +38,14 @@ class MemberController extends Controller
             ];
         });
 
+        $countries = Country::all();
+        $formattedCountries = $countries->map(function ($country) {
+            return [
+                'value' => $country->id,
+                'label' => $country->name,
+            ];
+        });
+
         $kycCounts = User::where('role', 'member')
             ->whereIn('kyc_approval', ['Pending', 'Verified', 'Unverified'])
             ->selectRaw('kyc_approval, count(*) as count')
@@ -47,7 +56,83 @@ class MemberController extends Controller
         return Inertia::render('Member/MemberListing', [
             'rankLists' => $rankLists,
             'kycCounts' => $kycCounts,
+            'countries' => $formattedCountries,
         ]);
+    }
+
+    public function addMember(AddMemberRequest $request)
+    {
+        
+        $upline_id = $request->upline_id['value'];
+        $upline = User::find($upline_id);
+
+        if(empty($upline->hierarchyList)) {
+            $hierarchyList = "-" . $upline_id . "-";
+        } else {
+            $hierarchyList = $upline->hierarchyList . $upline_id . "-";
+        }
+
+        $topLead = User::find($upline_id);
+
+        if ($topLead) {
+            if ($topLead->top_leader_id == null) {
+                
+                $topLead = $topLead->id;
+                
+            } else {
+                
+                $topLead = $topLead->top_leader_id;
+                
+            }
+            
+        }
+
+        $dialCode = Country::find($request->country);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'country' => $request->country,
+            'dial_code' => '+' . $dialCode->phone_code,
+            'phone' => '+' . $dialCode->phone_code . $request->phone,
+            'upline_id' => $upline_id,
+            'top_leader_id' => $topLead,
+            'dob' => $request->dob,
+            'hierarchyList' => $hierarchyList,
+            'setting_rank_id' => $request->ranking,
+            'password' => Hash::make($request->password),
+            'identification_number' => $request->identity_number,
+            'role' => 'member',
+            'kyc_approval' => 'Pending',
+        ]);
+
+        $user->setReferralId();
+
+        Wallet::create([
+            'user_id' => $user->id,
+            'name' => 'Cash Wallet',
+            'type' => 'cash_wallet',
+            'wallet_address' => RunningNumberService::getID('cash_wallet'),
+        ]);
+
+        Wallet::create([
+            'user_id' => $user->id,
+            'name' => 'Bonus Wallet',
+            'type' => 'bonus_wallet',
+            'wallet_address' => RunningNumberService::getID('bonus_wallet'),
+        ]);
+
+        Wallet::create([
+            'user_id' => $user->id,
+            'name' => 'E-Wallet',
+            'type' => 'e_wallet',
+            'wallet_address' => RunningNumberService::getID('e_wallet'),
+        ]);
+
+
+        $user->setReferralId();
+
+        return redirect()->back()->with('title', 'New member added!')->with('success', 'The new member has been added successfully.');
     }
 
     public function getMemberDetails(Request $request)
@@ -280,6 +365,21 @@ class MemberController extends Controller
 
         if($user->upline_id != $upline_id)
         {
+            $topLead = User::find($upline_id);
+
+            if ($topLead) {
+                if ($topLead->top_leader_id == null) {
+                    $user->update([
+                        'top_leader_id' => $topLead->id
+                    ]);
+                } else {
+                    $user->update([
+                        'top_leader_id' => $topLead->top_leader_id
+                    ]);
+                }
+                
+            }
+
             $this->transferUpline($user, $upline_id);
         }
 
@@ -357,7 +457,7 @@ class MemberController extends Controller
             $sameUplineIdUsers = User::where('upline_id', $new_parent->id)->get();
             if ($sameUplineIdUsers) {
                 foreach ($sameUplineIdUsers as $sameUplineUser) {
-                    $new_user_hierarchy = $new_parent->hierarchyList . $new_parent->id . "-";
+                    $new_user_hierarchy = $new_parent->hierarchyList ? $new_parent->hierarchyList . $new_parent->id . "-" : "-" . $new_parent->id . "-";
                     $this->updateHierarchyList($sameUplineUser, $new_user_hierarchy, '-' . $sameUplineUser->id . '-');
                     $sameUplineUser->hierarchyList = $new_user_hierarchy;
                     $sameUplineUser->upline_id = $new_parent->id;

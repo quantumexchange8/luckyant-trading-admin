@@ -9,6 +9,7 @@ import BaseListbox from "@/Components/BaseListbox.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import MemberTable from "@/Pages/Member/MemberTable.vue";
 import toast from "@/Composables/toast.js";
+import Action from "@/Pages/Member/Partials/Action.vue";
 
 const search = ref('');
 const date = ref('');
@@ -25,6 +26,7 @@ const formatter = ref({
 const props = defineProps({
     rankLists: Array,
     kycCounts: Object,
+    countries: Array,
 })
 
 const updateKycStatus = (kyc_status) => {
@@ -58,10 +60,23 @@ const updateKycCounts = () => {
     <AuthenticatedLayout title="Member Listing">
         <template #header>
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <h2 class="text-xl font-semibold leading-tight">
-                    Member Listing
-                </h2>
+                <div>
+                    <h2 class="text-xl font-semibold leading-tight">
+                        Member Listing
+                    </h2>
+                </div>
+                <div class="flex flex-row gap-3">
+                    <div>
+                        <Action
+                            type="add_member"
+                            :rankLists="rankLists"
+                            :countries="countries"
+                        />
+                    </div>
+                </div>
             </div>
+
+            
         </template>
 
         <div class="pt-3 md:flex md:justify-end items-center">

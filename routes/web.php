@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\AdminController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
@@ -37,6 +38,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      */
 
     Route::prefix('member')->group(function () {
+        Route::post('/addMember', [MemberController::class, 'addMember'])->name('member.addMember');
         Route::get('/member_listing', [MemberController::class, 'index'])->name('member.member_listing');
         Route::get('/getMemberDetails', [MemberController::class, 'getMemberDetails'])->name('member.getMemberDetails');
         Route::get('/member_details/{id}', [MemberController::class, 'viewMemberDetails'])->name('member.viewMemberDetails');
@@ -113,9 +115,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/getActiveSubscriber', [SubscriptionController::class, 'getActiveSubscriber'])->name('subscription.getActiveSubscriber');
         Route::get('/subscriptionHistory', [SubscriptionController::class, 'subscriptionHistory'])->name('subscription.subscriptionHistory');
         Route::get('/getHistorySubscriber', [SubscriptionController::class, 'getHistorySubscriber'])->name('subscription.getHistorySubscriber');
+        Route::get('/getPendingSubscriptionRenewal', [SubscriptionController::class, 'getPendingSubscriptionRenewal'])->name('subscription.getPendingSubscriptionRenewal');
+        // subscriber request
         Route::post('/approveSubscribe', [SubscriptionController::class, 'approveSubscribe'])->name('subscription.approveSubscribe');
         Route::post('/rejectSubscribe', [SubscriptionController::class, 'rejectSubscribe'])->name('subscription.rejectSubscribe');
         Route::post('/terminateSubscribe', [SubscriptionController::class, 'terminateSubscribe'])->name('subscription.terminateSubscribe');
+        // subscription renewal
+        Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
+        Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
     });
 
     /**
@@ -145,6 +152,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         //master setting
         Route::get('/master_setting', [SettingController::class, 'masterSetting'])->name('setting.master_setting');
         Route::post('/updateMasterSetting', [SettingController::class, 'updateMasterSetting'])->name('setting.updateMasterSetting');
+    });
+
+    /**
+     * ==============================
+     *          Admin
+     * ==============================
+     */
+    Route::prefix('admin')->group(function () {
+        Route::get('/admin', [AdminController::class, 'admin'])->name('admin.admin');
+        Route::get('/getAdminDetails', [AdminController::class, 'getAdminDetails'])->name('admin.getAdminDetails');
     });
 });
 

@@ -9,7 +9,7 @@ import AddMember from "@/Pages/Member/Partials/AddMember.vue";
 import Tooltip from "@/Components/Tooltip.vue";
 
 const props = defineProps({
-    members: Object,
+    admins: Object,
     type: String,
     rankLists: Array,
     countries: Array,
@@ -43,23 +43,11 @@ const closeModal = () => {
                 type="button"
                 class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
                 variant="gray"
-                :href="'/member/member_details/' + members.id"
+                :href="'/member/member_details/' + admins.id"
                 pill
             >
                 <ClipboardListIcon aria-hidden="true" class="w-5 h-5 absolute" />
                 <span class="sr-only">View Details</span>
-            </Button>
-        </Tooltip>
-        <Tooltip content="Referral Tree" placement="bottom" v-if="type === 'member'">
-            <Button
-                type="button"
-                class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-                variant="gray"
-                :href="'/member/member_affiliates/' + members.id"
-                pill
-            >
-                <UserGroupIcon aria-hidden="true" class="w-5 h-5 absolute" />
-                <span class="sr-only">Referral Tree</span>
             </Button>
         </Tooltip>
         <Tooltip content="Delete Member" placement="bottom" v-if="type === 'member'">
@@ -67,7 +55,7 @@ const closeModal = () => {
                 type="button"
                 class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
                 variant="danger"
-                @click="openMemberModal(members.id, 'deleteMember')"
+                @click="openMemberModal(admins.id, 'deleteMember')"
                 pill
                 disabled
             >
@@ -92,7 +80,7 @@ const closeModal = () => {
 
             <template v-if="modalComponent === 'Delete Member'">
                 <DeleteMember
-                    :members="members"
+                    :admins="admins"
                     @update:memberDetailModal="memberDetailModal = $event"
                 />
             </template>
