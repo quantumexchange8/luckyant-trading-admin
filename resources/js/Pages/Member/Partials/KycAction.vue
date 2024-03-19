@@ -155,16 +155,85 @@ const handleButton = (type) => {
             <div class="p-5 mt-3 bg-white overflow-hidden md:overflow-visible rounded-xl dark:bg-gray-700">
                 <div class="flex flex-col justify-center items-center">
                     <img :src="member.profile_photo_url ? member.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-16 h-16 rounded-full" alt="">
-                    <div class="text-xl font-semibold dark:text-white mt-3">
-                        {{ member.name }}
-                    </div>
-                    <div class="text-sm font-normal dark:text-gray-400">
-                        {{ member.identity_number }}
+                    <div class="flex flex-col items-center text-base font-semibold dark:text-white mt-3">
+                        <div>{{ member.name }}</div>
                     </div>
                 </div>
             </div>
             <div class="py-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Identification Number
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.identification_number ?? '-' }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Chinese Name
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.chinese_name ?? '-' }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Phone Number
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.phone }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Date of Birth
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.dob }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Gender
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.gender ?? '-' }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Address
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.address_1 ?? '-' }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Nationality
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.nationality ?? '-' }}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Country
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.country.name ?? '-' }}
+                        </div>
+                    </div>
+                    <!-- <div class="flex flex-col gap-2">
+                        <div class="text-sm text-left w-full dark:text-white">
+                            Address 2
+                        </div>
+                        <div class="pl-3 dark:bg-white rounded-lg w-full flex border-2 dark:border-white">
+                            {{ member.address_2 ?? '-' }}
+                        </div>
+                    </div> -->
                     <div class="flex flex-col gap-2">
                         <div class="text-sm text-left w-full dark:text-white">
                             Proof of Identity (FRONT)

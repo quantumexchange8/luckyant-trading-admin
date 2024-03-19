@@ -17,9 +17,10 @@ const props = defineProps({
 const form = useForm({
     user_id: props.member_detail.id,
     rank: props.member_detail.setting_rank_id,
-    upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.name } : {},
+    upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.email } : {},
     identification_number: props.member_detail.identification_number,
     password: '',
+    leader_status: props.member_detail.leader_status,
 })
 
 const showPassword = ref(false)
@@ -35,7 +36,7 @@ function loadUsers(query, setOptions) {
                 results.map(user => {
                     return {
                         value: user.id,
-                        label: user.name,
+                        label: user.email,
                         img: user.profile_photo
                     }
                 })
@@ -50,6 +51,11 @@ const submit = () => {
         },
     })
 }
+
+const leaderStatus = [
+    { label: 'Yes', value: 1},
+    { label: 'No', value: 0},
+];
 </script>
 
 <template>
@@ -120,7 +126,16 @@ const submit = () => {
                 </div>
             </div>
 
-            
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="leader_status" value="Leader Status" />
+                <div class="md:col-span-3">
+                    <BaseListbox
+                        v-model="form.leader_status"
+                        :options="leaderStatus"
+                    />
+                </div>
+            </div>
+
         </div>
 
         <div class="mt-5 flex justify-end">

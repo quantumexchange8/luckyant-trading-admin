@@ -200,6 +200,7 @@ class MasterController extends Controller
             'extra_fund' => $request->extra_fund,
             'total_fund' => $request->total_fund,
             'roi_period' => $request->roi_period,
+            'total_subscribers' => $request->total_subscriber,
         ]);
 
         if ($master->min_join_equity != null &&

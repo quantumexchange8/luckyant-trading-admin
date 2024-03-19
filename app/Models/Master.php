@@ -23,6 +23,7 @@ class Master extends Model
         'roi_period',
         'signal_status',
         'status',
+        'total_subscribers',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo

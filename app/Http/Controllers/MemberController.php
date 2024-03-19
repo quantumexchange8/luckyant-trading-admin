@@ -146,12 +146,12 @@ class MemberController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            // ->when($request->filled('type'), function ($query) use ($request) {
-            //     $type = $request->input('type');
-            //     $query->where(function ($innerQuery) use ($type) {
-            //         $innerQuery->where('kyc_approval', $type);
-            //     });
-            // })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $type = $request->input('type');
+                $query->where(function ($innerQuery) use ($type) {
+                    $innerQuery->where('kyc_approval', $type);
+                });
+            })
             ->when($request->filled('rank'), function ($query) use ($request) {
                 $rank_id = $request->input('rank');
                 $query->where(function ($innerQuery) use ($rank_id) {
@@ -165,13 +165,13 @@ class MemberController extends Controller
                 $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
                 $query->whereBetween('created_at', [$start_date, $end_date]);
             })
-            ->when($request->filled('type'), function($query) use ($request) {
-                $type = $request->input('type');
+            ->when($request->filled('sortType'), function($query) use ($request) {
+                $sortType = $request->input('sortType');
                 $sort = $request->input('sort');
                
-                $query->orderBy($type, $sort);
+                $query->orderBy($sortType, $sort);
             })
-            ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList')
+            // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', )
             ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
             ->latest()
             ->paginate(10)
@@ -338,7 +338,7 @@ class MemberController extends Controller
 
     public function advanceEditMember(Request $request)
     {
-
+        
         $user = User::find($request->user_id);
 
         $currentRank = $request->rank;
@@ -384,6 +384,12 @@ class MemberController extends Controller
 
                 $this->transferUpline($user, $upline_id);
             }
+        }
+
+        if ($user->leader_status != $request->leader_status) {
+            $user->update([
+                'leader_status' => $request->leader_status,
+            ]);
         }
 
         
@@ -563,7 +569,7 @@ class MemberController extends Controller
             'total_affiliate' => count($user->getChildrenIds()),
            'self_deposit' => $this->getSelfDeposit($user),
            'total_group_deposit' => $this->getTotalGroupDeposit($user),
-//            'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
+        //    'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
             'children' => $users->map(function ($user) {
                 return $this->mapUser($user, 0);
             })
@@ -605,8 +611,9 @@ class MemberController extends Controller
             'email' => $user->email,
             'level' => $level + 1,
             'total_affiliate' => count($user->getChildrenIds()),
-//            'self_deposit' => $this->getSelfDeposit($user),
-//            'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
+           'self_deposit' => $this->getSelfDeposit($user),
+           'total_group_deposit' => $this->getTotalGroupDeposit($user),
+        //    'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
         ];
 
         // Add 'children' only if there are children
@@ -616,6 +623,16 @@ class MemberController extends Controller
 
         return $mappedUser;
     }
+
+    // protected function getValidAffiliateDeposit($user)
+    // {
+    //     $ids = $user->getChildrenIds();
+
+    //     return InvestmentSubscription::query()
+    //         ->whereIn('user_id', $ids)
+    //         ->whereDate('expired_date', '>', now())
+    //         ->sum('amount');
+    // }
 
     public function impersonate(User $user)
     {

@@ -31,6 +31,7 @@ const form = useForm({
     extra_fund: props.masterConfigurations.extra_fund,
     total_fund: props.masterConfigurations.total_fund,
     roi_period: props.masterConfigurations.roi_period,
+    total_subscriber: props.masterConfigurations.total_subscribers,
 })
 
 const plans = [
@@ -219,6 +220,22 @@ const badgeVariant = (status) => {
                                 :invalid="form.errors.total_fund"
                             />
                             <InputError :message="form.errors.total_fund" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="total_subscriber"
+                                value="Total Subscribers"
+                            />
+                            <Input
+                                id="total_subscriber"
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                class="block w-full"
+                                v-model="form.total_subscriber"
+                                :invalid="form.errors.total_subscriber"
+                            />
+                            <InputError :message="form.errors.total_subscriber" />
                         </div>
                         <div class="space-y-2">
                             <Label

@@ -45,9 +45,9 @@ class User extends Authenticatable implements HasMedia
     public function getChildrenIds(): array
     {
         return User::query()->where('hierarchyList', 'like', '%-' . $this->id . '-%')
-            ->where('status', 1)
-            ->pluck('id'
-            )->toArray();
+            ->where('status', 'Active')
+            ->pluck('id')
+            ->toArray();
     }
     public function rank(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

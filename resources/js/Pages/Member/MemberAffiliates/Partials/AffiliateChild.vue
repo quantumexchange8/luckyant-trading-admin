@@ -161,12 +161,12 @@ export default {
                                     class="text-xs font-normal dark:text-gray-400">{{ $t('public.Total Clients') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
-                                <span class="text-sm font-semibold">$ {{ formatAmount(99999) }}</span>
+                                <span class="text-sm font-semibold">$ {{ node.self_deposit ? formatAmount(node.self_deposit) : '0.00' }}</span>
                                 <span
                                     class="text-xs font-normal dark:text-gray-400">{{ $t('public.Total Deposit') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
-                                <span class="text-sm font-semibold">$ {{ formatAmount(99999) }}</span>
+                                <span class="text-sm font-semibold">$ {{ node.total_group_deposit ? formatAmount(node.total_group_deposit) : '0.00' }}</span>
                                 <span
                                     class="text-xs font-normal dark:text-gray-400">{{ $t('public.Total Group Deposit') }}</span>
                             </div>

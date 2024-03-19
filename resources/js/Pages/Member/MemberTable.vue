@@ -39,19 +39,19 @@ const mt5Details = ref(null);
 const sortDescending = ref('desc');
 const types = ref('')
 
-const toggleSort = (type) => {
+const toggleSort = (sortType) => {
   sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
-  types.value = type;
+  types.value = sortType;
 }
 
 watch(
-    [() => props.search, () => props.rank, () => props.date, () => types.value, () => sortDescending.value],
+    [() => props.search, () => props.rank, () => props.date, () => props.kycStatus, () => types.value, () => sortDescending.value],
     debounce(([searchValue, rankValue, dateValue, typeValue, sortValue]) => {
         getResults(1, searchValue, rankValue, dateValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = types.value, sort = sortDescending.value) => {
+const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = props.kycStatus, sortType = types.value, sort = sortDescending.value) => {
     isLoading.value = true
     try {
         let url = `/member/getMemberDetails?page=${page}`;
@@ -60,9 +60,9 @@ const getResults = async (page = 1, search = props.search , rank = props.rank, d
             url += `&search=${search}`;
         }
 
-        // if (type) {
-        //     url += `&type=${type}`;
-        // }
+        if (type) {
+            url += `&type=${type}`;
+        }
 
         if (rank) {
             url += `&rank=${rank}`;
@@ -72,8 +72,8 @@ const getResults = async (page = 1, search = props.search , rank = props.rank, d
             url += `&date=${date}`;
         }
         
-        if (type) {
-            url += `&type=${type}`;
+        if (sortType) {
+            url += `&sortType=${sortType}`;
             url += `&sort=${sort}`;
         }
 

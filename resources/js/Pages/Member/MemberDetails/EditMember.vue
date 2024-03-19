@@ -120,7 +120,6 @@ const openInNewTab = (url) => {
                             v-model="form.name"
                             autofocus
                             autocomplete="name"
-                            :disabled="props.member_detail.kyc_approval === 'Verified'"
                             :invalid="form.errors.name"
                         />
                         <InputError :message="form.errors.name" class="mt-1 col-span-4" />
@@ -135,7 +134,6 @@ const openInNewTab = (url) => {
                             type="email"
                             class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
                             v-model="form.email"
-                            :disabled="props.member_detail.kyc_approval === 'Verified'"
                         />
                         <InputError :message="form.errors.email" class="mt-1 col-span-4" />
                     </div>
