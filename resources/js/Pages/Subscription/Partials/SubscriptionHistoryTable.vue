@@ -78,6 +78,7 @@ const updateSubscriptionType = (subscription_type) => {
                     :isLoading="isLoading"
                     :search="search"
                     :date="date"
+                    :exportStatus="exportStatus"
                     @update:loading="$emit('update:loading', $event)"
                     @update:refresh="$emit('update:refresh', $event)"
                 />

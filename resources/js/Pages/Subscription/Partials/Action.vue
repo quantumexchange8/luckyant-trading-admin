@@ -247,9 +247,13 @@ const submitForm = () => {
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription ID</span>
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_number }}</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <!-- <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
                 <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscription.subscription_fee ? subscriber.subscription.subscription_fee : '0.00' }}</span>
+            </div> -->
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Copy Trade Balance</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(subscriber.subscription.meta_balance) ? formatAmount(subscriber.subscription.meta_balance) : '0.00' }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
@@ -264,44 +268,5 @@ const submitForm = () => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.expired_date ?  subscriber.subscription.expired_date : '-'}}</span>
             </div>
         </div>
-
-        <!-- <div v-if="modalComponent == 'Renewal Details'">
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.created_at) }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Number</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_number }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">User</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.meta_login }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.master.user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.master.meta_login }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_period }} Days</span> 
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscription.subscription_fee }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.subscription.expired_date) }}</span>
-            </div>
-        </div> -->
     </Modal>
 </template>

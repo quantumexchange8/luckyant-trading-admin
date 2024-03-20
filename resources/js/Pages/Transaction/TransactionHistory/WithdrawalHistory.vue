@@ -222,53 +222,106 @@ const transactionVariant = (transactionStatus) => {
     </div>
 
     <Modal :show="withdrawalHistoryModal" title="Transaction Details" @close="closeModal">
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.user.name }}</span>
+        <div v-if="withdrawalDetail.category == 'trading_account'">
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.user.name }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Email</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.user.email }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_type }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_number }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(withdrawalDetail.created_at) }}</span>
+            </div>
+            <div v-if="withdrawalDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="withdrawalDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="withdrawalDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_meta_login }}</span>
+            </div>
+            <div v-if="withdrawalDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_meta_login }}</span>
+            </div>
+            <!-- <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">ticket</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.ticket }}</span>
+            </div> -->
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ withdrawalDetail.amount }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.status }}</span>
+            </div>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Email</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.user.email }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_type }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_number }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-cente gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(withdrawalDetail.created_at) }}</span>
-        </div>
-        <div v-if="withdrawalDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_wallet.wallet_address }}</span>
-        </div>
-        <div v-if="withdrawalDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet.wallet_address }}</span>
-        </div>
-        <div v-if="withdrawalDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_meta_login }}</span>
-        </div>
-        <div v-if="withdrawalDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_meta_login }}</span>
-        </div>
-        <!-- <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">ticket</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.ticket }}</span>
-        </div> -->
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ withdrawalDetail.amount }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.status }}</span>
+
+        <div v-if="withdrawalDetail.category == 'wallet'">
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.user.name }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Email</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.user.email }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_type }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.transaction_number }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(withdrawalDetail.created_at) }}</span>
+            </div>
+            <div v-if="withdrawalDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="withdrawalDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="withdrawalDetail.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Platform</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.payment_platform }}</span>
+            </div>
+            <div v-if="withdrawalDetail.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Name</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.payment_account_name }}</span>
+            </div>
+            <div v-if="withdrawalDetail.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Account</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.account_no }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ withdrawalDetail.amount }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ withdrawalDetail.status }}</span>
+            </div>
         </div>
     </Modal>
 </template>

@@ -258,57 +258,109 @@ const transactionVariant = (transactionStatus) => {
     </div>
 
     <Modal :show="depositHistoryModal" title="Transaction Details" @close="closeModal">
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.user.name }}</span>
+        <div v-if="depositDetail.category == 'trading_account'">
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.user.name }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Email</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.user.email }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.transaction_type }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.transaction_number }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(depositDetail.created_at) }}</span>
+            </div>
+            <div v-if="depositDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.from_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="depositDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_wallet.wallet_address }}</span>
+            </div>
+            <div v-if="depositDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.from_meta_login }}</span>
+            </div>
+            <div v-if="depositDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_meta_login }}</span>
+            </div>
+            <!-- <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">ticket</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.ticket }}</span>
+            </div> -->
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ depositDetail.amount }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.status }}</span>
+            </div>
+            <div v-if="depositDetail.status == 'Rejected'" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Remarks</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.remarks }}</span>
+            </div>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Email</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.user.email }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.transaction_type }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.transaction_number }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(depositDetail.created_at) }}</span>
-        </div>
-        <div v-if="depositDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.from_wallet.wallet_address }}</span>
-        </div>
-        <div v-if="depositDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_wallet.wallet_address }}</span>
-        </div>
-        <div v-if="depositDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.from_meta_login }}</span>
-        </div>
-        <div v-if="depositDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_meta_login }}</span>
-        </div>
-        <!-- <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">ticket</span>
-            <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.ticket }}</span>
-        </div> -->
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ depositDetail.amount }}</span>
-        </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.status }}</span>
-        </div>
-        <div v-if="depositDetail.status == 'Rejected'" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Remarks</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.remarks }}</span>
+        <div v-if="depositDetail.category == 'wallet'">
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Name</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.user.name }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Email</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.user.email }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Type</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.transaction_type }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction ID</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.transaction_number }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date & Time</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(depositDetail.created_at) }}</span>
+            </div>
+            <div v-if="depositDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_wallet.wallet_address }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Platform</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.payment_method }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Account</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.setting_payment.payment_account_name }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Account Number</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.setting_payment.account_no }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ depositDetail.amount }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.status }}</span>
+            </div>
+            <div v-if="depositDetail.status == 'Rejected'" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Remarks</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ depositDetail.remarks }}</span>
+            </div>
         </div>
     </Modal>
 </template>

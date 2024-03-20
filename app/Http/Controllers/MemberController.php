@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Transaction;
 use App\Models\PaymentAccount;
+use App\Models\Subscription;
 use App\Notifications\KycApprovalNotification;
 use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
@@ -580,22 +581,20 @@ class MemberController extends Controller
 
     protected function getSelfDeposit($user)
     {
-        return Transaction::query()
+        return Subscription::query()
             ->where('user_id', $user->id)
-            ->where('category', 'wallet')
-            ->where('transaction_type', 'Deposit')
-            ->sum('amount');
+            ->where('status', 'Active')
+            ->sum('meta_balance');
     }
 
     protected function getTotalGroupDeposit($user)
     {
         $ids = $user->getChildrenIds();
 
-        return Transaction::query()
+        return Subscription::query()
             ->whereIn('user_id', $ids)
-            ->where('category', 'wallet')
-            ->where('transaction_type', 'Deposit')
-            ->sum('amount');
+            ->where('status', 'Active')
+            ->sum('meta_balance');
     }
 
     protected function mapUser($user, $level) {

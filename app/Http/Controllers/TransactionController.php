@@ -28,7 +28,7 @@ class TransactionController extends Controller
 
     public function getPendingTransaction(Request $request, $type)
     {
-        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet'])
+        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet', 'payment_account'])
             ->where('transaction_type', $type)
             ->where('status', 'Processing');
 
@@ -183,7 +183,7 @@ class TransactionController extends Controller
 
     public function getTransactionHistory(Request $request, $type)
     {
-        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet'])
+        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet', 'setting_payment', 'payment_account'])
             ->whereNotIn('status', ['Processing', 'Pending'])
             ->where('transaction_type', $type);
         

@@ -26,6 +26,7 @@ const formatter = ref({
 });
 const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
+const refreshDeposit = ref(props.refresh);
 
 watch(
     [() => props.search, () => props.date],
@@ -67,6 +68,23 @@ const handlePageChange = (newPage) => {
         getResults(currentPage.value, props.search, props.date);
     }
 };
+
+watch(() => props.refresh, (newVal) => {
+    refreshDeposit.value = newVal;
+    if (newVal) {
+        // Call the getResults function when refresh is true
+        getResults();
+        emit('update:refresh', false);
+    }
+});
+
+const paginationClass = [
+    'bg-transparent border-0 dark:text-gray-400 dark:enabled:hover:text-white'
+];
+
+const paginationActiveClass = [
+    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
+];
 
 const transactionVariant = (transactionStatus) => {
     if (transactionStatus === 'Active') return 'success';
@@ -111,7 +129,7 @@ const closeModal = () => {
                         Master Trading Account
                     </th>
                     <th scope="col" class="p-3">
-                        Subscription Fee
+                        Copy Trade Balance
                     </th>
                     <th scope="col" class="p-3">
                         Approval Date
@@ -148,7 +166,7 @@ const closeModal = () => {
                         {{ subscriber.master_meta_login }}
                     </td>
                     <td class="p-3">
-                        $ {{ subscriber.subscription.subscription_fee ? subscriber.subscription.subscription_fee : '0.00' }}
+                        $ {{ subscriber.subscription.meta_balance }}
                     </td>
                     <td class="p-3">
                         {{ formatDateTime(subscriber.subscription.approval_date) }}
@@ -159,6 +177,22 @@ const closeModal = () => {
                 </tr>
             </tbody>
         </table>
+        <div class="flex justify-center mt-4" v-if="!depositLoading">
+            <TailwindPagination
+                :item-classes=paginationClass
+                :active-classes=paginationActiveClass
+                :data="subscribers"
+                :limit=2
+                @pagination-change-page="handlePageChange"
+            >
+                <template #prev-nav>
+                    <span class="flex gap-2"><ArrowLeftIcon class="w-5 h-5" /> Previous</span>
+                </template>
+                <template #next-nav>
+                    <span class="flex gap-2">Next <ArrowRightIcon class="w-5 h-5" /></span>
+                </template>
+            </TailwindPagination>
+        </div>
     </div>
 
     <Modal :show="subscriberHistoryModal" title="Subscriber History Details" @close="closeModal">
@@ -189,6 +223,10 @@ const closeModal = () => {
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription ID</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.subscription_number }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Copy Trade Balance</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.subscription.meta_balance }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>

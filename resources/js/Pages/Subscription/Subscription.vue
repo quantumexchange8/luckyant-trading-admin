@@ -45,7 +45,7 @@ const exportTransaction = () => {
                     </p>
                 </div>
 
-                <div>
+                <!-- <div>
                     <Button
                         type="button"
                         class="justify-center w-full gap-2 border border-gray-600 text-white text-sm dark:hover:bg-gray-600"
@@ -61,7 +61,7 @@ const exportTransaction = () => {
                             <span class="text-black dark:text-gray-300">Export as Excel</span>
                         </div>
                     </Button>
-                </div>
+                </div> -->
 
             </div>
         </template>

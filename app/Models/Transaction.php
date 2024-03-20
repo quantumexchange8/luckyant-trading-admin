@@ -47,4 +47,12 @@ class Transaction extends Model implements HasMedia
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
+    public function payment_account(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(PaymentAccount::class, 'payment_account_id', 'id');
+    }
+    public function setting_payment(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(SettingPaymentMethod::class, 'setting_payment_method_id', 'id');
+    }
 }

@@ -10,8 +10,10 @@ use App\Models\Transaction;
 use App\Models\Subscriber;
 use App\Models\Wallet;
 use App\Models\Master;
+use App\Exports\SubscriptionHistoryExport;
 use Auth;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SubscriptionController extends Controller
 {
@@ -298,6 +300,10 @@ class SubscriptionController extends Controller
             $historySubscriber->where(function ($q) use ($filter) {
                 $q->where('status', $filter);
             });
+        }
+
+        if ($request->has('exportStatus')) {
+            return Excel::download(new SubscriptionHistoryExport($historySubscriber), Carbon::now() . '-' . 'Subscription_History-report.xlsx');
         }
 
         $results = $historySubscriber->latest()->paginate(10);

@@ -191,6 +191,19 @@ const submitForm = () => {
                 <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.from_wallet.wallet_address }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
+                <span class="text-sm font-semibold dark:text-gray-400">Payment Platform</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_method }}</span>
+            </div>
+            <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                <span class="text-sm font-semibold dark:text-gray-400">Account Name</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.payment_account_name }}</span>
+            </div>
+            <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                <span v-if="transaction.payment_method == 'Crypto'" class="text-sm font-semibold dark:text-gray-400">USDT Address</span>
+                <span v-if="transaction.payment_method == 'Bank'" class="text-sm font-semibold dark:text-gray-400">Bank Account</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet_address }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
                 <span class="text-sm font-semibold dark:text-gray-400">Amount</span>
                 <span class="col-span-2 text-black dark:text-white py-2">$ {{ transaction.amount }}</span>
             </div>
@@ -199,11 +212,11 @@ const submitForm = () => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.status) }}</span>
             </div>
 
-            <div v-if="transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2 border-b pb-3">
+            <div v-if="transaction.payment_method == 'Crypto' && transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2 border-b pb-3">
                 <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
             </div>
 
-            <div  class="flex justify-center items-center gap-2 pb-2">
+            <div v-if="transaction.payment_method == 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
                 <img v-if="transaction.transaction_type == 'Deposit'"
                 :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
                 alt=""

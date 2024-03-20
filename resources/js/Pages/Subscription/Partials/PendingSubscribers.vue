@@ -24,6 +24,7 @@ const formatter = ref({
 });
 const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
+const refreshDeposit = ref(props.refresh);
 
 watch(
     [() => props.search, () => props.date],
@@ -66,6 +67,23 @@ const handlePageChange = (newPage) => {
     }
 };
 
+watch(() => props.refresh, (newVal) => {
+    refreshDeposit.value = newVal;
+    if (newVal) {
+        // Call the getResults function when refresh is true
+        getResults();
+        emit('update:refresh', false);
+    }
+});
+
+const paginationClass = [
+    'bg-transparent border-0 dark:text-gray-400 dark:enabled:hover:text-white'
+];
+
+const paginationActiveClass = [
+    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
+];
+
 </script>
 
 <template>
@@ -91,8 +109,11 @@ const handlePageChange = (newPage) => {
                     <th scope="col" class="p-3">
                         Master Trading Account
                     </th>
-                    <th scope="col" class="p-3">
+                    <!-- <th scope="col" class="p-3">
                         Subscription Fee
+                    </th> -->
+                    <th scope="col" class="p-3">
+                        Copy Trade Balance
                     </th>
                     <th scope="col" class="p-3 text-center">
                         Action
@@ -125,7 +146,7 @@ const handlePageChange = (newPage) => {
                         {{ subscriber.master.meta_login }}
                     </td>
                     <td class="p-2.5">
-                        {{ subscriber.subscription.subscription_fee }}
+                        $ {{ subscriber.subscription.meta_balance }}
                     </td>
                     <td class="p-2.5 text-center">
                         <Action :subscriber="subscriber"/>
@@ -133,5 +154,21 @@ const handlePageChange = (newPage) => {
                 </tr>
             </tbody>
         </table>
+        <div class="flex justify-center mt-4" v-if="!depositLoading">
+            <TailwindPagination
+                :item-classes=paginationClass
+                :active-classes=paginationActiveClass
+                :data="subscribers"
+                :limit=2
+                @pagination-change-page="handlePageChange"
+            >
+                <template #prev-nav>
+                    <span class="flex gap-2"><ArrowLeftIcon class="w-5 h-5" /> Previous</span>
+                </template>
+                <template #next-nav>
+                    <span class="flex gap-2">Next <ArrowRightIcon class="w-5 h-5" /></span>
+                </template>
+            </TailwindPagination>
+        </div>
     </div>
 </template>
