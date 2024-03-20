@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\MemberListingExport;
 use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
 use App\Models\Country;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MemberController extends Controller
 {
@@ -63,7 +65,7 @@ class MemberController extends Controller
 
     public function addMember(AddMemberRequest $request)
     {
-        
+
         $upline_id = $request->upline_id['value'];
         $upline = User::find($upline_id);
 
@@ -77,15 +79,15 @@ class MemberController extends Controller
 
         if ($topLead) {
             if ($topLead->top_leader_id == null) {
-                
+
                 $topLead = $topLead->id;
-                
+
             } else {
-                
+
                 $topLead = $topLead->top_leader_id;
-                
+
             }
-            
+
         }
 
         $dialCode = Country::find($request->country);
@@ -169,22 +171,18 @@ class MemberController extends Controller
             ->when($request->filled('sortType'), function($query) use ($request) {
                 $sortType = $request->input('sortType');
                 $sort = $request->input('sort');
-               
+
                 $query->orderBy($sortType, $sort);
             })
             // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', )
             ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            ->latest();
 
-        // if ($request->has('exportStatus')) {
-        //     if($request->type != null){
-        //         return Excel::download(new MemberListingTypeExport($members), Carbon::now() . '-' . $request->type . '-report.xlsx');
-        //     } else {
-        //         return Excel::download(new MemberListingExport($members), Carbon::now() . '-' . '-report.xlsx');
-        //     }
-        // }
+        if ($request->has('exportStatus')) {
+            return Excel::download(new MemberListingExport($members), Carbon::now() . '-report.xlsx');
+        }
+
+        $members = $members->paginate(10);
 
         $members->getCollection()->transform(function ($member) {
             $userId = explode('-', $member->hierarchyList)[1] ?? null;
@@ -294,7 +292,7 @@ class MemberController extends Controller
 
     public function editMember(EditMemberRequest $request)
     {
-        
+
         $user = User::find($request->user_id);
 
         $user->update([
@@ -323,9 +321,9 @@ class MemberController extends Controller
 
     public function paymentAccount(PaymentAccountRequest $request)
     {
-        
+
         $paymentAccount = PaymentAccount::find($request->id);
-       
+
         $PaymentAccount = $paymentAccount->update([
             'payment_account_name' => $request->payment_account_name,
             'payment_platform_name' => $request->payment_platform_name,
@@ -340,7 +338,7 @@ class MemberController extends Controller
 
     public function advanceEditMember(Request $request)
     {
-        
+
         $user = User::find($request->user_id);
 
         $currentRank = $request->rank;
@@ -381,7 +379,7 @@ class MemberController extends Controller
                             'top_leader_id' => $topLead->top_leader_id
                         ]);
                     }
-                    
+
                 }
 
                 $this->transferUpline($user, $upline_id);
@@ -394,7 +392,7 @@ class MemberController extends Controller
             ]);
         }
 
-        
+
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
     }

@@ -1,10 +1,11 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/Authenticated.vue";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import { RefreshIcon, SearchIcon } from "@heroicons/vue/outline";
+import { CloudDownloadIcon, SearchIcon } from "@heroicons/vue/outline";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import {onMounted, ref} from "vue";
 import Input from "@/Components/Input.vue";
+import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import MemberTable from "@/Pages/Member/MemberTable.vue";
@@ -54,6 +55,10 @@ const updateKycCounts = () => {
         status.count = props.kycCounts[status.value] || 0;
     }
 }
+
+const exportMember = () => {
+    exportStatus.value = true;
+}
 </script>
 
 <template>
@@ -76,7 +81,7 @@ const updateKycCounts = () => {
                 </div>
             </div>
 
-            
+
         </template>
 
         <div class="pt-3 md:flex md:justify-end items-center">
@@ -117,28 +122,44 @@ const updateKycCounts = () => {
             </div>
         </div>
 
-        <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900  my-8">
+        <div class="p-6 bg-white rounded-md shadow-md dark:bg-gray-900 my-8">
             <div class="w-full">
                 <TabGroup :selectedIndex="selectedTab" @change="changeTab">
-                    <TabList class="max-w-md flex py-1">
-                        <Tab
-                            v-for="kycStatus in kycStatuses"
-                            as="template"
-                            v-slot="{ selected }"
-                        >
-                            <button
-                                @click="updateKycStatus(kycStatus.value)"
-                                :class="[
-                                    'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
+                    <TabList class="flex py-1 w-full flex-col gap-3 sm:flex-row sm:justify-between">
+                        <div class="w-full">
+                            <Tab
+                                v-for="kycStatus in kycStatuses"
+                                as="template"
+                                v-slot="{ selected }"
+                            >
+                                <button
+                                    @click="updateKycStatus(kycStatus.value)"
+                                    class="w-full sm:w-36"
+                                    :class="[
+                                    'py-2.5 text-sm font-semibold dark:text-gray-400',
                                     'ring-white ring-offset-0 focus:outline-none focus:ring-0',
                                        selected
                                     ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
                                     : 'border-b border-gray-300 dark:border-gray-700',
                                 ]"
+                                >
+                                    {{ kycStatus.name }} <span v-if="kycStatus.name !== 'All'">({{ kycStatus.count }})</span>
+                                </button>
+                            </Tab>
+                        </div>
+                        <div>
+                            <Button
+                                type="button"
+                                variant="gray"
+                                class="w-full flex gap-1 justify-center"
+                                size="sm"
+                                v-slot="{ iconSizeClasses }"
+                                @click="exportMember"
                             >
-                                {{ kycStatus.name }} <span v-if="kycStatus.name !== 'All'">({{ kycStatus.count }})</span>
-                            </button>
-                        </Tab>
+                                <CloudDownloadIcon class="w-5 h-5" />
+                                Export
+                            </Button>
+                        </div>
                     </TabList>
 
                     <TabPanels>
@@ -155,7 +176,7 @@ const updateKycCounts = () => {
                                 :exportStatus="exportStatus"
                                 @update:loading="isLoading = $event"
                                 @update:refresh="refresh = $event"
-                                @update:export="$emit('update:export', $event)"
+                                @update:export="exportStatus = $event"
                             />
                         </TabPanel>
                     </TabPanels>

@@ -31,7 +31,7 @@ const members = ref({data: []});
 const currentPage = ref(1);
 const refreshDeposit = ref(props.refresh);
 const isLoading = ref(props.isLoading);
-const emit = defineEmits(['update:loading', 'update:refresh']);
+const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 const { formatDateTime, formatAmount } = transactionFormat();
 const memberMT5Modal = ref(false);
 const mt5Details = ref(null);
@@ -40,8 +40,9 @@ const sortDescending = ref('desc');
 const types = ref('')
 
 const toggleSort = (sortType) => {
-  sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
-  types.value = sortType;
+    sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
+    types.value = sortType;
+    console.log(sortType)
 }
 
 watch(
@@ -71,7 +72,7 @@ const getResults = async (page = 1, search = props.search , rank = props.rank, d
         if (date) {
             url += `&date=${date}`;
         }
-        
+
         if (sortType) {
             url += `&sortType=${sortType}`;
             url += `&sort=${sort}`;
@@ -107,28 +108,28 @@ watch(() => props.refresh, (newVal) => {
     }
 });
 
-// watch(() => props.exportStatus, (newVal) => {
-//     refreshDeposit.value = newVal;
-//     if(newVal) {
+watch(() => props.exportStatus, (newVal) => {
+    refreshDeposit.value = newVal;
+    if(newVal) {
 
-//         let url = `/member/getMemberDetails?exportStatus=yes`;
+        let url = `/member/getMemberDetails?exportStatus=yes`;
 
-//             if (props.date) {
-//                 url += `&date=${props.date}`;
-//             }
+            if (props.date) {
+                url += `&date=${props.date}`;
+            }
 
-//             if (props.search) {
-//                 url += `&search=${props.search}`;
-//             }
+            if (props.search) {
+                url += `&search=${props.search}`;
+            }
 
-//             if (props.filter) {
-//                 url += `&filter=${props.filter}`;
-//             }
+            if (props.rank) {
+                url += `&rank=${props.rank}`;
+            }
 
-//             window.location.href = url;
-//             emit('update:export', false);
-//     }
-// })
+            window.location.href = url;
+            emit('update:export', false);
+    }
+})
 
 watchEffect(() => {
     if (usePage().props.title !== null) {
@@ -141,7 +142,7 @@ const paginationClass = [
 ];
 
 const paginationActiveClass = [
-    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
+    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-primary-500 dark:text-white'
 ];
 
 const kycVariant = (kycApprovalStatus) => {
@@ -174,9 +175,9 @@ const closeModal = () => {
                         <div>
                             <span>Name</span>
                         </div>
-                        <div 
+                        <div
                             class="transition-transform transform"
-                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            :class="{ 'rotate-180': sortDescending === 'asc' && types === 'name' }"
                             @click="toggleSort('name')"
                         >
                             <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
@@ -190,7 +191,7 @@ const closeModal = () => {
                         </div>
                         <div
                             class="transition-transform transform"
-                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            :class="{ 'rotate-180': sortDescending === 'asc' && types === 'created_at' }"
                             @click="toggleSort('created_at')"
                         >
                             <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
@@ -213,7 +214,7 @@ const closeModal = () => {
                         </div>
                         <div
                             class="transition-transform transform"
-                            :class="{ 'rotate-180': sortDescending === 'asc' }"
+                            :class="{ 'rotate-180': sortDescending === 'asc' && types === 'country' }"
                             @click="toggleSort('country')"
                         >
                             <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
@@ -254,7 +255,7 @@ const closeModal = () => {
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     <Tooltip content="View MT5 account" placement="bottom">
-                        <Button 
+                        <Button
                             type="button"
                             variant="gray"
                             size="sm"
