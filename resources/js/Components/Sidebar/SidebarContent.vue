@@ -42,6 +42,11 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 title="Member Listing"
                 :active="route().current('member.member_listing')"
             />
+            <!-- <SidebarCollapsibleItem
+                :href="route('member.live_trading')"
+                title="Live Trading Listing"
+                :active="route().current('member.live_trading')"
+            /> -->
         </SidebarCollapsible>
 
         <SidebarLink
@@ -103,7 +108,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
             />
         </SidebarCollapsible>
         <SidebarCollapsible
-            title="Subscriber"
+            title="Subscribers"
             :active="route().current('subscription.*')"
         >
             <template #icon>
@@ -115,12 +120,17 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
 
             <SidebarCollapsibleItem
                 :href="route('subscription.subscribers')"
-                title="Subscriber Request"
+                title="Pending Request"
                 :active="route().current('subscription.subscribers')"
             />
             <SidebarCollapsibleItem
+                :href="route('subscription.subscribersListing')"
+                title="Subscribers Listing"
+                :active="route().current('subscription.subscribersListing')"
+            />
+            <SidebarCollapsibleItem
                 :href="route('subscription.subscriptionHistory')"
-                title="Subscription Listing"
+                title="Subscriptions History"
                 :active="route().current('subscription.subscriptionHistory')"
             />
         </SidebarCollapsible>

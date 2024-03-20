@@ -51,8 +51,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/getTreeData/{id}', [MemberController::class, 'getTreeData'])->name('member.getTreeData');
         Route::post('/wallet_adjustment', [MemberController::class, 'wallet_adjustment'])->name('member.wallet_adjustment');
         Route::post('/verifyMember', [MemberController::class, 'verifyMember'])->name('member.verify_member');
-
         Route::get('/impersonate/{user}', [MemberController::class, 'impersonate'])->name('member.impersonate');
+
+        // live trading
+        Route::get('/live_trading', [MemberController::class, 'liveTrading'])->name('member.live_trading');
+  
     });
 
     /**
@@ -125,6 +128,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         // subscription renewal
         Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
         Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
+    
+        Route::get('/subscribersListing', [SubscriptionController::class, 'subscribersListing'])->name('subscription.subscribersListing');
+
     });
 
     /**

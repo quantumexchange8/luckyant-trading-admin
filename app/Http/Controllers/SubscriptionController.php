@@ -350,4 +350,9 @@ class SubscriptionController extends Controller
 
         return response()->json($results);
     }
+
+    public function subscribersListing()
+    {
+        return Inertia::render('Subscription/SubscriberListing');
+    }
 }

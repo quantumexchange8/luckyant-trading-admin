@@ -25,24 +25,7 @@ const updateSubscriptionType = (subscription_type) => {
 
 <template>
     <TabGroup>
-        <TabList class="max-w-xl flex py-1">
-            <Tab
-                as="template"
-                v-slot="{ selected }"
-            >
-                <button
-                    @click="updateSubscriptionType('Renewal')"
-                    :class="[
-                              'w-full py-2.5 text-sm font-semibold dark:text-gray-400',
-                              'ring-white ring-offset-0 focus:outline-none focus:ring-0',
-                              selected
-                                ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
-                                : 'border-b border-gray-300 dark:border-gray-700',
-                           ]"
-                >
-                    Pending Renewal
-                </button>
-            </Tab>
+        <TabList class="max-w-xs flex py-1">
             <Tab
                 as="template"
                 v-slot="{ selected }"
@@ -62,16 +45,7 @@ const updateSubscriptionType = (subscription_type) => {
             </Tab>
         </TabList>
         <TabPanels>
-            <TabPanel>
-                <SubscriptionRenewal
-                    :refresh="refresh"
-                    :isLoading="isLoading"
-                    :search="search"
-                    :date="date"
-                    @update:loading="$emit('update:loading', $event)"
-                    @update:refresh="$emit('update:refresh', $event)"
-                />
-            </TabPanel>
+            
             <TabPanel>
                 <SubscriptionHistory
                     :refresh="refresh"

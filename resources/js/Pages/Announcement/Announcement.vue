@@ -106,7 +106,7 @@ const updateStatus = async (announcementId, newStatus) => {
             id: announcementId,
             status: newStatus
         });
-        console.log('Status updated successfully:');
+        
     } catch (error) {
         console.error('Error updating status:', error);
     }
@@ -179,7 +179,7 @@ const updateStatus = async (announcementId, newStatus) => {
                     </thead>
                     <tbody>
                         <tr v-if="announcements.data.length === 0">
-                            <th colspan="3" class="py-4 text-lg text-center">
+                            <th colspan="5" class="py-4 text-lg text-center">
                                 No History
                             </th>
                         </tr>
@@ -200,13 +200,13 @@ const updateStatus = async (announcementId, newStatus) => {
                                 <Switch
                                     :modelValue="enabled.value && announcement.status === 'Active'"
                                     :class="announcement.status === 'Active' ? 'bg-success-500' : 'bg-gray-300'"
-                                    class="relative inline-flex h-[24px] w-[50px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75"
+                                    class="relative inline-flex h-[24px] w-[52px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75"
                                     @click="toggleStatus(announcement)"
                                     >
                                     <span class="sr-only">Use setting</span>
                                     <span
                                         aria-hidden="true"
-                                        :class="announcement.status === 'Active' ? 'translate-x-9' : 'translate-x-0'"
+                                        :class="announcement.status === 'Active' ? 'translate-x-7' : 'translate-x-0'"
                                         class="pointer-events-none inline-block h-[20px] w-[20px] transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
                                     />
                                 </Switch>

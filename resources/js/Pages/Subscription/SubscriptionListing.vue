@@ -47,7 +47,7 @@ const exportTransaction = () => {
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
                 <h2 class="text-2xl font-semibold leading-tight">
-                    Subscription Listing
+                    Subscription History
                 </h2>
                
             </div>

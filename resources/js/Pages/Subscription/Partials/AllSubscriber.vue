@@ -5,18 +5,17 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import {alertTriangle} from "@/Components/Icons/outline.jsx";
 import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
-import Action from "@/Pages/Subscription/Partials/Action.vue";
-import debounce from "lodash/debounce.js";
 import Badge from "@/Components/Badge.vue";
 import Modal from "@/Components/Modal.vue";
+import debounce from "lodash/debounce.js";
+import Action from "@/Pages/Subscription/Partials/Action.vue";
 
 const props = defineProps({
     refresh: Boolean,
     isLoading: Boolean,
     search: String,
-    filter: String,
     date: String,
-    exportStatus: Boolean,
+    // exportStatus: Boolean,
 })
 
 const subscribers = ref({data: []});
@@ -27,20 +26,19 @@ const formatter = ref({
 });
 const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
-const currentPage = ref(1);
 const refreshDeposit = ref(props.refresh);
 
 watch(
-    [() => props.search, () => props.date, () => props.filter],
-    debounce(([searchValue, dateValue, filterValue]) => {
-        getResults(1, searchValue, dateValue, filterValue);
+    [() => props.search, () => props.date],
+    debounce(([searchValue, dateValue]) => {
+        getResults(1, searchValue, dateValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '', filter = '') => {
+const getResults = async (page = 1, search = '', date = '') => {
     depositLoading.value = true
     try {
-        let url = `/subscription/getHistorySubscriber?page=${page}`;
+        let url = `/subscription/getActiveSubscriber?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -48,10 +46,6 @@ const getResults = async (page = 1, search = '', date = '', filter = '') => {
 
         if (date) {
             url += `&date=${date}`;
-        }
-
-        if (filter) {
-            url += `&filter=${filter}`;
         }
 
         const response = await axios.get(url);
@@ -84,28 +78,6 @@ watch(() => props.refresh, (newVal) => {
     }
 });
 
-watch(() => props.exportStatus, (newVal) => {
-    refreshDeposit.value = newVal;
-    if (newVal) {
-        let url = `/subscription/getHistorySubscriber?exportStatus=yes`;
-
-        if (props.date) {
-            url += `&date=${props.date}`;
-        }
-
-        if (props.search) {
-            url += `&search=${props.search}`;
-        }
-
-        if (props.filter) {
-            url += `&filter=${props.filter}`;
-        }
-
-        window.location.href = url;
-        emit('update:export', false);
-    }
-});
-
 const paginationClass = [
     'bg-transparent border-0 dark:text-gray-400 dark:enabled:hover:text-white'
 ];
@@ -114,24 +86,21 @@ const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
 ];
 
-
 const transactionVariant = (transactionStatus) => {
     if (transactionStatus === 'Active') return 'success';
     if (transactionStatus === 'Rejected') return 'danger';
-    if (transactionStatus === 'Expired') return 'warning';
-    if (transactionStatus === 'Terminated') return 'danger';
 }
 
-const subscriptionHistoryModal = ref(false);
-const subscriptionDetail = ref();
+const subscriberHistoryModal = ref(false);
+const subscriberHistoryDetail = ref();
 
-const openSubscriptionHistoryModal = (subscriber) => {
-    subscriptionHistoryModal.value = true;
-    subscriptionDetail.value = subscriber;
+const openSubscriberModal = (subscriber) => {
+    subscriberHistoryModal.value = true
+    subscriberHistoryDetail.value = subscriber
 }
 
 const closeModal = () => {
-    subscriptionHistoryModal.value = false;
+    subscriberHistoryModal.value = false
 }
 </script>
 
@@ -146,6 +115,7 @@ const closeModal = () => {
                     <th scope="col" class="p-3">
                         Date
                     </th>
+                    
                     <th scope="col" class="p-3">
                         User
                     </th>
@@ -164,8 +134,8 @@ const closeModal = () => {
                     <th scope="col" class="p-3">
                         Approval Date
                     </th>
-                    <th scope="col" class="p-3">
-                        Status
+                    <th scope="col" class="p-3 text-center">
+                        Action
                     </th>
                 </tr>
             </thead>
@@ -177,8 +147,8 @@ const closeModal = () => {
                 </tr>
                 <tr
                     v-for="subscriber in subscribers.data"
-                    class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800 hover:cursor-pointer"
-                    @click="openSubscriptionHistoryModal(subscriber)"
+                    class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
+                    
                 >
                     <td class="p-3">
                         {{ formatDateTime(subscriber.created_at) }}
@@ -193,20 +163,16 @@ const closeModal = () => {
                         {{ subscriber.master.user.name }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.master.meta_login }}
+                        {{ subscriber.master_meta_login }}
                     </td>
                     <td class="p-3">
-                       $ {{ subscriber.meta_balance }}
+                        $ {{ subscriber.subscription.meta_balance }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.approval_date ? subscriber.approval_date : '-' }}
+                        {{ formatDateTime(subscriber.subscription.approval_date) }}
                     </td>
-                    <td class="p-3">
-                        <Badge
-                            :variant="transactionVariant(subscriber.status)"
-                        >
-                            {{ subscriber.status }}
-                        </Badge>
+                    <td class="p-3 text-center">
+                        <Action :subscriber="subscriber"/>
                     </td>
                 </tr>
             </tbody>
@@ -229,58 +195,54 @@ const closeModal = () => {
         </div>
     </div>
 
-    <Modal :show="subscriptionHistoryModal" title="Subscription Details" @close="closeModal">
+    <Modal :show="subscriberHistoryModal" title="Subscriber History Details" @close="closeModal">
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriptionDetail.created_at) }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriberHistoryDetail.created_at)}}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">User</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.user.name }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.user.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.meta_login }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.meta_login }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Type</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.type }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.master.user.name }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.master.user.name }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Trading Account</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.master.meta_login }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.master.meta_login }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription ID</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.subscription_number }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.subscription_number }}</span>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.subscription_period }} Days</span> 
-        </div>
-        <!-- <div class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriptionDetail.subscription_fee ? subscriptionDetail.subscription_fee : '0.00' }}</span>
-        </div> -->
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Copy Trade Balance</span>
-            <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriptionDetail.meta_balance }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.subscription.meta_balance }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.approval_date ? subscriptionDetail.approval_date : '-' }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.approval_date ? subscriberHistoryDetail.approval_date : '-' }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.expired_date ? subscriptionDetail.expired_date : '-' }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.expired_date ? subscriberHistoryDetail.expired_date : '-' }}</span>
         </div>
-        <div v-if="subscriptionDetail.status == 'Terminated'" class="grid grid-cols-3 items-center gap-2">
-            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Termination Date</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.termination_date }}</span>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Status</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.status }}</span>
         </div>
-        <div v-if="subscriptionDetail.status == 'Terminated' || subscriptionDetail.status == 'Rejected'" class="grid grid-cols-3 items-center gap-2">
+        <div v-if="subscriberHistoryDetail.status == 'Rejected'" class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Remarks</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.remarks }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriberHistoryDetail.remarks }}</span>
         </div>
     </Modal>
 </template>
