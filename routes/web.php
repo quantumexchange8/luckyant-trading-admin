@@ -83,6 +83,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/listing', [AnnouncementController::class, 'index'])->name('announcement.announcement_listing');
         Route::get('/getAnnouncement', [AnnouncementController::class, 'getAnnouncement'])->name('getAnnouncement');
         Route::post('/addAnnouncement', [AnnouncementController::class, 'addAnnouncement'])->name('addAnnouncement');
+        Route::post('/edit_details', [AnnouncementController::class, 'editAnnoucement'])->name('announcement.edit_details');
+        Route::post('/updateStatus', [AnnouncementController::class, 'updateStatus'])->name('announcement.updateStatus');
     });
 
     /**

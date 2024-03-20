@@ -32,9 +32,9 @@ class AnnouncementController extends Controller
 
         $results = $announcements->latest()->paginate(10);
 
-        // $results->each(function ($image) {
-        //     $image->user->profile_photo_url = $user_deposit->user->getFirstMediaUrl('profile_photo');
-        // });
+        $results->each(function ($image) {
+            $image->announcement_image_url = $image->getFirstMediaUrl('announcement');
+        });
 
         return response()->json($results);
     }
@@ -46,12 +46,43 @@ class AnnouncementController extends Controller
             'subject' => $request->subject,
             'details' => $request->details,
             'type' => $request->positions,
+            'status' => 'Active',
         ]);
 
         if ($request->hasfile('image'))
         {
             $announcement->addMedia($request->image)->toMediaCollection('announcement');
         }
+
+        return redirect()->back()->with('title', 'Announcement uploaded')->with('success', 'This announcement has been uploaded successfully.');
+    }
+
+    public function editAnnoucement(Request $request)
+    {
+
+        $announcement = Announcement::find($request->id);
+
+        $announcement->update([
+            'subject' => $request->subject,
+            'details' => $request->details,
+        ]);
+
+        if ($request->hasfile('image'))
+        {
+            $announcement->clearMediaCollection('announcement');
+            $announcement->addMedia($request->image)->toMediaCollection('announcement');
+        }
+
+        return redirect()->back()->with('title', 'Announcement uploaded')->with('success', 'This announcement has been uploaded successfully.');
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $announcement = Announcement::find($request->id);
+
+        $announcement->update([
+            'status' => $request->status,
+        ]);
 
         return redirect()->back()->with('title', 'Announcement uploaded')->with('success', 'This announcement has been uploaded successfully.');
     }

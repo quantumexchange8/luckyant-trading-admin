@@ -16,6 +16,7 @@ class Announcement extends Model implements HasMedia
         'subject',
         'details',
         'type',
+        'status'
     ];
 
 }

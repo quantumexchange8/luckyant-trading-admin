@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/Authenticated.vue'
 import {usePage} from "@inertiajs/vue3";
 import AddAnnouncement from "@/Pages/Announcement/Partials/AddAnnouncement.vue";
+import Action from "@/Pages/Announcement/Partials/Action.vue";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import Input from "@/Components/Input.vue";
 import {ArrowLeftIcon, ArrowRightIcon, SearchIcon} from "@heroicons/vue/outline";
@@ -15,6 +16,7 @@ import Button from "@/Components/Button.vue";
 import Modal from "@/Components/Modal.vue";
 import debounce from "lodash/debounce.js";
 import {TailwindPagination} from "laravel-vue-pagination";
+import { Switch } from '@headlessui/vue'
 
 const announcements = ref({data: []});
 const isLoading = ref(false);
@@ -90,6 +92,25 @@ const openAnnouncementModal = (announcement) => {
 const closeModal = () => {
     announcementModal.value = false
 }
+
+const enabled = ref(false);
+
+const toggleStatus = (announcement) => {
+    announcement.status = announcement.status === 'Active' ? 'Inactive' : 'Active';
+    updateStatus(announcement.id, announcement.status);
+}
+
+const updateStatus = async (announcementId, newStatus) => {
+    try {
+        const response = await axios.post('/announcement/updateStatus', {
+            id: announcementId,
+            status: newStatus
+        });
+        console.log('Status updated successfully:');
+    } catch (error) {
+        console.error('Error updating status:', error);
+    }
+};
 </script>
 
 <template>
@@ -148,6 +169,9 @@ const closeModal = () => {
                             <th scope="col" class="p-3">
                                 Type
                             </th>
+                            <th scope="col" class="p-3">
+                                Status
+                            </th>
                             <th scope="col" class="p-3 text-center">
                                 Action
                             </th>
@@ -172,22 +196,26 @@ const closeModal = () => {
                             <td class="p-3">
                                 {{ announcement.type }}
                             </td>
-                            <td class="p-3 flex justify-center">
-                                <Tooltip content="View Details" placement="bottom">
-                                    <Button
-                                        type="button"
-                                        class="flex items-center justify-center"
-                                        variant="gray"
-                                        iconOnly
-                                        size="lg"
-                                        pill
-                                        v-slot="{ iconSizeClasses }"
-                                        @click="openAnnouncementModal(announcement)"
+                            <td class="p-3">
+                                <Switch
+                                    :modelValue="enabled.value && announcement.status === 'Active'"
+                                    :class="announcement.status === 'Active' ? 'bg-success-500' : 'bg-gray-300'"
+                                    class="relative inline-flex h-[24px] w-[50px] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75"
+                                    @click="toggleStatus(announcement)"
                                     >
-                                        <MemberDetailIcon aria-hidden="true" class="w-5 h-5 absolute" />
-                                        <span class="sr-only">View Details</span>
-                                    </Button>
-                                </Tooltip>
+                                    <span class="sr-only">Use setting</span>
+                                    <span
+                                        aria-hidden="true"
+                                        :class="announcement.status === 'Active' ? 'translate-x-9' : 'translate-x-0'"
+                                        class="pointer-events-none inline-block h-[20px] w-[20px] transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out"
+                                    />
+                                </Switch>
+                            </td>
+                            <td class="p-3 flex justify-center">
+                                <Action
+                                    :announcement="announcement"
+                                />
+                                
                             </td>
                         </tr>
                     </tbody>

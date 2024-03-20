@@ -304,6 +304,7 @@ class MemberController extends Controller
             'country' => $request->country,
             'nationality' => $request->nationality,
             'address_1' => $request->address_1,
+            'gender' => $request->gender,
         ]);
 
         if ($request->hasFile('profile_photo')) {
