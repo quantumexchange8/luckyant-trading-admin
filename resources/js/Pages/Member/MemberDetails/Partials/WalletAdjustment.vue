@@ -174,6 +174,7 @@ const closeModal = () => {
                 <Input
                     id="amount"
                     type="number"
+                    min="0"
                     placeholder="$ 0.00"
                     class="block w-full"
                     v-model="form.amount"

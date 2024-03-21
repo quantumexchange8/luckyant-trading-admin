@@ -29,6 +29,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
 
 class MemberController extends Controller
 {
@@ -106,7 +107,7 @@ class MemberController extends Controller
             'password' => Hash::make($request->password),
             'identification_number' => $request->identity_number,
             'role' => 'member',
-            'kyc_approval' => 'Pending',
+            'kyc_approval' => 'Unverified',
         ]);
 
         $user->setReferralId();
@@ -291,6 +292,7 @@ class MemberController extends Controller
         $user->update([
             'name' => $request->name,
             'phone' => $request->phone,
+            'email' => $request->email,
             'dob' => $request->dob,
             'country' => $request->country,
             'nationality' => $request->nationality,

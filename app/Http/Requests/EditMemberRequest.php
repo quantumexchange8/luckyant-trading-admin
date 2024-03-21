@@ -16,6 +16,7 @@ class EditMemberRequest extends FormRequest
         return [
             'name' => ['required', 'regex:/^[a-zA-Z0-9\p{Han}. ]+$/u', 'max:255'],
             'phone' => ['required', 'max:255', Rule::unique(User::class)->ignore($user_id)],
+            'email' => ['required', 'email', Rule::unique(User::class)->ignore($user_id)],
             'password' => ['nullable', Password::defaults()],
             'dob' => ['required'],
             'country' => ['required'],
@@ -34,6 +35,7 @@ class EditMemberRequest extends FormRequest
             'name' => 'Name',
             'phone' => 'Phone Number',
             'password' => 'Password',
+            'email' => 'Email',
             'dob' => 'Date of Birth',
             'country' => 'Country',
         ];
