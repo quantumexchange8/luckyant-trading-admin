@@ -15,6 +15,7 @@ const isLoading = ref(false);
 const search = ref('');
 const date = ref('');
 const filter = ref('');
+const transactionType = ref('');
 const exportStatus = ref(false);
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -26,10 +27,16 @@ const statusList = [
     {value:'Rejected', label:"Rejected"},
 ];
 
+const category = [
+    { value: 'wallet', label: 'Wallet' },
+    { value: 'trading_account', label: 'Trading Account' },
+]
+
 function refreshTable() {
     search.value = '';
     date.value = '';
     filter.value = '';
+    transactionType.value = '';
     isLoading.value = !isLoading.value;
     refresh.value = true;
 }
@@ -97,11 +104,21 @@ const exportTransaction = () => {
                     <BaseListbox
                         id="statusID"
                         class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
+                        v-model="transactionType"
+                        :options="category"
+                        placeholder="Filter type"
+                    />
+                </div>
+                <div class="w-full">
+                    <BaseListbox
+                        id="statusID"
+                        class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
                         v-model="filter"
                         :options="statusList"
                         placeholder="Filter status"
                     />
                 </div>
+                
                 <div class="w-auto md:w-full">
                     <Button
                         type="button"
@@ -122,6 +139,7 @@ const exportTransaction = () => {
                 :search="search"
                 :date="date"
                 :filter="filter"
+                :transactionType="transactionType"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"
                 @update:refresh="refresh = $event"

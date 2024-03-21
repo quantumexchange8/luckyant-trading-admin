@@ -13,6 +13,7 @@ const props = defineProps({
     search: String,
     date: String,
     filter: String,
+    transactionType: String,
     refresh: Boolean,
     isLoading: Boolean,
     exportStatus: Boolean,
@@ -37,13 +38,13 @@ const toggleSort = (type) => {
 }
 
 watch(
-    [() => props.search, () => props.date, () => props.filter, () => types.value, () => sortDescending.value],
-    debounce(([searchValue, dateValue, filterValue, typeValue, sortValue]) => {
-        getResults(1, searchValue, dateValue, filterValue, typeValue, sortValue);
+    [() => props.search, () => props.date, () => props.filter, () => props.transactionType, () => types.value, () => sortDescending.value],
+    debounce(([searchValue, dateValue, filterValue, transactionTypeValue, typeValue, sortValue]) => {
+        getResults(1, searchValue, dateValue, filterValue, transactionTypeValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '', filter = '', type = types.value, sort = sortDescending.value) => {
+const getResults = async (page = 1, search = '', date = '', filter = '', transactionType = '', type = types.value, sort = sortDescending.value) => {
     depositLoading.value = true
     try {
         let url = `/transaction/getTransactionHistory/Deposit?page=${page}`;
@@ -58,6 +59,10 @@ const getResults = async (page = 1, search = '', date = '', filter = '', type = 
 
         if (filter) {
             url += `&filter=${filter}`;
+        }
+
+        if (transactionType) {
+            url += `&transactionType=${transactionType}`;
         }
 
         if (type) {
@@ -82,7 +87,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date, props.filter, types.value, sortDescending.value);
+        getResults(currentPage.value, props.search, props.date, props.filter, props.transactionType, types.value, sortDescending.value);
     }
 };
 
@@ -110,6 +115,10 @@ watch(() => props.exportStatus, (newVal) => {
 
         if (props.filter) {
             url += `&filter=${props.filter}`;
+        }
+
+        if (props.transactionType) {
+            url += `&transactionType=${props.transactionType}`;
         }
 
         window.location.href = url;
@@ -280,19 +289,19 @@ const transactionVariant = (transactionStatus) => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(depositDetail.created_at) }}</span>
             </div>
             <div v-if="depositDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.from_wallet.wallet_address }}</span>
             </div>
             <div v-if="depositDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_wallet.wallet_address }}</span>
             </div>
             <div v-if="depositDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Trading Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.from_meta_login }}</span>
             </div>
             <div v-if="depositDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Trading Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_meta_login }}</span>
             </div>
             <!-- <div class="grid grid-cols-3 items-center gap-2">
@@ -334,20 +343,24 @@ const transactionVariant = (transactionStatus) => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(depositDetail.created_at) }}</span>
             </div>
             <div v-if="depositDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.to_wallet.wallet_address }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Platform</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.payment_method }}</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <div v-if="depositDetail.setting_payment != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.setting_payment.payment_account_name }}</span>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
+            <div v-if="depositDetail.setting_payment != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Account Number</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.setting_payment.account_no }}</span>
+            </div>
+            <div v-if="depositDetail.payment_method == 'Payment Merchant'" class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Txn Hash</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ depositDetail.txn_hash }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>

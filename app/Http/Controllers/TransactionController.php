@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Exports\DepositExport;
-// use App\Exports\WithdrawalExport;
+use App\Exports\WithdrawalExport;
+use App\Exports\InternalTransferExport;
 // use App\Exports\BalanceAdjustmentExport;
 use App\Models\Wallet;
 // use App\Models\BalanceAdjustment;
@@ -218,6 +219,13 @@ class TransactionController extends Controller
             });
         }
 
+        if ($request->filled('transactionType')) {
+            $transactionType = $request->input('transactionType');
+            $query->where(function ($q) use ($transactionType) {
+                $q->where('category',  $transactionType);
+            });
+        }
+
         if ($request->filled('type')) {
             $sorttype = $request->input('type');
             $sort = $request->input('sort');
@@ -230,6 +238,8 @@ class TransactionController extends Controller
                 return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
             } elseif ($type == 'Withdrawal') {
                 return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
+            } elseif ($type == 'InternalTransfer') {
+                return Excel::download(new InternalTransferExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
             }
         }
 

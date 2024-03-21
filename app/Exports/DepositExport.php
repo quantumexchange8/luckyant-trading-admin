@@ -27,12 +27,20 @@ class DepositExport implements FromCollection, WithHeadings
             $result[] = array(
                 'name' => $deposits->user->name,
                 'email' => $deposits->user->email,
+                'category' => $deposits->category,
+                'type' => $deposits->transaction_type,
                 'transaction_id' => $deposits->transaction_number,
                 'txn_hash' => $deposits->txn_hash,
                 'to_wallet_address' => $deposits->to_wallet_address,
+                'from_meta_login' => $deposits->from_meta_login,
+                'to_meta_login' => $deposits->to_meta_login,
+                'payment_method' => $deposits->payment_method,
+                'payment_account_name' => $deposits->setting_payment->payment_account_name ?? '',
+                'account_number' => $deposits->setting_payment->account_no ?? '',
                 'date' => Carbon::parse($deposits->created_at)->format('Y-m-d'),
                 'amount' =>  number_format((float)$deposits->amount, 2, '.', ''),
                 'status' => $deposits->status,
+                'remarks' => $deposits->remarks,
             );
         }
 
@@ -44,12 +52,20 @@ class DepositExport implements FromCollection, WithHeadings
         return [
             'Name',
             'Email',
+            'type',
+            'transaction Type',
             'Transaction ID',
             'Transaction Hash',
             'To Wallet Address',
+            'From Trading Account',
+            'To Trading Account',
+            'Payment Method',
+            'Payment Account Name',
+            'Account',
             'Date',
             'Amount',
             'Status',
+            'Remarks',
         ];
     }
 }

@@ -13,6 +13,7 @@ const props = defineProps({
     search: String,
     date: String,
     filter: String,
+    transactionType: String,
     refresh: Boolean,
     isLoading: Boolean,
     exportStatus: Boolean,
@@ -29,13 +30,13 @@ const withdrawalHistoryModal = ref(false);
 const withdrawalDetail = ref();
 
 watch(
-    [() => props.search, () => props.date, () => props.filter],
-    debounce(([searchValue, dateValue, filterValue]) => {
-        getResults(1, searchValue, dateValue, filterValue);
+    [() => props.search, () => props.date, () => props.filter, () => props.transactionType],
+    debounce(([searchValue, dateValue, filterValue, transactionTypeValue]) => {
+        getResults(1, searchValue, dateValue, filterValue, transactionTypeValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '', filter = '') => {
+const getResults = async (page = 1, search = '', date = '', filter = '', transactionType = '') => {
     depositLoading.value = true
     try {
         let url = `/transaction/getTransactionHistory/Withdrawal?page=${page}`;
@@ -50,6 +51,10 @@ const getResults = async (page = 1, search = '', date = '', filter = '') => {
 
         if (filter) {
             url += `&filter=${filter}`;
+        }
+
+        if (transactionType) {
+            url += `&transactionType=${transactionType}`;
         }
 
         const response = await axios.get(url);
@@ -70,7 +75,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date);
+        getResults(currentPage.value, props.search, props.date, props.transactionType);
     }
 };
 
@@ -97,7 +102,11 @@ watch(() => props.exportStatus, (newVal) => {
         }
 
         if (props.filter) {
-            url += `&search=${props.filter}`;
+            url += `&filter=${props.filter}`;
+        }
+
+        if (props.transactionType) {
+            url += `&transactionType=${props.transactionType}`;
         }
 
         window.location.href = url;
@@ -244,19 +253,19 @@ const transactionVariant = (transactionStatus) => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(withdrawalDetail.created_at) }}</span>
             </div>
             <div v-if="withdrawalDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_wallet.wallet_address }}</span>
             </div>
             <div v-if="withdrawalDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet.wallet_address }}</span>
             </div>
             <div v-if="withdrawalDetail.from_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Meta</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Trading Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_meta_login }}</span>
             </div>
             <div v-if="withdrawalDetail.to_meta_login != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Meta</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Trading Account</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_meta_login }}</span>
             </div>
             <!-- <div class="grid grid-cols-3 items-center gap-2">
@@ -295,11 +304,11 @@ const transactionVariant = (transactionStatus) => {
                 <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(withdrawalDetail.created_at) }}</span>
             </div>
             <div v-if="withdrawalDetail.from_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">From Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.from_wallet.wallet_address }}</span>
             </div>
             <div v-if="withdrawalDetail.to_wallet_id != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">To Wallet</span>
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.to_wallet.wallet_address }}</span>
             </div>
             <div v-if="withdrawalDetail.payment_account != null" class="grid grid-cols-3 items-center gap-2">

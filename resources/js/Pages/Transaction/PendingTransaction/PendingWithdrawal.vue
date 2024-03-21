@@ -259,6 +259,9 @@ const rejectTransaction = async () => {
                     Transaction ID
                 </th>
                 <th scope="col" class="py-3">
+                    Tether/ Payment Merchant
+                </th>
+                <th scope="col" class="py-3">
                     USDT Address / Bank Acc
                 </th>
                 <th scope="col" class="py-3">
@@ -302,6 +305,9 @@ const rejectTransaction = async () => {
                 </td>
                 <td class="py-3">
                     {{ deposit.transaction_number }}
+                </td>
+                <td class="py-3">
+                    {{ deposit.payment_method }}
                 </td>
                 <td class="py-3">
                     {{ deposit.to_wallet_address }} 

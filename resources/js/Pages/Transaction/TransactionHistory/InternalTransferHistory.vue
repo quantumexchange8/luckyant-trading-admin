@@ -77,7 +77,7 @@ watch(() => props.refresh, (newVal) => {
 watch(() => props.exportStatus, (newVal) => {
     refreshTransfer.value = newVal;
     if (newVal) {
-        let url = `/transaction/getBalanceHistory/InternalTransfer?exportStatus=yes`;
+        let url = `/transaction/getTransactionHistory/InternalTransfer?exportStatus=yes`;
 
         if (props.date) {
             url += `&date=${props.date}`;
@@ -205,12 +205,16 @@ const closeModal = () => {
             <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transferDetail.created_at) }}</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer ID</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.transaction_number }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer From</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.from_meta_login ? transferDetail.from_meta_login : transferDetail.from_wallet.name }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.from_meta_login ? transferDetail.from_meta_login : transferDetail.from_wallet.name }} ( {{ transferDetail.from_wallet.wallet_address }})</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer To</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.to_meta_login ? transferDetail.to_meta_login : transferDetail.to_wallet.name }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transferDetail.to_meta_login ? transferDetail.to_meta_login : transferDetail.to_wallet.name }} ( {{ transferDetail.to_wallet.wallet_address }})</span>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transfer Amount</span>
