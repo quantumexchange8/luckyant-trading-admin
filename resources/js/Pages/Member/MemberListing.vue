@@ -15,7 +15,7 @@ import Action from "@/Pages/Member/Partials/Action.vue";
 const search = ref('');
 const date = ref('');
 const type = ref('');
-const rank = ref('');
+const rank = ref();
 const isLoading = ref(false);
 const refresh = ref(false);
 const exportStatus = ref(false)

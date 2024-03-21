@@ -74,14 +74,14 @@ const tooltipContent = computed(() => {
             />
         </template>
         <template v-if="modalComponent === 'Bonus Wallet Adjustment'">
-            <RebateAdjustment
+            <WalletAdjustment
                 :member_detail="member_detail"
                 :wallet="wallet"
                 @update:memberDetailModal="memberDetailModal = $event"
             />
         </template>
         <template v-if="modalComponent === 'E-Wallet Adjustment'">
-            <EWalletAdjustment
+            <WalletAdjustment
                 :member_detail="member_detail"
                 :wallet="wallet"
                 @update:memberDetailModal="memberDetailModal = $event"

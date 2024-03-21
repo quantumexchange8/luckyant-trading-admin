@@ -15,6 +15,7 @@ class Transaction extends Model implements HasMedia
         'user_id',
         'category',
         'transaction_type',
+        'fund_type',
         'from_wallet_id',
         'to_wallet_id',
         'from_meta_login',

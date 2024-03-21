@@ -17,7 +17,7 @@ import {CheckIcon, ChevronDownIcon, SortAscendingIcon } from '@heroicons/vue/sol
 const props = defineProps({
     search: String,
     date: String,
-    rank: String,
+    rank: Number,
     refresh: Boolean,
     isLoading: Boolean,
     kycStatus: String,
@@ -254,17 +254,22 @@ const closeModal = () => {
                     {{ formatDateTime(member.created_at, false) }}
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
-                    <Tooltip content="View MT5 account" placement="bottom">
-                        <Button
-                            type="button"
-                            variant="gray"
-                            size="sm"
-                            @click="openMT5Modal(member)"
-                            class="flex justify-center"
-                        >
-                            <span class="text-xs">View</span>
-                        </Button>
-                    </Tooltip>
+                    <div v-if="member.trading_accounts.length > 0">
+                        <Tooltip content="View MT5 account" placement="bottom">
+                            <Button
+                                type="button"
+                                variant="gray"
+                                size="sm"
+                                @click="openMT5Modal(member)"
+                                class="flex justify-center"
+                            >
+                                <span class="text-xs">View</span>
+                            </Button>
+                        </Tooltip>
+                    </div>
+                    <div v-else>
+                        -
+                    </div>
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     {{ member.userName ? member.userName : 'LuckyAnt Trading' }}

@@ -184,20 +184,13 @@ class MemberController extends Controller
 
         $members = $members->paginate(10);
 
-        $members->getCollection()->transform(function ($member) {
-            $userId = explode('-', $member->hierarchyList)[1] ?? null;
-            $userName = User::where('id', $userId)->value('name');
-            $member->userId = $userId;
-            $member->userName = $userName;
-            return $member;
-        });
-
         $members->each(function ($user) {
             $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
             $user->front_identity = $user->getFirstMediaUrl('front_identity');
             $user->back_identity = $user->getFirstMediaUrl('back_identity');
             $user->kyc_upload_date = $user->getMedia('back_identity')->first()->created_at ?? null;
             $user->walletBalance = $user->wallets->sum('balance');
+            $user->userName = $user->top_leader->name ?? null;
         });
 
         return response()->json($members);
@@ -400,33 +393,55 @@ class MemberController extends Controller
     public function wallet_adjustment(WalletAdjustmentRequest $request)
     {
         $amount = $request->amount;
-
         $wallet = Wallet::find($request->wallet_id);
-        $new_balance = $wallet->balance + $amount;
+        $transaction_type = $request->transaction_type;
 
-        if ($new_balance < 0 || $amount == 0) {
-            throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
-        }
-
-        $adjustment_id = RunningNumberService::getID('adjustment');
-
-        $wallet_balance = Transaction::create([
+        $transactionData = [
             'user_id' => $request->user_id,
-            'from_wallet_id' => $request->wallet_id,
-            'transaction_type' => 'WalletAdjustment',
             'category' => 'wallet',
-            'amount' => $amount,
-            'transaction_number' => $adjustment_id,
             'transaction_charges' => 0,
-            'transaction_amount' => $amount,
             'remarks' => $request->description,
             'handle_by' => Auth::id(),
             'status' => 'Success',
-            'new_wallet_amount' => $new_balance
-        ]);
+            'transaction_number' => RunningNumberService::getID('transaction')
+        ];
+
+        if ($wallet->type == 'cash_wallet') {
+            $transactionData['amount'] = $amount;
+            $transactionData['transaction_amount'] = $amount;
+            $transactionData['transaction_type'] = $transaction_type;
+            $transactionData['fund_type'] = $request->fund_type;
+
+            if ($transaction_type == 'Deposit') {
+                $transactionData['to_wallet_id'] = $wallet->id;
+                $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
+            } else {
+                $transactionData['from_wallet_id'] = $wallet->id;
+                $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
+            }
+        } else {
+            if ($transaction_type == 'Deposit') {
+                $transactionData['amount'] = $amount;
+                $transactionData['transaction_amount'] = $amount;
+                $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
+            } else {
+                $transactionData['amount'] = -$amount;
+                $transactionData['transaction_amount'] = -$amount;
+                $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
+            }
+
+            $transactionData['from_wallet_id'] = $wallet->id;
+            $transactionData['transaction_type'] = 'WalletAdjustment';
+        }
+
+        if ($transactionData['new_wallet_amount'] < 0) {
+            throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
+        }
+
+        $transaction = Transaction::create($transactionData);
 
         $wallet->update([
-            'balance' => $new_balance
+            'balance' => $transaction->new_wallet_amount
         ]);
 
         return redirect()->back()->with('title', 'Wallet Adjusted!')->with('success', 'This wallet has been adjusted successfully.');

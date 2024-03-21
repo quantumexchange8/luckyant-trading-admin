@@ -8,9 +8,10 @@ import TradingAccount from "@/Pages/Member/MemberDetails/TradingAccount.vue";
 import Action from "@/Pages/Member/MemberDetails/Partials/Action.vue";
 import {transactionFormat} from "@/Composables/index.js";
 import Badge from "@/Components/Badge.vue";
-import { ref } from "vue";
+import {ref, watchEffect} from "vue";
 import Modal from "@/Components/Modal.vue";
 import PaymentAccount from "@/Pages/Member/MemberDetails/Partials/PaymentAccount.vue"
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     member_detail: Object,
@@ -46,17 +47,17 @@ const closeModal = () => {
     <AuthenticatedLayout title="Member Details">
         <template #header>
             <div class="flex flex-row gap-2 items-center">
-                <h2 class="text-sm font-semibold dark:text-gray-400">
-                    <a class="dark:hover:text-white" href="/member/member_listing">Member Listing</a>
+                <h2 class="text-xl font-semibold dark:text-gray-400">
+                    <a class="hover:text-primary-500 dark:hover:text-white" href="/member/member_listing">Member Listing</a>
                 </h2>
                 <ChevronRightIcon aria-hidden="true" class="w-5 h-5" />
-                <h2 class="text-sm font-semibold dark:text-white">
+                <h2 class="text-xl font-semibold dark:text-white">
                     {{ member_detail.name }} - View Details
                 </h2>
             </div>
         </template>
 
-        <div class="flex flex-wrap gap-5 items-start md:flex-nowrap">
+        <div class="flex flex-wrap gap-5 items-stretch md:flex-nowrap">
             <div class="flex p-5 bg-white rounded-lg shadow-md dark:bg-gray-900 w-full md:w-3/4">
                 <EditMember
                     :member_detail="member_detail"
@@ -84,7 +85,7 @@ const closeModal = () => {
         </div> -->
 
         <div class="flex flex-col my-8">
-            <h3 class="pb-4 border-b border-gray-600 mb-5 text-xl font-semibold">
+            <h3 class="pb-2 border-b border-gray-300 mb-5 text-xl font-semibold">
                 Wallet
             </h3>
             <div class="overflow-x-auto grid grid-flow-col justify-start relative gap-5">
@@ -120,11 +121,14 @@ const closeModal = () => {
         </div>
 
         <div class="flex flex-col my-8">
-            <h3 class="pb-4 border-b border-gray-600 mb-5 text-xl font-semibold">
-                Payment Account 
+            <h3 class="pb-2 border-b border-gray-300 mb-5 text-xl font-semibold">
+                Payment Account
             </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div v-for="paymentAccount in paymentAccounts" 
+            <div v-if="paymentAccounts.length === 0" class="flex justify-center">
+                No Payment Accounts
+            </div>
+            <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div v-for="paymentAccount in paymentAccounts"
                     class="card text-gray-300 w-full hover:brightness-90 transition-all cursor-pointer group bg-gradient-to-tl from-gray-600 to-gray-800 hover:from-gray-800 hover:to-gray-700 dark:from-gray-900 dark:to-gray-950 dark:hover:from-gray-800 dark:hover:to-gray-950 border-r-2 border-t-2 border-gray-600 dark:border-gray-900 rounded-lg overflow-hidden relative"
                     @click="openModal(paymentAccount)"
                 >
@@ -160,6 +164,6 @@ const closeModal = () => {
             <PaymentAccount :paymentDetails="paymentDetails" :countries="countries" :currencies="currencies" @closeModal="closeModal"/>
         </Modal>
 
-        
+
     </AuthenticatedLayout>
 </template>
