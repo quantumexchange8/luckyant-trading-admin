@@ -160,6 +160,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         //master setting
         Route::get('/master_setting', [SettingController::class, 'masterSetting'])->name('setting.master_setting');
         Route::post('/updateMasterSetting', [SettingController::class, 'updateMasterSetting'])->name('setting.updateMasterSetting');
+
+        // tnc setting
+        Route::get('/tnc_setting', [SettingController::class, 'tncSetting'])->name('setting.tnc_setting');
+        Route::get('/getTncSetting', [SettingController::class, 'getTncSetting'])->name('setting.getTncSetting');
+        Route::post('/addTnCSetting', [SettingController::class, 'addTnCSetting'])->name('setting.addTnCSetting');
+        Route::put('/editTnCSetting/{id}', [SettingController::class, 'editTnCSetting'])->name('setting.editTnCSetting');
     });
 
     /**

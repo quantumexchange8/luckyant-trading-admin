@@ -162,16 +162,20 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                     aria-hidden="true"
                 />
             </template>
-
+            <SidebarCollapsibleItem
+                :href="route('setting.master_setting')"
+                title="Master Setting"
+                :active="route().current('setting.master_setting')"
+            />
             <SidebarCollapsibleItem
                 :href="route('setting.payment_setting')"
                 title="Payment Setting"
                 :active="route().current('setting.payment_setting')"
             />
             <SidebarCollapsibleItem
-                :href="route('setting.master_setting')"
-                title="Master Setting"
-                :active="route().current('setting.master_setting')"
+                :href="route('setting.tnc_setting')"
+                title="T&C Setting"
+                :active="route().current('setting.tnc_setting')"
             />
         </SidebarCollapsible>
         <!-- <SidebarCollapsible

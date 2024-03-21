@@ -128,10 +128,10 @@ module.exports = {
             typography: ({ theme }) => ({
                 DEFAULT: {
                     css: {
-                        '--tw-prose-paragraphs': theme('colors.white'),
-                        '--tw-prose-headings': theme('colors.white'),
-                        '--tw-prose-counters': theme('colors.white'),
-                        '--tw-prose-bold': theme('colors.white'),
+                        '--tw-prose-paragraphs': theme('colors.gray[300]'),
+                        '--tw-prose-headings': theme('colors.gray[300]'),
+                        '--tw-prose-counters': theme('colors.gray[300]'),
+                        '--tw-prose-bold': theme('colors.gray[300]'),
                         h1: {
                             fontSize: '28px',
                             lineHeight: '36px'

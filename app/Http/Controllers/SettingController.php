@@ -8,8 +8,10 @@ use Inertia\Inertia;
 use App\Models\Country;
 use App\Models\SettingPaymentMethod;
 use App\Models\Setting;
+use App\Models\Term;
 use Spatie\Activitylog\Models\Activity;
 use App\Http\Requests\PaymentSettingRequest;
+use App\Http\Requests\TermsRequest;
 use Carbon\Carbon;
 use Auth;
 
@@ -207,5 +209,63 @@ class SettingController extends Controller
             ->get();
 
         return response()->json($networks);
+    }
+
+    public function tncSetting(Request $request)
+    {
+        return Inertia::render('Setting/Tnc/TncSetting');
+    }
+
+    public function getTncSetting(Request $request)
+    {
+
+        $tnc = Term::query()
+        ->with('user:id,name')
+        ->when($request->filled('search'), function ($query) use ($request) {
+            $search = $request->input('search');
+            $query->where(function ($innerQuery) use ($search) {
+                $innerQuery->where('title', 'like', '%' . $search . '%');
+            });
+        })
+        ->when($request->filled('date'), function ($query) use ($request) {
+            $date = $request->input('date');
+            $dateRange = explode(' - ', $date);
+            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+            $query->whereBetween('created_at', [$start_date, $end_date]);
+        })
+        ->latest()
+        ->paginate(10);
+
+        return response()->json($tnc);
+    }
+
+    public function addTnCSetting(TermsRequest $request)
+    {
+        
+        $term = Term::create([
+            'type' => $request->type,
+            'title' => $request->title,
+            'contents' => $request->contents,
+            'user_id' => \Auth::id(),
+        ]);
+
+        return redirect()->back()->with('title', 'Terms and Conditions created')->with('success', 'The Terms and Conditions has been created successfully.');
+
+    }
+
+    public function editTnCSetting(TermsRequest $request, $id)
+    {
+        
+        $term = Term::findOrFail($id);
+
+        $term->update([
+            'type' => $request->type,
+            'title' => $request->title,
+            'contents' => $request->contents,
+            'user_id'  => \Auth::id(),
+        ]);
+
+        return redirect()->back()->with('title', 'Terms and Conditions updated')->with('success', 'The Terms and Conditions has been updated successfully.');
     }
 }
