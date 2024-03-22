@@ -167,6 +167,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/getTncSetting', [SettingController::class, 'getTncSetting'])->name('setting.getTncSetting');
         Route::post('/addTnCSetting', [SettingController::class, 'addTnCSetting'])->name('setting.addTnCSetting');
         Route::put('/editTnCSetting/{id}', [SettingController::class, 'editTnCSetting'])->name('setting.editTnCSetting');
+
+        // tnc setting
+        Route::get('/leverage_setting', [SettingController::class, 'leverageSetting'])->name('setting.leverage_setting');
+        Route::get('/getLeverageSetting', [SettingController::class, 'getLeverageSetting'])->name('setting.getLeverageSetting');
+        Route::post('/addLeverageSetting', [SettingController::class, 'addLeverageSetting'])->name('setting.addLeverageSetting');
+        Route::put('/editLeverageSetting/{id}', [SettingController::class, 'editLeverageSetting'])->name('setting.editLeverageSetting');
+        
     });
 
     /**

@@ -316,16 +316,30 @@ const transactionVariant = (transactionStatus) => {
                 <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.payment_platform }}</span>
             </div>
             <div v-if="withdrawalDetail.payment_account != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.payment_account_name }}</span>
-            </div>
-            <div v-if="withdrawalDetail.payment_account != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Payment Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.account_no }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2 break-words">{{ withdrawalDetail.payment_account.payment_platform_name }} - {{ withdrawalDetail.payment_account.account_no }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Amount</span>
                 <span class="col-span-2 text-black dark:text-white py-2">$ {{ withdrawalDetail.amount }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="text-sm font-semibold dark:text-gray-400">Payment Charges</span>
+                <span class="col-span-2 text-black dark:text-white py-2">
+                    $ {{ withdrawalDetail.transaction_charges }}
+                </span>
+            </div>
+            <div v-if="withdrawalDetail.payment_account ? withdrawalDetail.payment_account.payment_platform == 'Bank' : ''" class="grid grid-cols-3 items-center gap-2">
+                <span class="text-sm font-semibold dark:text-gray-400">Conversion Rate</span>
+                <span class="col-span-2 text-black dark:text-white py-2">
+                    {{ withdrawalDetail.conversion_rate }}
+                </span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="text-sm font-semibold dark:text-gray-400">Transaction Amount</span>
+                <span class="col-span-2 text-black dark:text-white py-2">
+                    {{ withdrawalDetail.payment_account.payment_platform == 'Bank' ? withdrawalDetail.payment_account.currency : '$ ' }} {{ withdrawalDetail.transaction_amount }}
+                </span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Transaction Status</span>

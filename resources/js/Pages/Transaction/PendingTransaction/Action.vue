@@ -166,63 +166,136 @@ const submitForm = () => {
 
         <!-- View -->
         <div v-if="modalComponent === 'Transaction Details'" class="pb-3">
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Email</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.email }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">ID Number</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.transaction_number }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Date & time</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transaction.created_at) }}</span>
-            </div>
-            <div v-if="transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">To Wallet Address</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet.wallet_address }}</span>
-            </div>
-            <div v-if="transaction.transaction_type == 'Withdrawal'" class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">From Wallet Address</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.from_wallet.wallet_address }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Payment Platform</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_method }}</span>
-            </div>
-            <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Account Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.payment_account_name }}</span>
-            </div>
-            <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
-                <span v-if="transaction.payment_method == 'Crypto'" class="text-sm font-semibold dark:text-gray-400">USDT Address</span>
-                <span v-if="transaction.payment_method == 'Bank'" class="text-sm font-semibold dark:text-gray-400">Bank Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet_address }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Amount</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ transaction.amount }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2 pb-2">
-                <span class="text-sm font-semibold dark:text-gray-400">Transaction Status</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.status) }}</span>
-            </div>
+            <div v-if="transaction.transaction_type == 'Deposit'">
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Name</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.name }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Email</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.email }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">ID Number</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.transaction_number }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Date & time</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transaction.created_at) }}</span>
+                </div>
+                <div v-if="transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">To Wallet Address</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet.wallet_address }}</span>
+                </div>
+                <div v-if="transaction.transaction_type == 'Withdrawal'" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">From Wallet Address</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.from_wallet.wallet_address }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Payment Platform</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_method }}</span>
+                </div>
+                <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Account Name</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.payment_account_name }}</span>
+                </div>
+                <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                    <span v-if="transaction.payment_method == 'Crypto'" class="text-sm font-semibold dark:text-gray-400">USDT Address</span>
+                    <span v-if="transaction.payment_method == 'Bank'" class="text-sm font-semibold dark:text-gray-400">Bank Account</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet_address }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Amount</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">$ {{ transaction.amount }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2 pb-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Transaction Status</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.status) }}</span>
+                </div>
 
-            <div v-if="transaction.payment_method == 'Crypto' && transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2 border-b pb-3">
-                <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
+                <div v-if="transaction.payment_method == 'Crypto' && transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2 border-b pb-3">
+                    <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
+                </div>
+
+                <div v-if="transaction.payment_method == 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
+                    <img v-if="transaction.transaction_type == 'Deposit'"
+                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
+                    alt=""
+                    class="pt-5"
+                    />
+
+                </div>
             </div>
+            <div v-if="transaction.transaction_type == 'Withdrawal'">
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Name</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.name }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Email</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.user.email }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">ID Number</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ transaction.transaction_number }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Date & time</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(transaction.created_at) }}</span>
+                </div>
+                <div v-if="transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">To Wallet Address</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.to_wallet.wallet_address }}</span>
+                </div>
+                <div v-if="transaction.transaction_type == 'Withdrawal'" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">From Wallet Address</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.from_wallet.wallet_address }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Payment Platform</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_method }}</span>
+                </div>
+                <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">To Account </span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.payment_platform_name }} - {{ transaction.payment_account.account_no }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Amount</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">
+                        $ {{ formatAmount(transaction.amount) }}
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Payment Charges</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">
+                        $ {{ transaction.transaction_charges }}
+                    </span>
+                </div>
+                <div v-if="transaction.payment_account.payment_platform == 'Bank'" class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Conversion Rate</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.conversion_rate) }}</span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Transaction Amount</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">
+                        {{ transaction.payment_account.payment_platform == 'Bank' ? transaction.payment_account.currency : '$ ' }} {{ transaction.transaction_amount }}
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 items-center gap-2 pb-2">
+                    <span class="text-sm font-semibold dark:text-gray-400">Transaction Status</span>
+                    <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transaction.status) }}</span>
+                </div>
+                <div v-if="transaction.payment_method == 'Crypto' && transaction.transaction_type == 'Deposit'" class="grid grid-cols-3 items-center gap-2 border-b pb-3">
+                    <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
+                </div>
 
-            <div v-if="transaction.payment_method == 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
-                <img v-if="transaction.transaction_type == 'Deposit'"
-                :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
-                alt=""
-                class="pt-5"
-                />
-
+                <div v-if="transaction.payment_method == 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
+                    <img v-if="transaction.transaction_type == 'Deposit'"
+                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
+                    alt=""
+                    class="pt-5"
+                    />
+                </div>
             </div>
         </div>
     </Modal>
