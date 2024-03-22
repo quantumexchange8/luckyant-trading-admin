@@ -15,6 +15,7 @@ import {
   RadioGroupOption,
 } from '@headlessui/vue'
 import AvatarInput from "@/Pages/Member/MemberDetails/Partials/AvatarInput.vue";
+import CountryLists from "../../../../../public/data/countries.json";
 
 const props = defineProps({
     member_detail: Object,
@@ -39,13 +40,16 @@ const memberInfo = ref(props.member_detail);
 const form = useForm({
     user_id: props.member_detail.id,
     name: '',
+    username: '',
     email: '',
+    dial_code: '',
     phone: '',
     dob: '',
     country: '',
     gender: '',
-    address_1: '',
+    address: '',
     nationality: '',
+    identification_number: '',
     profile_photo: null,
 })
 
@@ -61,13 +65,16 @@ const togglePasswordVisibility = () => {
 
 const submit = () => {
     form.name = memberInfo.value.name;
+    form.username = memberInfo.value.username;
     form.email = memberInfo.value.email;
+    form.dial_code = memberInfo.value.dial_code;
     form.phone = memberInfo.value.phone;
     form.dob = memberInfo.value.dob;
     form.country = memberInfo.value.country;
-    form.gender = selected.value.gender;
-    form.address_1 = memberInfo.value.address_1;
+    form.gender = selected.value.value;
+    form.address = memberInfo.value.address_1;
     form.nationality = memberInfo.value.nationality;
+    form.identification_number = memberInfo.value.identification_number;
     form.post(route('member.edit_member'), {
         onSuccess: () => {
             form.reset();
@@ -133,6 +140,21 @@ const openInNewTab = (url) => {
                 </div>
 
                 <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="username" value="Username" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="username"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="memberInfo.username"
+                            autocomplete="username"
+                            :invalid="form.errors.username"
+                        />
+                        <InputError :message="form.errors.username" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
                     <Label class="text-sm dark:text-white" for="email" value="Email" />
                     <div class="md:col-span-3">
                         <Input
@@ -146,28 +168,29 @@ const openInNewTab = (url) => {
                 </div>
 
                 <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="country" value="Country" />
-                    <div class="md:col-span-3">
+                    <Label
+                        for="phone"
+                        :value="$t('public.mobile_phone')"
+                    />
+                    <div class="flex gap-3">
                         <BaseListbox
-                            v-model="memberInfo.country"
-                            :options="countries"
+                            class="w-[240px]"
+                            :options="CountryLists"
+                            v-model="memberInfo.dial_code"
+                            with-img
+                            is-phone-code
+                            :error="!!form.errors.phone"
                         />
-                        <InputError :message="form.errors.country" class="mt-1 col-span-4" />
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="phone" value="Phone" />
-                    <div class="md:col-span-3">
                         <Input
                             id="phone"
                             type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            class="block w-full"
+                            :placeholder="$t('public.phone_placeholder')"
                             v-model="memberInfo.phone"
                             :invalid="form.errors.phone"
                         />
-                        <InputError :message="form.errors.phone" class="mt-1 col-span-4" />
                     </div>
+                    <InputError :message="form.errors.phone"/>
                 </div>
 
                 <div class="space-y-2">
@@ -233,6 +256,17 @@ const openInNewTab = (url) => {
                 </div>
 
                 <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="country" value="Country" />
+                    <div class="md:col-span-3">
+                        <BaseListbox
+                            v-model="memberInfo.country"
+                            :options="countries"
+                        />
+                        <InputError :message="form.errors.country" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
                     <Label class="text-sm dark:text-white" for="nationality" value="Nationality" />
                     <div class="md:col-span-3">
                         <BaseListbox
@@ -253,7 +287,21 @@ const openInNewTab = (url) => {
                             v-model="memberInfo.address_1"
 
                         />
-                        <InputError :message="form.errors.address_1" class="mt-1 col-span-4" />
+                        <InputError :message="form.errors.address" class="mt-1 col-span-4" />
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="identification_number" value="Identity Number" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="identification_number"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
+                            v-model="memberInfo.identification_number"
+
+                        />
+                        <InputError :message="form.errors.identification_number" class="mt-1 col-span-4" />
                     </div>
                 </div>
 

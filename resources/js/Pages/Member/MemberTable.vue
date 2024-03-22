@@ -22,6 +22,8 @@ const props = defineProps({
     isLoading: Boolean,
     kycStatus: String,
     exportStatus: Boolean,
+    countries: Array,
+    nationalities: Array,
 })
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -299,6 +301,8 @@ const closeModal = () => {
                     <KycAction
                         v-else
                         :member="member"
+                        :countries="countries"
+                        :nationalities="nationalities"
                     />
                 </td>
             </tr>

@@ -30,7 +30,7 @@ return [
         'file' => ':attribute 必须在 :min 到 :max 千字节之间。',
         'numeric' => ':attribute 必须在 :min 到 :max 之间。',
         'string' => ':attribute 必须在 :min 到 :max 个字符之间。',
-    ],
+    ],    
     'boolean' => ':attribute 字段必须是 true 或 false。',
     'confirmed' => ':attribute 确认不匹配。',
     'current_password' => '密码不正确。',
@@ -145,7 +145,7 @@ return [
     'url' => ':attribute 必须是有效的 URL。',
     'ulid' => ':attribute 必须是有效的 ULID。',
     'uuid' => ':attribute 必须是有效的 UUID。',
-
+    
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -162,7 +162,7 @@ return [
             'rule-name' => '自定义消息',
         ],
     ],
-
+    
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Attributes

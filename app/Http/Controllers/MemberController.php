@@ -19,6 +19,7 @@ use App\Services\RunningNumberService;
 use App\Http\Requests\EditMemberRequest;
 use App\Http\Requests\PaymentAccountRequest;
 use App\Http\Requests\AddMemberRequest;
+use App\Services\SelectOptionService;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -42,14 +43,6 @@ class MemberController extends Controller
             ];
         });
 
-        $countries = Country::all();
-        $formattedCountries = $countries->map(function ($country) {
-            return [
-                'value' => $country->id,
-                'label' => $country->name,
-            ];
-        });
-
         $kycCounts = User::where('role', 'member')
             ->whereIn('kyc_approval', ['Pending', 'Verified', 'Unverified'])
             ->selectRaw('kyc_approval, count(*) as count')
@@ -60,7 +53,8 @@ class MemberController extends Controller
         return Inertia::render('Member/MemberListing', [
             'rankLists' => $rankLists,
             'kycCounts' => $kycCounts,
-            'countries' => $formattedCountries,
+            'countries' => (new SelectOptionService())->getCountries(),
+            'nationalities' => (new SelectOptionService())->getNationalities(),
         ]);
     }
 
@@ -197,6 +191,11 @@ class MemberController extends Controller
         return response()->json($members);
     }
 
+    public function validateKyc(EditMemberRequest $request)
+    {
+        $this->updateMember($request);
+    }
+
     public function verifyMember(KycApprovalRequest $request)
     {
         $user = User::find($request->id);
@@ -286,29 +285,13 @@ class MemberController extends Controller
 
     public function editMember(EditMemberRequest $request)
     {
-
         $user = User::find($request->user_id);
 
-        $user->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'dob' => $request->dob,
-            'country' => $request->country,
-            'nationality' => $request->nationality,
-            'address_1' => $request->address_1,
-            'gender' => $request->gender,
-        ]);
+        $this->updateMember($request);
 
         if ($request->hasFile('profile_photo')) {
             $user->clearMediaCollection('profile_photo');
             $user->addMedia($request->profile_photo)->toMediaCollection('profile_photo');
-        }
-
-        if ($request->password) {
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
         }
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
@@ -343,10 +326,6 @@ class MemberController extends Controller
                 'password' => Hash::make($request->password),
             ]);
         }
-        $user->update([
-            'identification_number' => $request->identification_number,
-        ]);
-
 
         if ($currentRank != $user->setting_rank_id) {
             $user->rank_up_status = 'manual';
@@ -386,8 +365,6 @@ class MemberController extends Controller
                 'leader_status' => $request->leader_status,
             ]);
         }
-
-
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
     }
@@ -665,5 +642,64 @@ class MemberController extends Controller
         }
 
         return Inertia::location($url);
+    }
+
+    protected function updateMember($request)
+    {
+        $user = User::find($request->user_id);
+        $dial_code = $request->dial_code;
+        $phone = $request->phone;
+
+        // Remove leading '+' from dial code if present
+        $dial_code = ltrim($dial_code, '+');
+
+        // Remove leading '+' from phone number if present
+        $phone = ltrim($phone, '+');
+
+        // Check if phone number already starts with dial code
+        if (!str_starts_with($phone, $dial_code)) {
+            // Concatenate dial code and phone number
+            $phone_number = '+' . $dial_code . $phone;
+        } else {
+            // If phone number already starts with dial code, use the phone number directly
+            $phone_number = '+' . $phone;
+        }
+
+        $users = User::where('dial_code', $dial_code)
+            ->whereNot('id', $user->id)
+            ->where('role', 'member')
+            ->where('status', 'Active')
+            ->get();
+
+        foreach ($users as $user_phone) {
+            if ($user_phone->phone == $phone_number) {
+                throw ValidationException::withMessages(['phone' => trans('public.invalid_mobile_phone')]);
+            }
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'dob' => $request->dob,
+            'country' => $request->country,
+            'dial_code' => $request->dial_code,
+            'phone' => $phone_number,
+            'nationality' => $request->nationality,
+            'gender' => $request->gender,
+            'address_1' => $request->address,
+            'identification_number' => $request->identification_number,
+        ]);
+
+        if ($request->hasFile('profile_photo')) {
+            $user->clearMediaCollection('profile_photo');
+            $user->addMedia($request->profile_photo)->toMediaCollection('profile_photo');
+        }
+
+        if ($request->password) {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+        }
     }
 }

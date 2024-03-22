@@ -28,6 +28,7 @@ const props = defineProps({
     rankLists: Array,
     kycCounts: Object,
     countries: Array,
+    nationalities: Array,
 })
 
 const updateKycStatus = (kyc_status) => {
@@ -174,6 +175,8 @@ const exportMember = () => {
                                 :rank="rank"
                                 :kycStatus=kycStatus.value
                                 :exportStatus="exportStatus"
+                                :countries="countries"
+                                :nationalities="nationalities"
                                 @update:loading="isLoading = $event"
                                 @update:refresh="refresh = $event"
                                 @update:export="exportStatus = $event"

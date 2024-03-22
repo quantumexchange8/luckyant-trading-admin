@@ -18,7 +18,6 @@ const form = useForm({
     user_id: props.member_detail.id,
     rank: props.member_detail.setting_rank_id,
     upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.email } : {},
-    identification_number: props.member_detail.identification_number,
     password: '',
     leader_status: props.member_detail.leader_status,
 })
@@ -61,18 +60,6 @@ const leaderStatus = [
 <template>
     <form class="w-full">
         <div class="grid grid-cols-1 gap-3">
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="ic_number" value="Identity Number" />
-                <div class="md:col-span-3">
-                    <Input
-                        id="ic_number"
-                        type="text"
-                        class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                        v-model="form.identification_number"
-                    />
-                    <InputError :message="form.errors.identification_number" class="mt-1 col-span-4" />
-                </div>
-            </div>
 
             <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="password" value="Password" />
@@ -102,7 +89,7 @@ const leaderStatus = [
                     <InputError :message="form.errors.password" class="mt-1 col-span-4" />
                 </div>
             </div>
-            
+
             <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="rank" value="Rank" />
                 <div class="md:col-span-3">
