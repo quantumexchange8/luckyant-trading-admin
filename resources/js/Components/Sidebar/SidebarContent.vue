@@ -177,6 +177,11 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 title="T&C Setting"
                 :active="route().current('setting.tnc_setting')"
             />
+            <SidebarCollapsibleItem
+                :href="route('setting.leverage_setting')"
+                title="Leverage Setting"
+                :active="route().current('setting.leverage_setting')"
+            />
         </SidebarCollapsible>
         <!-- <SidebarCollapsible
             title="Admin"

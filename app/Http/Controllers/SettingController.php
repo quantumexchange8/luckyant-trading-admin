@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CurrencyConversionRate;
-use Illuminate\Http\Request;
+use Auth;
+use Carbon\Carbon;
+use App\Models\Term;
 use Inertia\Inertia;
 use App\Models\Country;
-use App\Models\SettingPaymentMethod;
 use App\Models\Setting;
-use App\Models\Term;
+use Illuminate\Http\Request;
+use App\Models\SettingLeverage;
+use App\Http\Requests\TermsRequest;
+use App\Models\SettingPaymentMethod;
+use App\Models\CurrencyConversionRate;
+use App\Http\Requests\LeveragesRequest;
 use Spatie\Activitylog\Models\Activity;
 use App\Http\Requests\PaymentSettingRequest;
-use App\Http\Requests\TermsRequest;
-use Carbon\Carbon;
-use Auth;
 
 class SettingController extends Controller
 {
@@ -268,4 +270,49 @@ class SettingController extends Controller
 
         return redirect()->back()->with('title', 'Terms and Conditions updated')->with('success', 'The Terms and Conditions has been updated successfully.');
     }
+
+    public function leverageSetting()
+    {
+        return Inertia::render('Setting/Leverage/LeverageSetting');
+    }
+    public function getLeverageSetting(Request $request)
+    {
+        $leverageSettings = SettingLeverage::query()
+        ->when($request->filled('search'), function ($query) use ($request) {
+            $search = $request->input('search');
+            $query->where(function ($innerQuery) use ($search) {
+                $innerQuery->where('value', 'like', '%' . $search . '%');
+            });
+        })
+        ->latest()
+        ->paginate(10);
+
+        return response()->json($leverageSettings);
+    }
+
+    public function addLeverageSetting(LeveragesRequest $request)
+    {
+        $leverageSetting = SettingLeverage::create([
+            'display' => '1:' . $request->value,
+            'value' => $request->value,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->back()->with('title', 'Leverage created')->with('success', 'The Leverage has been created successfully.');
+
+    }
+
+    public function editLeverageSetting(LeveragesRequest $request, $id)
+    {
+        $leverageSetting = SettingLeverage::findOrFail($id);
+
+        $leverageSetting->update([
+            'display' => '1:' . $request->value,
+            'value' => $request->value,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->back()->with('title', 'Leverage updated')->with('success', 'The Leverage has been updated successfully.');
+    }
+
 }
