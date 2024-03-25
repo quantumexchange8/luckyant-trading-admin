@@ -186,14 +186,13 @@ class SettingController extends Controller
     public function updateMasterSetting(Request $request)
     {
 
-
         $setting = Setting::find($request->id);
 
         $updateSetting = $setting->update([
             'value' => $request->value,
         ]);
 
-        return redirect()->back()->with('title', 'Updated successfully')->with('success', 'The payment configuaration has been updated successfully.');
+        return redirect()->back()->with('title', 'Updated successfully')->with('success', 'The master setting configuaration has been updated successfully.');
     }
 
     public function getCryptoNetworks(Request $request)

@@ -20,17 +20,17 @@ const configureWithdrawal = ref(false)
 
 const form = useForm({
     id: '',
-    value: props.withdrawal.value,
+    name: '',
+    value: '',
 });
 
 const configureSetting = (setting) => {
     
-    if (setting.slug == 'withdrawal-fee') {
-        configureWithdrawal.value = true;
-        
-        form.id = setting.id;
-        form.value = setting.value;
-    }
+    configureWithdrawal.value = true;
+    
+    form.id = setting.id;
+    form.name = setting.name;
+    form.value = setting.value;
 }
 
 const closeModal = () => {
@@ -40,6 +40,7 @@ const closeModal = () => {
 const submit = () => {
     const formData = {
         id: form.id,
+        name: form.name,
         value: form.value,
     };
     form.post(route('setting.updateMasterSetting'), {
@@ -98,12 +99,12 @@ const submit = () => {
         </table>
     </div>
 
-    <Modal :show="configureWithdrawal" :title="$t('Configuration Witdrawal')" @close="closeModal">
+    <Modal :show="configureWithdrawal" :title="$t('Configuration')" @close="closeModal">
         <form class="space-y-2">
             <div class="space-y-2">
                 <Label
-                    for="withdrawal"
-                    value="Withdrawal value"
+                    for="name"
+                    :value=form.name
                 />
                 <Input
                     id="withdrawal"
@@ -120,7 +121,7 @@ const submit = () => {
                     @click="submit"
                     :disabled="form.processing"
                 >
-                    {{ $t('public.Save') }}
+                    {{ $t('public.save') }}
                 </Button>
             </div>
         </form>
