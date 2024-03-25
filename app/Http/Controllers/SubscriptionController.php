@@ -32,7 +32,7 @@ class SubscriptionController extends Controller
     {
 
         $pendingSubscriber = Subscriber::query()
-            ->with(['user', 'master', 'master.user', 'subscription'])
+            ->with(['user', 'master', 'master.user', 'subscription', 'tradingUser'])
             ->where('status', 'Pending');
 
         if ($request->filled('search')) {

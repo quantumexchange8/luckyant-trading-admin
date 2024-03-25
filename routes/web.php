@@ -9,6 +9,7 @@ use App\Http\Controllers\MasterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\TradingController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
@@ -55,8 +56,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/impersonate/{user}', [MemberController::class, 'impersonate'])->name('member.impersonate');
 
         // live trading
-        Route::get('/live_trading', [MemberController::class, 'liveTrading'])->name('member.live_trading');
-
+        Route::get('/live_trading', [TradingController::class, 'liveTrading'])->name('member.live_trading');
+        Route::get('/getTradingAccount', [TradingController::class, 'getTradingAccount'])->name('member.getTradingAccount');
+        Route::post('/edit_leverage', [TradingController::class, 'edit_leverage'])->name('member.edit_leverage');
+        Route::post('/change_password', [TradingController::class, 'change_password'])->name('member.change_password');
+  
     });
 
     /**

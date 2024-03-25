@@ -1,8 +1,8 @@
 <script setup>
-import Loading from "@/Components/Loading.vue";
-import {ref} from "vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
-import AllSubscriber from "@/Pages/Subscription/Partials/AllSubscriber.vue"
+import Loading from "@/Components/Loading.vue";
+import Button from "@/Components/Button.vue";
+import AllTradingAccount from "@/Pages/Member/TradingListing/Partials/AllTradingAccount.vue"
 
 const props = defineProps({
     refresh: Boolean,
@@ -10,6 +10,7 @@ const props = defineProps({
     search: String,
     date: String,
     exportStatus: Boolean,
+    leverageSel: Array,
 })
 
 </script>
@@ -17,7 +18,7 @@ const props = defineProps({
 <template>
     <div>
         <TabGroup>
-            <TabList class="max-w-xs flex py-1">
+            <TabList class="max-w-52 flex py-1">
                 <Tab
                     as="template"
                     v-slot="{ selected }"
@@ -31,13 +32,14 @@ const props = defineProps({
                                     : 'border-b border-gray-300 dark:border-gray-700',
                             ]"
                     >
-                        All Subscribers
+                        Trading Account
                     </button>
                 </Tab>
             </TabList>
             <TabPanels>
                 <TabPanel>
-                    <AllSubscriber
+                    <AllTradingAccount
+                    :leverageSel="leverageSel"
                     :refresh="refresh"
                     :isLoading="isLoading"
                     :search="search"
@@ -51,4 +53,5 @@ const props = defineProps({
             </TabPanels>
         </TabGroup>
     </div>
+
 </template>

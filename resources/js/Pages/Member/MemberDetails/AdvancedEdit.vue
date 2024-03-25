@@ -14,6 +14,8 @@ const props = defineProps({
     ranks: Array,
 })
 
+const memberInfo = ref(props.member_detail);
+
 const form = useForm({
     user_id: props.member_detail.id,
     rank: props.member_detail.setting_rank_id,
@@ -44,6 +46,7 @@ function loadUsers(query, setOptions) {
 }
 
 const submit = () => {
+    form.identification_number = memberInfo.value.identification_number;
     form.patch(route('member.advanceEdit_member'), {
         onSuccess: () => {
             form.reset();

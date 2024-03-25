@@ -59,4 +59,18 @@ class MetaFiveService {
         (new CreateTradingUser)->execute($user, $accountResponse);
         return $accountResponse;
     }
+
+    public function changePassword($meta_login, $type, $password)
+    {
+        $passwordResponse = Http::acceptJson()->patch($this->baseURL . "/change_password", [
+            'login' => $meta_login,
+            'type' => $type,
+            'password' => $password,
+        ]);
+        $passwordResponse = $passwordResponse->json();
+
+        Log::debug($passwordResponse);
+
+        return $passwordResponse;
+    }
 }

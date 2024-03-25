@@ -15,15 +15,12 @@ const props = defineProps({
     isLoading: Boolean,
     search: String,
     date: String,
-    // exportStatus: Boolean,
+    exportStatus: Boolean,
 })
 
 const subscribers = ref({data: []});
 const depositLoading = ref(props.isLoading);
-const formatter = ref({
-    date: 'YYYY-MM-DD',
-    month: 'MM'
-});
+const currentPage = ref(1);
 const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 const refreshDeposit = ref(props.refresh);

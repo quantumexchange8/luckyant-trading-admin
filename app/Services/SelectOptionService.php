@@ -6,6 +6,7 @@ use App\Models\Country;
 use App\Models\PaymentAccount;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Models\SettingLeverage;
 
 class SelectOptionService
 {
@@ -36,6 +37,18 @@ class SelectOptionService
             return [
                 'value' => $transactionType,
                 'label' => $transactionType,
+            ];
+        });
+    }
+
+    public function getActiveLeverageSelection(): \Illuminate\Support\Collection
+    {
+        $settingLeverages = SettingLeverage::where('status', 'Active');
+
+        return $settingLeverages->get()->map(function ($settingLeverage) {
+            return [
+                'label' => $settingLeverage->display,
+                'value' => $settingLeverage->value,
             ];
         });
     }
