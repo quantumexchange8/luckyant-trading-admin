@@ -22,7 +22,8 @@ const isLoading = ref(false);
 const search = ref('');
 const date = ref('');
 const type = ref('');
-const filter = ref('');
+const fund_type = ref('');
+const status = ref('');
 const methods = ref('');
 const transactionType = ref('');
 const exportStatus = ref(false);
@@ -37,10 +38,11 @@ const statusList = [
     {value:'Rejected', label:"Rejected"},
 ];
 
-const category = [
-    { value: 'wallet', label: 'Wallet' },
-    { value: 'trading_account', label: 'Trading Account' },
-]
+const fundTypes = [
+    {value: '', label:"All"},
+    {value: 'DemoFund', label:"Demo Fund"},
+    {value: 'RealFund', label:"Real Fund"},
+];
 
 const paymentMethods = [
     {value: '', label:"All"},
@@ -52,7 +54,7 @@ const paymentMethods = [
 function refreshTable() {
     search.value = '';
     date.value = '';
-    filter.value = '';
+    status.value = '';
     transactionType.value = '';
     isLoading.value = !isLoading.value;
     refresh.value = true;
@@ -111,16 +113,25 @@ function changeTab(index) {
                     <BaseListbox
                         id="statusID"
                         class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
-                        v-model="transactionType"
-                        :options="category"
-                        placeholder="Filter type"
+                        v-model="methods"
+                        :options="paymentMethods"
+                        placeholder="Filter Payment Methods"
                     />
                 </div>
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
                         class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
-                        v-model="filter"
+                        v-model="fund_type"
+                        :options="fundTypes"
+                        placeholder="Filter Fund Type"
+                    />
+                </div>
+                <div class="w-full">
+                    <BaseListbox
+                        id="statusID"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
+                        v-model="status"
                         :options="statusList"
                         placeholder="Filter status"
                     />
@@ -183,8 +194,9 @@ function changeTab(index) {
                                 :isLoading="isLoading"
                                 :search="search"
                                 :date="date"
-                                :category="category"
+                                :fund_type="fund_type"
                                 :methods="methods"
+                                :status="status"
                                 :transactionType=transactionType.value
                                 :exportStatus="exportStatus"
                                 @update:loading="isLoading = $event"
@@ -200,7 +212,7 @@ function changeTab(index) {
 <!--                :isLoading="isLoading"-->
 <!--                :search="search"-->
 <!--                :date="date"-->
-<!--                :filter="filter"-->
+<!--                :status="status"-->
 <!--                :transactionType="transactionType"-->
 <!--                :transactionTypes="transactionTypes"-->
 <!--                :exportStatus="exportStatus"-->

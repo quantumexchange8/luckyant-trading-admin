@@ -341,4 +341,5 @@ return [
     'transaction_amount' => "Transaction Amount",
     'wallet_adjustment' => "Wallet Adjustment",
     'username' => "Username",
+    'fund_type' => "Fund Type",
 ];

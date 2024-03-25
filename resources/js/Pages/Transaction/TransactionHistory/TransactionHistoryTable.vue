@@ -15,8 +15,9 @@ import {CheckIcon, ChevronDownIcon, SortAscendingIcon } from '@heroicons/vue/sol
 const props = defineProps({
     search: String,
     date: String,
-    category: String,
+    fund_type: String,
     methods: String,
+    status: String,
     refresh: Boolean,
     isLoading: Boolean,
     transactionType: String,
@@ -31,9 +32,10 @@ const currentPage = ref(1);
 const refreshTransaction = ref(props.refresh);
 const transactionLoading = ref(props.isLoading);
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
-const { formatDateTime, formatAmount } = transactionFormat();
+const { formatDateTime, formatAmount, formatType } = transactionFormat();
 const transactionModal = ref(false);
 const transactionDetail = ref(null);
+const totalAmount = ref(null);
 
 const sortDescending = ref('desc');
 const types = ref('')
@@ -45,13 +47,13 @@ const toggleSort = (sortType) => {
 }
 
 watch(
-    [() => props.search, () => props.category, () => props.methods, () => props.date, () => props.transactionType, () => types.value, () => sortDescending.value],
-    debounce(([searchValue, categoryValue, methodsValue, dateValue, typeValue, sortValue]) => {
-        getResults(1, searchValue, categoryValue, methodsValue, dateValue, typeValue, sortValue);
+    [() => props.search, () => props.fund_type, () => props.methods, () => props.status, () => props.date, () => props.transactionType, () => types.value, () => sortDescending.value],
+    debounce(([searchValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue]) => {
+        getResults(1, searchValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search, category = props.category, methods = props.methods, date = props.date, type = props.transactionType, sortType = types.value, sort = sortDescending.value) => {
+const getResults = async (page = 1, search = props.search, fund_type = props.fund_type, methods = props.methods, status = props.status, date = props.date, type = props.transactionType, sortType = types.value, sort = sortDescending.value) => {
     transactionLoading.value = true
     try {
         let url = `/transaction/getTransactionHistory?page=${page}`;
@@ -64,12 +66,16 @@ const getResults = async (page = 1, search = props.search, category = props.cate
             url += `&type=${type}`;
         }
 
-        if (category) {
-            url += `&category=${category}`;
+        if (fund_type) {
+            url += `&fund_type=${fund_type}`;
         }
 
         if (methods) {
             url += `&methods=${methods}`;
+        }
+
+        if (status) {
+            url += `&status=${status}`;
         }
 
         if (date) {
@@ -83,6 +89,7 @@ const getResults = async (page = 1, search = props.search, category = props.cate
 
         const response = await axios.get(url);
         transactions.value = response.data.transactions;
+        totalAmount.value = response.data.totalAmount;
     } catch (error) {
         console.error(error);
     } finally {
@@ -98,7 +105,7 @@ const handlePageChange = (newPage) => {
 
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.category, props.methods, props.date, props.kycStatus, types.value, sortDescending.value);
+        getResults(currentPage.value, props.search, props.fund_type, props.methods, props.status, props.date, props.kycStatus, types.value, sortDescending.value);
     }
 };
 
@@ -115,7 +122,7 @@ watch(() => props.exportStatus, (newVal) => {
     refreshTransaction.value = newVal;
     if(newVal) {
 
-        let url = `/transaction/getTransactionData?exportStatus=yes`;
+        let url = `/transaction/getTransactionHistory?exportStatus=yes`;
 
         if (props.date) {
             url += `&date=${props.date}`;
@@ -125,12 +132,20 @@ watch(() => props.exportStatus, (newVal) => {
             url += `&search=${props.search}`;
         }
 
-        if (props.category) {
-            url += `&category=${props.category}`;
+        if (props.transactionType) {
+            url += `&type=${props.transactionType}`;
+        }
+
+        if (props.fund_type) {
+            url += `&fund_type=${props.fund_type}`;
         }
 
         if (props.methods) {
             url += `&methods=${props.methods}`;
+        }
+
+        if (props.status) {
+            url += `&status=${props.status}`;
         }
 
         window.location.href = url;
@@ -193,6 +208,9 @@ const closeModal = () => {
                     {{ $t('public.payment_methods') }}
                 </th>
                 <th scope="col" class="p-3">
+                    {{ $t('public.fund_type') }}
+                </th>
+                <th scope="col" class="p-3">
                     {{ $t('public.transaction_no') }}
                 </th>
                 <th scope="col" class="p-3">
@@ -233,15 +251,22 @@ const closeModal = () => {
                     </div>
                 </td>
                 <td class="p-3">
-                    {{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : (transaction.from_meta_login ? $t('public.account_no') + ' - ' + transaction.from_meta_login.meta_login : '-') }}
+                    <div class="flex flex-col gap-1">
+                        <div>
+                            {{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : (transaction.from_meta_login ? $t('public.account_no') : '-') }}
+                        </div>
+                        <div v-if="transaction.from_meta_login" class="font-semibold">
+                            {{ transaction.from_meta_login ? transaction.from_meta_login.meta_login : '-' }}
+                        </div>
+                    </div>
                 </td>
                 <td class="p-3">
                     <div class="flex flex-col gap-1">
                         <div>
                             {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? $t('public.account_no') : '-') }}
                         </div>
-                        <div>
-                            {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? transaction.to_meta_login.meta_login : '-') }}
+                        <div v-if="transaction.to_meta_login" class="font-semibold">
+                            {{ transaction.to_meta_login ? transaction.to_meta_login.meta_login : '-' }}
                         </div>
                     </div>
                 </td>
@@ -249,13 +274,18 @@ const closeModal = () => {
                     {{ transaction.payment_method ?? '-' }}
                 </td>
                 <td class="p-3">
+                    {{ formatType(transaction.fund_type ? transaction.fund_type : '-' ) }}
+                </td>
+                <td class="p-3">
                     {{ transaction.transaction_number }}
                 </td>
                 <td class="p-3">
                     $ {{ transaction.amount }}
                 </td>
-                <td class="p-3 flex items-center justify-center">
-                    <Badge :variant="statusVariant(transaction.status)">{{ transaction.status }}</Badge>
+                <td class="p-3">
+                    <div class="flex items-center justify-center">
+                        <Badge :variant="statusVariant(transaction.status)">{{ transaction.status }}</Badge>
+                    </div>
                 </td>
             </tr>
             </tbody>
@@ -268,6 +298,9 @@ const closeModal = () => {
                 :limit=2
                 @pagination-change-page="handlePageChange"
             />
+        </div>
+        <div class="text-xl font-semibold">
+            {{ formatType(transactionType) }} Total Amount: ${{ formatAmount(totalAmount ? totalAmount : 0) }}
         </div>
     </div>
 
@@ -287,6 +320,10 @@ const closeModal = () => {
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.payment_methods') }}</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.payment_method ?? '-' }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.fund_type') }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transactionDetail.fund_type ? transactionDetail.fund_type : '-' ) }}</span>
         </div>
         <div v-if="transactionDetail.transaction_type === 'Deposit'" class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.to_account') }}</span>

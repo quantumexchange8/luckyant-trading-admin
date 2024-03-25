@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\DepositExport;
+use App\Exports\TransactionsExport;
 use App\Exports\WithdrawalExport;
 use App\Exports\InternalTransferExport;
 // use App\Exports\BalanceAdjustmentExport;
@@ -197,7 +198,7 @@ class TransactionController extends Controller
                 // $q->whereHas('wallet', function ($wallet_query) use ($search) {
                 //     $wallet_query->where('name', 'like', $search);
                 // })
-                $q->WhereHas('user', function ($user) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
                          ->orWhere('email', 'like', $search);
                 })
@@ -222,33 +223,42 @@ class TransactionController extends Controller
             });
         }
 
-        if ($request->filled('transactionType')) {
-            $transactionType = $request->input('transactionType');
-            $query->where(function ($q) use ($transactionType) {
-                $q->where('category',  $transactionType);
-            });
-        }
-
         if ($request->filled('type')) {
             $type = $request->input('type');
             $query->where(function ($q) use ($type) {
-                $q->where('transaction_type', $type);
+                $q->where('transaction_type',  $type);
             });
         }
 
-//        if ($request->has('exportStatus')) {
-//            if ($type == 'Deposit') {
-//                return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-//            } elseif ($type == 'Withdrawal') {
-//                return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-//            } elseif ($type == 'InternalTransfer') {
-//                return Excel::download(new InternalTransferExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-//            }
-//        }
+        if ($request->filled('methods')) {
+            $methods = $request->input('methods');
+            $query->where(function ($q) use ($methods) {
+                $q->where('payment_method', $methods);
+            });
+        }
+
+        if ($request->filled('fund_type')) {
+            $fund_type = $request->input('fund_type');
+            $query->where(function ($q) use ($fund_type) {
+                $q->where('fund_type', $fund_type);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where(function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        if ($request->has('exportStatus')) {
+            $fileName = Carbon::now() . '-' . $request->type . '_History-report.xlsx';
+            return Excel::download(new TransactionsExport($query), $fileName);
+        }
 
         $results = $query->latest()->paginate(10);
 
-        $totalAmount = $query->sum('amount');
+        $totalAmount = $query->sum('transaction_amount');
 
         $results->each(function ($user_deposit) {
             $user_deposit->user->profile_photo_url = $user_deposit->user->getFirstMediaUrl('profile_photo');
