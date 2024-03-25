@@ -53,7 +53,7 @@ class TradingAccount extends Model
 //            ->dontSubmitEmptyLogs();
 //    }
 
-    public function ofUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -61,8 +61,8 @@ class TradingAccount extends Model
     {
         return $this->belongsTo(AccountType::class, 'account_type', 'id');
     }
-//    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\HasOne
-//    {
-//        return $this->hasOne(TradingUser::class, 'meta_login', 'meta_login');
-//    }
+   public function tradingUser(): \Illuminate\Database\Eloquent\Relations\HasOne
+   {
+       return $this->hasOne(TradingUser::class, 'meta_login', 'meta_login');
+   }
 }

@@ -42,11 +42,11 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 title="Member Listing"
                 :active="route().current('member.member_listing')"
             />
-            <!-- <SidebarCollapsibleItem
+            <SidebarCollapsibleItem
                 :href="route('member.live_trading')"
-                title="Live Trading Listing"
+                title="Live Account Listing"
                 :active="route().current('member.live_trading')"
-            /> -->
+            />
         </SidebarCollapsible>
 
         <SidebarLink

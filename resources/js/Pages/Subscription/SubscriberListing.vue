@@ -19,6 +19,13 @@ const formatter = ref({
     month: 'MM'
 });
 
+function refreshTable() {
+    search.value = '';
+    date.value = '';
+    filter.value = '';
+    isLoading.value = !isLoading.value;
+    refresh.value = true;
+}
 
 </script>
 

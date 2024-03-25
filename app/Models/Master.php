@@ -24,6 +24,7 @@ class Master extends Model
         'signal_status',
         'status',
         'total_subscribers',
+        'max_drawdown',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo

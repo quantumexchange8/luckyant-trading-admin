@@ -5,26 +5,26 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import {alertTriangle} from "@/Components/Icons/outline.jsx";
 import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
-import Action from "@/Pages/Subscription/Partials/Action.vue";
+import Badge from "@/Components/Badge.vue";
+import Modal from "@/Components/Modal.vue";
 import debounce from "lodash/debounce.js";
+import Action from "@/Pages/Member/TradingListing/Partials/Action.vue";
 
 const props = defineProps({
     refresh: Boolean,
     isLoading: Boolean,
     search: String,
     date: String,
-    // exportStatus: Boolean,
+    exportStatus: Boolean,
+    leverageSel: Array,
 })
 
-const subscribers = ref({data: []});
-const depositLoading = ref(props.isLoading);
-const formatter = ref({
-    date: 'YYYY-MM-DD',
-    month: 'MM'
-});
 const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
+const tradingListings = ref({data: []});
+const tradingLoading = ref(props.isLoading);
 const refreshDeposit = ref(props.refresh);
+const currentPage = ref(1);
 
 watch(
     [() => props.search, () => props.date],
@@ -34,9 +34,9 @@ watch(
 );
 
 const getResults = async (page = 1, search = '', date = '') => {
-    depositLoading.value = true
+    tradingLoading.value = true
     try {
-        let url = `/subscription/getPendingSubscriber?page=${page}`;
+        let url = `/member/getTradingAccount?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -47,12 +47,12 @@ const getResults = async (page = 1, search = '', date = '') => {
         }
 
         const response = await axios.get(url);
-        subscribers.value = response.data;
+        tradingListings.value = response.data;
 
     } catch (error) {
         console.error(error);
     } finally {
-        depositLoading.value = false
+        tradingLoading.value = false
         emit('update:loading', false);
     }
 }
@@ -76,6 +76,24 @@ watch(() => props.refresh, (newVal) => {
     }
 });
 
+watch(() => props.exportStatus, (newVal) => {
+    refreshDeposit.value = newVal;
+    if (newVal) {
+        let url = `/member/getTradingAccount?exportStatus=yes`;
+
+        if (props.date) {
+            url += `&date=${props.date}`;
+        }
+
+        if (props.search) {
+            url += `&search=${props.search}`;
+        }
+
+        window.location.href = url;
+        emit('update:export', false);
+    }
+});
+
 const paginationClass = [
     'bg-transparent border-0 dark:text-gray-400 dark:enabled:hover:text-white'
 ];
@@ -83,83 +101,92 @@ const paginationClass = [
 const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
 ];
-
 </script>
 
 <template>
     <div class="relative overflow-x-auto sm:rounded-lg">
-        <div v-if="depositLoading" class="w-full flex justify-center my-8">
+        <div v-if="tradingLoading" class="w-full flex justify-center my-8">
             <Loading />
         </div>
         <table v-else class="w-[900px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
                 <tr>
                     <th scope="col" class="p-3">
-                        Date
+                        Date 
                     </th>
                     <th scope="col" class="p-3">
-                        User
+                        Trading Account  
                     </th>
                     <th scope="col" class="p-3">
-                        Trading Account
+                        Balance 
                     </th>
                     <th scope="col" class="p-3">
-                        Master
+                        Margin Leverage 
                     </th>
                     <th scope="col" class="p-3">
-                        Master Trading Account
+                        Equity 
                     </th>
-                    <!-- <th scope="col" class="p-3">
-                        Subscription Fee
-                    </th> -->
                     <th scope="col" class="p-3">
-                        Copy Trade Balance
+                        User 
                     </th>
-                    <th scope="col" class="p-3 text-center">
-                        Action
+                    <th scope="col" class="p-3">
+                        Action 
                     </th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-if="subscribers.data.length === 0">
+                <tr v-if="tradingListings.data.length === 0">
                     <th colspan="7" class="py-4 text-lg text-center">
-                        No Pending
+                        No Trading Account
                     </th>
                 </tr>
                 <tr
-                    v-for="subscriber in subscribers.data"
+                    v-for="tradingListing in tradingListings.data"
                     class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
                 >
-                    <td class="p-2.5">
-                        {{ formatDateTime(subscriber.created_at) }}
+                    <td class="p-3">
+                        {{ tradingListing.created_at }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.user.name }}
-                        <!-- {{ subscriber.trading_user.name }} -->
+                    <td class="p-3">
+                        <div class="flex flex-col ">
+                            <span>Account: {{ tradingListing.meta_login }}</span>
+                            <span>User Name: {{ tradingListing.trading_user.name }}</span>
+                        </div>
+                        
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.meta_login }}
+                    <td class="p-3">
+                        $ {{ formatAmount(tradingListing.balance) }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.master.user.name }}
+                    <td class="p-3">
+                        1:{{ tradingListing.margin_leverage }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.master.meta_login }}
+                    <td class="p-3">
+                       $ {{ formatAmount(tradingListing.equity) }}
                     </td>
-                    <td class="p-2.5">
-                        $ {{ subscriber.subscription.meta_balance }}
+                    <td class="p-3">
+                    <div class="inline-flex gap-2">
+                        <div>
+                            <img :src="tradingListing.user.profile_photo_url ? tradingListing.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
+                        </div>
+                        <div class="flex flex-col">
+                            <span>{{ tradingListing.user.name }}</span>
+                            <span>{{ tradingListing.user.email }}</span>
+                        </div>
+                        
+                    </div>
+                        
                     </td>
-                    <td class="p-2.5 text-center">
-                        <Action :subscriber="subscriber"/>
+                    <td class="p-3">
+                        <Action :tradingListing="tradingListing" :leverageSel="leverageSel"/>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <div class="flex justify-center mt-4" v-if="!depositLoading">
+        <div class="flex justify-center mt-4" v-if="!tradingLoading">
             <TailwindPagination
                 :item-classes=paginationClass
                 :active-classes=paginationActiveClass
-                :data="subscribers"
+                :data="tradingListings"
                 :limit=2
                 @pagination-change-page="handlePageChange"
             >
@@ -172,4 +199,5 @@ const paginationActiveClass = [
             </TailwindPagination>
         </div>
     </div>
+    
 </template>

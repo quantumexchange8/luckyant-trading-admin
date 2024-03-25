@@ -32,6 +32,7 @@ const form = useForm({
     total_fund: props.masterConfigurations.total_fund,
     roi_period: props.masterConfigurations.roi_period,
     total_subscriber: props.masterConfigurations.total_subscribers,
+    max_drawdown: props.masterConfigurations.max_drawdown,
 })
 
 const plans = [
@@ -239,6 +240,21 @@ const badgeVariant = (status) => {
                         </div>
                         <div class="space-y-2">
                             <Label
+                                for="max_drawdown"
+                                value="Max Drawdown"
+                            />
+                            <Input
+                                id="max_drawdown"
+                                type="text"
+                                placeholder="%"
+                                class="block w-full"
+                                v-model="form.max_drawdown"
+                                :invalid="form.errors.max_drawdown"
+                            />
+                            <InputError :message="form.errors.max_drawdown" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
                                 for="signal_status"
                                 value="Trade Signal Status"
                             />
@@ -286,7 +302,7 @@ const badgeVariant = (status) => {
                             @click="submit"
                             :disabled="form.processing"
                         >
-                            {{ $t('public.Save') }}
+                            {{ $t('public.save') }}
                         </Button>
                     </div>
                 </form>
