@@ -555,7 +555,7 @@ class MemberController extends Controller
 
         $level = 0;
         $rootNode = [
-            'name' => $user->name,
+            'name' => $user->username,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
             'level' => $level,
@@ -598,7 +598,7 @@ class MemberController extends Controller
         });
 
         $mappedUser = [
-            'name' => $user->name,
+            'name' => $user->username,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
             'level' => $level + 1,

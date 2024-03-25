@@ -9,14 +9,24 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
+import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
+import TransactionHistoryTable from "@/Pages/Transaction/TransactionHistory/TransactionHistoryTable.vue";
+import {transactionFormat} from "@/Composables/index.js";
+
+const props = defineProps({
+    transactionTypes: Array,
+})
 
 const refresh = ref(false);
 const isLoading = ref(false);
 const search = ref('');
 const date = ref('');
+const type = ref('');
 const filter = ref('');
+const methods = ref('');
 const transactionType = ref('');
 const exportStatus = ref(false);
+const { formatType } = transactionFormat();
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MM'
@@ -32,6 +42,13 @@ const category = [
     { value: 'trading_account', label: 'Trading Account' },
 ]
 
+const paymentMethods = [
+    {value: '', label:"All"},
+    {value: 'Bank', label:"Bank"},
+    {value: 'Crypto', label:"Crypto"},
+    {value: 'Payment Merchant', label:"Payment Merchant"},
+];
+
 function refreshTable() {
     search.value = '';
     date.value = '';
@@ -44,12 +61,22 @@ function refreshTable() {
 const exportTransaction = () => {
     exportStatus.value = true;
 }
+
+
+const updateTransactionType = (transaction_type) => {
+    type.value = transaction_type
+};
+
+const selectedTab = ref(0);
+function changeTab(index) {
+    selectedTab.value = index;
+}
 </script>
 
 <template>
     <AuthenticatedLayout title="Transaction History">
         <template #header>
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-4">
                 <div>
                     <h2 class="text-2xl font-semibold leading-tight">
                         Transaction History
@@ -58,32 +85,13 @@ const exportTransaction = () => {
                         Track all transaction history carried out by your members.
                     </p>
                 </div>
-
-                <div>
-                    <Button
-                        type="button"
-                        class="justify-center w-full gap-2 border border-gray-600 text-white text-sm dark:hover:bg-gray-600"
-                        variant="transparent"
-                        v-slot="{ iconSizeClasses }"
-                        @click="exportTransaction"
-                    >
-                        <div class="inline-flex items-center">
-                            <CloudDownloadIcon
-                                aria-hidden="true"
-                                class="mr-2 w-5 h-5"
-                            />
-                            <span>Export as Excel</span>
-                        </div>
-                    </Button>
-                </div>
-
             </div>
         </template>
 
-        <div class="pt-3 md:flex md:justify-end items-center">
-            <div class="flex flex-wrap items-center md:flex-nowrap gap-3 mt-3 md:mt-0">
+        <div class="flex flex-col gap-5 items-start self-stretch">
+            <div class="flex flex-col md:flex-row items-center gap-4 w-full">
                 <div class="w-full">
-                    <InputIconWrapper class="w-full md:w-[280px]">
+                    <InputIconWrapper class="w-full">
                         <template #icon>
                             <SearchIcon aria-hidden="true" class="w-5 h-5" />
                         </template>
@@ -97,13 +105,12 @@ const exportTransaction = () => {
                         separator=" - "
                         v-model="date"
                         input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
-                        class="w-full md:w-[230px]"
                     />
                 </div>
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
                         v-model="transactionType"
                         :options="category"
                         placeholder="Filter type"
@@ -112,39 +119,95 @@ const exportTransaction = () => {
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full md:w-[155px] dark:text-white dark:bg-gray-600"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
                         v-model="filter"
                         :options="statusList"
                         placeholder="Filter status"
                     />
                 </div>
-                
-                <div class="w-auto md:w-full">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        size="lg"
-                        @click="refreshTable"
-                    >
-                        <span class="text-lg">Clear</span>
-                    </Button>
-                </div>
+            </div>
+            <div class="flex justify-end gap-4 items-center w-full">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    @click="refreshTable"
+                >
+                    <span class="text-lg">Clear</span>
+                </Button>
+                <Button
+                    type="button"
+                    variant="gray"
+                    class="flex gap-1 justify-center"
+                    v-slot="{ iconSizeClasses }"
+                    @click="exportTransaction"
+                >
+                    <CloudDownloadIcon class="w-5 h-5" />
+                    Export
+                </Button>
             </div>
         </div>
 
         <div class="p-5 my-8 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-gray-900">
-            <TransactionHistory
-                :refresh="refresh"
-                :isLoading="isLoading"
-                :search="search"
-                :date="date"
-                :filter="filter"
-                :transactionType="transactionType"
-                :exportStatus="exportStatus"
-                @update:loading="isLoading = $event"
-                @update:refresh="refresh = $event"
-                @update:export="exportStatus = $event"
-            />
+            <div class="w-full">
+                <TabGroup :selectedIndex="selectedTab" @change="changeTab">
+                    <TabList class="flex py-1 w-full flex-col gap-3 sm:flex-row sm:justify-between">
+                        <div class="w-full">
+                            <Tab
+                                v-for="transactionType in transactionTypes"
+                                as="template"
+                                v-slot="{ selected }"
+                            >
+                                <button
+                                    @click="updateTransactionType(transactionType.value)"
+                                    class="w-full sm:w-40"
+                                    :class="[
+                                    'py-2.5 text-sm font-semibold dark:text-gray-400',
+                                    'ring-white ring-offset-0 focus:outline-none focus:ring-0',
+                                       selected
+                                    ? 'dark:text-white border-b-2 border-gray-400 dark:border-gray-500'
+                                    : 'border-b border-gray-300 dark:border-gray-700',
+                                ]"
+                                >
+                                    {{ formatType(transactionType.label) }}
+                                </button>
+                            </Tab>
+                        </div>
+                    </TabList>
+
+                    <TabPanels>
+                        <TabPanel
+                            v-for="transactionType in transactionTypes"
+                        >
+                            <TransactionHistoryTable
+                                :refresh="refresh"
+                                :isLoading="isLoading"
+                                :search="search"
+                                :date="date"
+                                :category="category"
+                                :methods="methods"
+                                :transactionType=transactionType.value
+                                :exportStatus="exportStatus"
+                                @update:loading="isLoading = $event"
+                                @update:refresh="refresh = $event"
+                                @update:export="exportStatus = $event"
+                            />
+                        </TabPanel>
+                    </TabPanels>
+                </TabGroup>
+            </div>
+<!--            <TransactionHistory-->
+<!--                :refresh="refresh"-->
+<!--                :isLoading="isLoading"-->
+<!--                :search="search"-->
+<!--                :date="date"-->
+<!--                :filter="filter"-->
+<!--                :transactionType="transactionType"-->
+<!--                :transactionTypes="transactionTypes"-->
+<!--                :exportStatus="exportStatus"-->
+<!--                @update:loading="isLoading = $event"-->
+<!--                @update:refresh="refresh = $event"-->
+<!--                @update:export="exportStatus = $event"-->
+<!--            />-->
         </div>
     </AuthenticatedLayout>
 </template>

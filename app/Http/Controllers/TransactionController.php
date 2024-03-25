@@ -9,6 +9,7 @@ use App\Exports\InternalTransferExport;
 use App\Models\Wallet;
 // use App\Models\BalanceAdjustment;
 use App\Models\Transaction;
+use App\Services\SelectOptionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,7 +25,9 @@ class TransactionController extends Controller
 
     public function transactionHistory()
     {
-        return Inertia::render('Transaction/TransactionHistory/TransactionHistory');
+        return Inertia::render('Transaction/TransactionHistory/TransactionHistory', [
+            'transactionTypes' => (new SelectOptionService())->getTransactionType(),
+        ]);
     }
 
     public function getPendingTransaction(Request $request, $type)
@@ -68,9 +71,9 @@ class TransactionController extends Controller
         // }
 
         $results = $query->latest()->paginate(10);
-        
+
         $results->each(function ($transaction) {
-            
+
             $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
             $transaction->receipt_url = $transaction->getFirstMediaUrl('receipt');
         });
@@ -101,7 +104,7 @@ class TransactionController extends Controller
             }
         } else {
             $transaction = Transaction::find($request->id);
-            
+
 
             if ($transaction->transaction_type == 'Deposit') {
                 $wallet = Wallet::find($transaction->to_wallet_id);
@@ -121,7 +124,7 @@ class TransactionController extends Controller
                 'handle_by' => Auth::user()->id,
                 'new_wallet_amount' => $wallet->balance,
             ]);
-            
+
         }
 
         return redirect()->back()->with('title', 'Approved successfully')->with('success', 'The transaction request has been approved successfully.');
@@ -153,7 +156,7 @@ class TransactionController extends Controller
             }
         } else {
             $transaction = Transaction::find($request->id);
-            
+
             if ($transaction->transaction_type == 'Deposit') {
                 $wallet = Wallet::find($transaction->to_wallet_id);
                 $transaction->update([
@@ -172,7 +175,7 @@ class TransactionController extends Controller
                     'new_wallet_amount' => $transaction->new_wallet_amount += $transaction->amount,
                     'handle_by' => Auth::user()->id,
                 ]);
-                
+
                 $wallet = Wallet::find($transaction->from_wallet_id);
                 $wallet->balance += $transaction->amount;
                 $wallet->save();
@@ -182,12 +185,12 @@ class TransactionController extends Controller
         return redirect()->back()->with('title', 'Rejected successfully')->with('success', 'The transaction request has been rejected successfully.');
     }
 
-    public function getTransactionHistory(Request $request, $type)
+    public function getTransactionHistory(Request $request)
     {
-        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet', 'setting_payment', 'payment_account'])
-            ->whereNotIn('status', ['Processing', 'Pending'])
-            ->where('transaction_type', $type);
-        
+        $query = Transaction::query()
+            ->with(['user:id,name,email', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
+            ->whereNotIn('status', ['Processing', 'Pending']);
+
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
             $query->where(function ($q) use ($search) {
@@ -227,21 +230,21 @@ class TransactionController extends Controller
         }
 
         if ($request->filled('type')) {
-            $sorttype = $request->input('type');
-            $sort = $request->input('sort');
-            
-            $query->orderBy($sorttype, $sort);
+            $type = $request->input('type');
+            $query->where(function ($q) use ($type) {
+                $q->where('transaction_type', $type);
+            });
         }
 
-        if ($request->has('exportStatus')) {
-            if ($type == 'Deposit') {
-                return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-            } elseif ($type == 'Withdrawal') {
-                return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-            } elseif ($type == 'InternalTransfer') {
-                return Excel::download(new InternalTransferExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-            }
-        }
+//        if ($request->has('exportStatus')) {
+//            if ($type == 'Deposit') {
+//                return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
+//            } elseif ($type == 'Withdrawal') {
+//                return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
+//            } elseif ($type == 'InternalTransfer') {
+//                return Excel::download(new InternalTransferExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
+//            }
+//        }
 
         $results = $query->latest()->paginate(10);
 
@@ -253,7 +256,7 @@ class TransactionController extends Controller
 
 
         return response()->json([
-            $type => $results,
+            'transactions' => $results,
             'totalAmount' => $totalAmount
         ]);
     }
