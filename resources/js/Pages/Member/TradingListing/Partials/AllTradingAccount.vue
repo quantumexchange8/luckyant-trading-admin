@@ -150,7 +150,7 @@ const paginationActiveClass = [
                     <td class="p-3">
                         <div class="flex flex-col ">
                             <span>Account: {{ tradingListing.meta_login }}</span>
-                            <span>User Name: {{ tradingListing.trading_user.name }}</span>
+                            <span>Name: {{ tradingListing.trading_user.name }}</span>
                         </div>
                         
                     </td>

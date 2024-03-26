@@ -136,6 +136,7 @@ const toggleMasterPasswordVisibilityConfirm = () => {
             <EditLeverage
                 :leverageSel="leverageSel"
                 :tradingListing="tradingListing"
+                @update:tradingModal="tradingModal = $event" 
             />
         </div>
 
@@ -143,6 +144,7 @@ const toggleMasterPasswordVisibilityConfirm = () => {
             <ChangePassword 
                 :tradingListing="tradingListing"
                 :leverageSel="leverageSel"
+                @update:tradingModal="tradingModal = $event" 
             />
         </div>
     </Modal>

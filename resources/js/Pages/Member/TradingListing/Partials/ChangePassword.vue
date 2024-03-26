@@ -13,6 +13,8 @@ const props = defineProps({
     leverageSel: Array,
 })
 
+const emit = defineEmits(['update:tradingModal']);
+
 const form = useForm({
     id: props.tradingListing.id,
     master_password: undefined,
@@ -37,8 +39,12 @@ const toggleMasterPasswordVisibility = () => {
     showPassword.value = !showPassword.value;
 };
 
-const toggleMasterPasswordVisibilityConfirm = () => {
+const toggleInvestorPasswordVisibility = () => {
     showPassword2.value = !showPassword2.value;
+}
+
+const closeModal = () => {
+    emit('update:tradingModal', false);
 }
 
 </script>
