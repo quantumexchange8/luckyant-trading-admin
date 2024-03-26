@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\ChangeTradingAccountPassowrdNotification;
 use Illuminate\Support\Facades\Validator;
 use App\Services\MetaFiveService;
+use App\Services\passwordType;
 
 class TradingController extends Controller
 {
@@ -80,7 +81,7 @@ class TradingController extends Controller
         
         $rules = [
             'meta_login' => ['required'],
-            'master_password' => ['sometimes', 'string'],
+            'master_password' => ['sometimes', 'string', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'],
             'investor_password' => ['sometimes', 'string'],
         ];
 
@@ -103,29 +104,32 @@ class TradingController extends Controller
             $investor_password = $request->investor_password;
             $metaService = new MetaFiveService();
             $connection = $metaService->getConnectionStatus();
-
+            
             if ($connection != 0) {
                 return redirect()->back()
                     ->with('title', trans('public.server_under_maintenance'))
                     ->with('warning', trans('public.try_again_later'));
             }
 
-            if ($master_password) {
-                $metaService->changePassword($meta_login, 'main', $master_password);
-            }
-
-            if ($investor_password) {
-                $metaService->changePassword($meta_login, 'investor', $investor_password);
-            }
-
             if ($master_password || $investor_password) {
+                if ($master_password) {
+                    $metaService->changePassword($meta_login, passwordType::MAIN, $master_password);
+                }
+    
+                if ($investor_password) {
+                    $metaService->changePassword($meta_login, passwordType::INVESTOR, $investor_password);
+                }
+
                 Notification::route('mail', $user->email)
                     ->notify(new ChangeTradingAccountPassowrdNotification($user, $meta_login, $master_password, $investor_password));
+            
+                return back()->with('toast', trans('public.updated_trading_account'));
             }
-           
+            
+            return back()->with('toast', trans('public.error_updating_account'));
         }
     
+        return back()->with('toast', trans('public.error_updating_account'));
         
-        return back()->with('toast', trans('public.created_trading_account'));
     }
 }

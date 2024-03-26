@@ -342,4 +342,6 @@ return [
     'wallet_adjustment' => "Wallet Adjustment",
     'username' => "Username",
     'fund_type' => "Fund Type",
+    'updated_trading_account' => 'Updated Password',
+    'error_updating_account' => 'Error Updating',
 ];

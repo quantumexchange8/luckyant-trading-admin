@@ -73,4 +73,11 @@ class MetaFiveService {
 
         return $passwordResponse;
     }
+
+}
+
+class passwordType
+{
+    const MAIN = 0;
+    const INVESTOR = 1;
 }

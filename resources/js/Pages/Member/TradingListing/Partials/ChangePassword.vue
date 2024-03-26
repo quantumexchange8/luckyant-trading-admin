@@ -4,9 +4,9 @@ import Label from "@/Components/Label.vue";
 import InputError from "@/Components/InputError.vue";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
-import {ref} from "vue";
+import {ref, computed } from "vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
-import { KeyIcon, EyeIcon, EyeOffIcon } from "@heroicons/vue/outline"
+import { KeyIcon, EyeIcon, EyeOffIcon, CheckIcon } from "@heroicons/vue/outline"
 
 const props = defineProps({
     tradingListing: Object,
@@ -46,6 +46,32 @@ const toggleInvestorPasswordVisibility = () => {
 const closeModal = () => {
     emit('update:tradingModal', false);
 }
+
+const passwordRules = [
+    { message: 'register_terms_1', regex: /[A-Z]+/ },
+    { message: 'register_terms_2', regex: /[a-z]+/ },
+    { message: 'register_terms_3', regex: /[0-9]+/ },
+];
+
+const passwordValidation = () => {
+    let valid = false;
+    let messages = [];
+
+    for (let condition of passwordRules) {
+        const isConditionValid = condition.regex.test(form.master_password);
+        
+        if (isConditionValid) {
+            valid = true;
+        }
+
+        messages.push({
+            message: condition.message,
+            valid: isConditionValid,
+        });
+    }
+
+    return { valid, messages };
+};
 
 </script>
 
@@ -109,6 +135,28 @@ const closeModal = () => {
                 </div>
                 </div>
                 <InputError :message="form.errors.investor_password" class="mt-2" />
+            </div>
+        </div>
+        <div  class="flex flex-col items-start gap-3 self-stretch">
+            <div v-for="message in passwordValidation().messages" :key="message.key" class="flex items-center gap-2 self-stretch">
+                <div
+                    :class="{
+                            'bg-success-500': message.valid,
+                            'bg-gray-400 dark:bg-dark-eval-3': !message.valid
+                        }"
+                    class="flex justify-center items-center w-5 h-5 rounded-full grow-0 shrink-0"
+                >
+                    <CheckIcon aria-hidden="true" class="text-white" />
+                </div>
+                <div
+                    class="text-sm"
+                    :class="{
+                            'text-gray-600 dark:text-gray-300': message.valid,
+                            'text-gray-400 dark:text-gray-500': !message.valid
+                        }"
+                >
+                    {{ $t('public.' + message.message) }}
+                </div>
             </div>
         </div>
     </div>
