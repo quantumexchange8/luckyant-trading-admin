@@ -158,12 +158,12 @@ export default {
                                     class="text-xs font-normal dark:text-gray-400">{{ $t('public.total_clients') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
-                                <span class="text-sm font-semibold">$ {{ formatAmount(node.self_deposit ? formatAmount(node.self_deposit) : 0) }}</span>
+                                <span class="text-sm font-semibold">$ {{ formatAmount(node.self_deposit ? node.self_deposit : 0) }}</span>
                                 <span
                                     class="text-xs font-normal dark:text-gray-400">{{ $t('public.total_deposit') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
-                                <span class="text-sm font-semibold">$ {{ formatAmount(node.total_group_deposit ? formatAmount(node.total_group_deposit) : 0) }}</span>
+                                <span class="text-sm font-semibold">$ {{ formatAmount(node.total_group_deposit ? node.total_group_deposit : 0) }}</span>
                                 <span
                                     class="text-xs font-normal dark:text-gray-400">{{ $t('public.total_group_deposit') }}</span>
                             </div>
@@ -214,12 +214,12 @@ export default {
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
                         class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Deposit') }}</span>
-                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.self_deposit ? formatAmount(selectedAffiliate.self_deposit) : 0) }}</span>
+                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.self_deposit ? selectedAffiliate.self_deposit : 0) }}</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
                         class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Group Deposit') }}</span>
-                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.total_group_deposit ? formatAmount(selectedAffiliate.total_group_deposit) : 0) }}</span>
+                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.total_group_deposit ? selectedAffiliate.total_group_deposit : 0) }}</span>
                 </div>
             </div>
         </Modal>
