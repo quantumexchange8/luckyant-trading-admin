@@ -12,6 +12,8 @@ const props = defineProps({
     leverageSel: Array,
 })
 
+const emit = defineEmits(['update:tradingModal']);
+
 const form = useForm({
     id: props.tradingListing.id,
     margin_leverage: props.tradingListing.margin_leverage,
@@ -24,6 +26,10 @@ const submit = () => {
             form.reset();
         },
     })
+}
+
+const closeModal = () => {
+    emit('update:tradingModal', false);
 }
 </script>
 

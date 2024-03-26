@@ -94,7 +94,7 @@ export default {
                                 v-if="hasChildren"
                                 aria-hidden="true"
                                 @click="nodeClicked"
-                                :class="['w-5 h-5 cursor-pointer text-pink-500']"
+                                :class="['w-5 h-5 cursor-pointer text-primary-500']"
                             />
                         </template>
                     </div>
