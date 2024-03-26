@@ -89,6 +89,25 @@ class User extends Authenticatable implements HasMedia
         return $this->belongsTo(User::class, 'top_leader_id', 'id');
     }
 
+    public function getFirstLeader()
+    {
+        $first_leader = null;
+
+        $upline = explode("-", substr($this->hierarchyList, 1, -1));
+        $count = count($upline) - 1;
+        if ($count > 0) {
+            while ($count > -1) {
+                $user = User::find($upline[$count]);
+                if (!empty($user->leader_status) && $user->leader_status == 1) {
+                    $first_leader = $user;
+                    break; // Found the first leader, exit the loop
+                }
+                $count--;
+            }
+        }
+        return $first_leader;
+    }
+
     public function setReferralId(): void
     {
         $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
