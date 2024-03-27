@@ -81,7 +81,7 @@ class TradingController extends Controller
         
         $rules = [
             'meta_login' => ['required'],
-            'master_password' => ['sometimes', 'string', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'],
+            'master_password' => ['sometimes', 'string', 'regex:/^(?=.*[A-Z])(?=.*\d).+$/'],
             'investor_password' => ['sometimes', 'string'],
         ];
 

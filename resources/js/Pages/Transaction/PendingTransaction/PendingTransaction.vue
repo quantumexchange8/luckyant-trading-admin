@@ -9,6 +9,7 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
+import Combobox from "@/Components/Combobox.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
@@ -29,12 +30,30 @@ const statusList = [
 function refreshTable() {
     search.value = '';
     date.value = '';
+    leader.value = '';
     isLoading.value = !isLoading.value;
     refresh.value = true;
 }
 
 const exportTransaction = () => {
     exportStatus.value = true;
+}
+
+const leader = ref()
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllLeaders?query=' + query)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.name,
+                        img: user.profile_photo
+                    }
+                })
+            )
+        });
 }
 </script>
 
@@ -74,13 +93,21 @@ const exportTransaction = () => {
 
         <div class="pt-3 md:flex md:justify-end items-center">
             <div class="flex flex-wrap md:flex-nowrap md:items-center gap-3 mt-3 md:mt-0">
-                <div class="w-full col-span-5 md:col-span-2">
+                <div class="w-full col-span-4 md:col-span-2">
                     <InputIconWrapper>
                         <template #icon>
                             <SearchIcon aria-hidden="true" class="w-5 h-5" />
                         </template>
                         <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
                     </InputIconWrapper>
+                </div>
+                <div class="w-full col-span-3 md:col-span-1">
+                    <Combobox
+                        :load-options="loadUsers"
+                        v-model="leader"
+                        placeholder="Leader"
+                        image
+                    />
                 </div>
                 <div class="w-full col-span-3 md:col-span-1">
                     <vue-tailwind-datepicker
@@ -109,6 +136,7 @@ const exportTransaction = () => {
                 :refresh="refresh"
                 :isLoading="isLoading"
                 :search="search"
+                :leader="leader"
                 :date="date"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"

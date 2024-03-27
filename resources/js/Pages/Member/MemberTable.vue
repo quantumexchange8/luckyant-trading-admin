@@ -24,6 +24,7 @@ const props = defineProps({
     exportStatus: Boolean,
     countries: Array,
     nationalities: Array,
+    leader: Object,
 })
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -47,13 +48,13 @@ const toggleSort = (sortType) => {
 }
 
 watch(
-    [() => props.search, () => props.rank, () => props.date, () => props.kycStatus, () => types.value, () => sortDescending.value],
-    debounce(([searchValue, rankValue, dateValue, typeValue, sortValue]) => {
-        getResults(1, searchValue, rankValue, dateValue, typeValue, sortValue);
+    [() => props.search, () => props.rank, () => props.date, () => props.kycStatus, () => types.value, () => sortDescending.value, () => props.leader],
+    debounce(([searchValue, rankValue, dateValue, typeValue, sortValue, leaderValue]) => {
+        getResults(1, searchValue, rankValue, dateValue, typeValue, sortValue, leaderValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = props.kycStatus, sortType = types.value, sort = sortDescending.value) => {
+const getResults = async (page = 1, search = props.search , rank = props.rank, date = props.date, type = props.kycStatus, sortType = types.value, sort = sortDescending.value, leader = props.leader) => {
     isLoading.value = true
     try {
         let url = `/member/getMemberDetails?page=${page}`;
@@ -79,6 +80,10 @@ const getResults = async (page = 1, search = props.search , rank = props.rank, d
             url += `&sort=${sort}`;
         }
 
+        if (leader) {
+            url += `&leader=${leader.value}`;
+        }
+
         const response = await axios.get(url);
         members.value = response.data;
     } catch (error) {
@@ -96,7 +101,7 @@ const handlePageChange = (newPage) => {
 
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.rank, props.date, props.kycStatus, types.value, sortDescending.value);
+        getResults(currentPage.value, props.search, props.rank, props.date, props.kycStatus, types.value, sortDescending.value, props.leader);
     }
 };
 
@@ -126,6 +131,10 @@ watch(() => props.exportStatus, (newVal) => {
             if (props.rank) {
                 url += `&rank=${props.rank}`;
             }
+
+            if (props.leader) {
+            url += `&leader=${props.leader.value}`;
+        }
 
             window.location.href = url;
             emit('update:export', false);
@@ -203,6 +212,9 @@ const closeModal = () => {
                     MT5 Account
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
+                    Top Leader
+                </th>
+                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
                     First Leader
                 </th>
                 <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
@@ -273,7 +285,10 @@ const closeModal = () => {
                     </div>
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
-                    {{ member.userName ? member.userName : 'LuckyAnt Trading' }}
+                    {{ member.top_leader ? member.top_leader.name : 'LuckyAnt Trading' }} <!--top leader-->
+                </td>
+                <td class="px-3 py-2.5 text-center" colspan="2">
+                    {{ member.first_leader ? member.first_leader.name : 'LuckyAnt Trading' }} <!--first leader-->
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     $ {{ formatAmount(member.walletBalance) }}
@@ -293,7 +308,7 @@ const closeModal = () => {
                 </td>
                 <td class="px-3 py-2.5 text-center" colspan="2">
                     <Action
-                        v-if="kycStatus !== 'Pending'"
+                        v-if="kycStatus !== 'Pending' && kycStatus !== 'Unverified'"
                         :members="member"
                         type="member"
                     />

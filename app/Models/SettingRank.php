@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\App;
 
 class SettingRank extends Model
 {
@@ -20,4 +21,11 @@ class SettingRank extends Model
         'group_sales',
         'rebate',
     ];
+
+    public function getNameAttribute($label)
+    {
+        $lang = App::getLocale();
+        $translations = json_decode($label, true);
+        return $translations[$lang] ?? $label;
+    }
 }

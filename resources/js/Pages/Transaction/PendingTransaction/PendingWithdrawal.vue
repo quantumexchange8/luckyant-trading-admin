@@ -22,6 +22,7 @@ const props = defineProps({
     refresh: Boolean,
     isLoading: Boolean,
     exportStatus: Boolean,
+    leader: Object,
 })
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -58,9 +59,9 @@ const closeModal = () => {
 }
 
 watch(
-    [() => props.search, () => props.date],
-    debounce(([searchValue, dateValue]) => {
-        getResults(1, searchValue, dateValue);
+    [() => props.search, () => props.date, () => props.leader],
+    debounce(([searchValue, dateValue, leaderValue]) => {
+        getResults(1, searchValue, dateValue, leaderValue);
     }, 300)
 );
 
@@ -102,7 +103,7 @@ const handleSelectAll = () => {
     }
 };
 
-const getResults = async (page = 1, search = '', date = '') => {
+const getResults = async (page = 1, search = '', date = '', leader = '') => {
     depositLoading.value = true
     try {
         let url = `/transaction/getPendingTransaction/Withdrawal?page=${page}`;
@@ -113,6 +114,10 @@ const getResults = async (page = 1, search = '', date = '') => {
 
         if (date) {
             url += `&date=${date}`;
+        }
+
+        if (leader) {
+            url += `&leader=${leader.value}`;
         }
 
         const response = await axios.get(url);
@@ -137,7 +142,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date);
+        getResults(currentPage.value, props.search, props.date, props.leader);
     }
 };
 
@@ -161,6 +166,10 @@ watch(() => props.exportStatus, (newVal) => {
 
         if (props.search) {
             url += `&search=${props.search}`;
+        }
+
+        if (props.leader) {
+            url += `&leader=${props.leader}`;
         }
 
         window.location.href = url;

@@ -166,10 +166,16 @@ class MemberController extends Controller
             ->when($request->filled('sortType'), function($query) use ($request) {
                 $sortType = $request->input('sortType');
                 $sort = $request->input('sort');
-
                 $query->orderBy($sortType, $sort);
             })
-            // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', )
+            ->when($request->filled('leader'), function($query) use ($request) {
+                $leader = $request->input('leader');
+                $leaderUser = User::find($leader);
+                if ($leaderUser) {
+                    $query->whereIn('id', $leaderUser->getChildrenIds());
+                }
+            })
+            // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', 'top_leader_id', 'upline_id')
             ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
             ->latest();
 
@@ -185,7 +191,8 @@ class MemberController extends Controller
             $user->back_identity = $user->getFirstMediaUrl('back_identity');
             $user->kyc_upload_date = $user->getMedia('back_identity')->first()->created_at ?? null;
             $user->walletBalance = $user->wallets->sum('balance');
-            $user->userName = $user->top_leader->name ?? null;
+            $user->top_leader = $user->top_leader->name ?? null;
+            $user->first_leader = $user->getFirstLeader() ?? null;
         });
 
         return response()->json($members);
@@ -236,10 +243,10 @@ class MemberController extends Controller
 
         $settingRanks = SettingRank::all();
 
-        $formattedRanks = $settingRanks->map(function ($country) {
+        $formattedRanks = $settingRanks->map(function ($rank) {
             return [
-                'value' => $country->id,
-                'label' => $country->name,
+                'value' => $rank->id,
+                'label' => $rank->getNameAttribute($rank->name),
             ];
         });
 
@@ -251,10 +258,10 @@ class MemberController extends Controller
             ];
         });
 
-        $formattedNationalities = $countries->map(function ($country) {
+        $formattedNationalities = $countries->map(function ($nationality) {
             return [
-                'value' => $country->nationality,
-                'label' => $country->nationality,
+                'value' => $nationality->nationality,
+                'label' => $nationality->nationality,
             ];
         });
 
@@ -490,6 +497,28 @@ class MemberController extends Controller
         $users = User::query()
             ->where('role', '=', 'member')
             ->whereNot('id', $request->id)
+            ->when($request->filled('query'), function ($query) use ($request) {
+                $search = $request->input('query');
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->select('id', 'name', 'email')
+            ->get();
+
+        $users->each(function ($users) {
+            $users->profile_photo = $users->getFirstMediaUrl('profile_photo');
+        });
+
+        return response()->json($users);
+    }
+
+    public function getAllLeaders(Request $request)
+    {
+        $users = User::query()
+            ->where('role', '=', 'member')
+            ->where('leader_status', 1)
             ->when($request->filled('query'), function ($query) use ($request) {
                 $search = $request->input('query');
                 $query->where(function ($innerQuery) use ($search) {

@@ -6,8 +6,11 @@ use App\Exports\DepositExport;
 use App\Exports\TransactionsExport;
 use App\Exports\WithdrawalExport;
 use App\Exports\InternalTransferExport;
+use App\Exports\PendingDepositExport;
+use App\Exports\PendingWithdrawalExport;
 // use App\Exports\BalanceAdjustmentExport;
 use App\Models\Wallet;
+use App\Models\User;
 // use App\Models\BalanceAdjustment;
 use App\Models\Transaction;
 use App\Services\SelectOptionService;
@@ -63,13 +66,22 @@ class TransactionController extends Controller
             $query->whereBetween('created_at', [$start_date, $end_date]);
         }
 
-        // if ($request->has('exportStatus')) {
-        //     if ($type == 'Deposit') {
-        //         return Excel::download(new DepositExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
-        //     } elseif ($type == 'Withdrawal') {
-        //         return Excel::download(new WithdrawalExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
-        //     }
-        // }
+        if ($request->filled('leader')) {
+            $leader = $request->input('leader');
+            $leaderUser = User::find($leader);
+            if ($leaderUser) {
+                $query->whereIn('user_id', $leaderUser->getChildrenIds());
+            }
+        }
+
+        if ($request->has('exportStatus')) {
+
+            if ($type == 'Deposit') {
+                return Excel::download(new PendingDepositExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
+            } elseif ($type == 'Withdrawal') {
+                return Excel::download(new PendingWithdrawalExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
+            }
+        }
 
         $results = $query->latest()->paginate(10);
 

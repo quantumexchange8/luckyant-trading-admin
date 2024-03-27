@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/payment_account', [MemberController::class, 'paymentAccount'])->name('member.payment_account');
         Route::patch('/advanceEditMember', [MemberController::class, 'advanceEditMember'])->name('member.advanceEdit_member');
         Route::get('/getAllUsers', [MemberController::class, 'getAllUsers'])->name('member.getAllUsers');
+        Route::get('/getAllLeaders', [MemberController::class, 'getAllLeaders'])->name('member.getAllLeaders');
         Route::get('/refreshTradingAccountsData', [MemberController::class, 'refreshTradingAccountsData'])->name('member.refreshTradingAccountsData');
         Route::get('/member_affiliates/{id}', [MemberController::class, 'affiliate_tree'])->name('member.affiliate_tree');
         Route::get('/getTreeData/{id}', [MemberController::class, 'getTreeData'])->name('member.getTreeData');

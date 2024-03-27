@@ -11,6 +11,7 @@ import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import MemberTable from "@/Pages/Member/MemberTable.vue";
 import toast from "@/Composables/toast.js";
 import Action from "@/Pages/Member/Partials/Action.vue";
+import Combobox from "@/Components/Combobox.vue";
 
 const search = ref('');
 const date = ref('');
@@ -59,6 +60,32 @@ const updateKycCounts = () => {
 
 const exportMember = () => {
     exportStatus.value = true;
+}
+
+const leader = ref()
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllLeaders?query=' + query)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.name,
+                        img: user.profile_photo
+                    }
+                })
+            )
+        });
+}
+
+function refreshTable() {
+    search.value = '';
+    date.value = '';
+    rank.value = null;
+    leader.value = null;
+    isLoading.value = !isLoading.value;
+    refresh.value = true;
 }
 </script>
 
@@ -120,6 +147,24 @@ const exportMember = () => {
                         placeholder="Filter rank"
                     />
                 </div>
+                <div class="w-full md:w-[240px]">
+                    <Combobox
+                        :load-options="loadUsers"
+                        v-model="leader"
+                        placeholder="Leader"
+                        image
+                    />
+                </div>
+                <div>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="lg"
+                        @click="refreshTable"
+                    >
+                        <span class="text-lg">Clear</span>
+                    </Button>
+                </div>
             </div>
         </div>
 
@@ -168,6 +213,7 @@ const exportMember = () => {
                             v-for="kycStatus in kycStatuses"
                         >
                             <MemberTable
+                                :leader="leader"
                                 :refresh="refresh"
                                 :isLoading="isLoading"
                                 :search="search"

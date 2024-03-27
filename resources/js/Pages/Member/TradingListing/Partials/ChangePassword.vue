@@ -48,9 +48,8 @@ const closeModal = () => {
 }
 
 const passwordRules = [
-    { message: 'register_terms_1', regex: /[A-Z]+/ },
-    { message: 'register_terms_2', regex: /[a-z]+/ },
-    { message: 'register_terms_3', regex: /[0-9]+/ },
+    { message: 'change_password_terms_1', regex: /[A-Z]+/ },
+    { message: 'change_password_terms_3', regex: /[0-9]+/ },
 ];
 
 const passwordValidation = () => {
