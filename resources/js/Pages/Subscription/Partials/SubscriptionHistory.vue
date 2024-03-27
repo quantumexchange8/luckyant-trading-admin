@@ -17,6 +17,7 @@ const props = defineProps({
     filter: String,
     date: String,
     exportStatus: Boolean,
+    leader: Object,
 })
 
 const subscribers = ref({data: []});
@@ -31,13 +32,13 @@ const currentPage = ref(1);
 const refreshDeposit = ref(props.refresh);
 
 watch(
-    [() => props.search, () => props.date, () => props.filter],
-    debounce(([searchValue, dateValue, filterValue]) => {
-        getResults(1, searchValue, dateValue, filterValue);
+    [() => props.search, () => props.date, () => props.filter, () => props.leader],
+    debounce(([searchValue, dateValue, filterValue, leaderValue]) => {
+        getResults(1, searchValue, dateValue, filterValue, leaderValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '', filter = '') => {
+const getResults = async (page = 1, search = '', date = '', filter = '', leader = '') => {
     depositLoading.value = true
     try {
         let url = `/subscription/getHistorySubscriber?page=${page}`;
@@ -52,6 +53,10 @@ const getResults = async (page = 1, search = '', date = '', filter = '') => {
 
         if (filter) {
             url += `&filter=${filter}`;
+        }
+
+        if (leader) {
+            url += `&leader=${leader.value}`;
         }
 
         const response = await axios.get(url);
@@ -71,7 +76,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date);
+        getResults(currentPage.value, props.search, props.date, props.leader);
     }
 };
 
@@ -99,6 +104,10 @@ watch(() => props.exportStatus, (newVal) => {
 
         if (props.filter) {
             url += `&filter=${props.filter}`;
+        }
+
+        if (props.leader) {
+            url += `&leader=${props.leader.value}`;
         }
 
         window.location.href = url;
@@ -190,10 +199,10 @@ const closeModal = () => {
                         {{ subscriber.meta_login }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.master.user.name }}
+                        {{ subscriber.master ? subscriber.master.user.name : '-' }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.master.meta_login }}
+                        {{ subscriber.master ? subscriber.master.meta_login : '-' }}
                     </td>
                     <td class="p-3">
                        $ {{ subscriber.meta_balance }}

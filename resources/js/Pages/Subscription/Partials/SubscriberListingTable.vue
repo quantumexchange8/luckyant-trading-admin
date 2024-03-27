@@ -10,6 +10,7 @@ const props = defineProps({
     search: String,
     date: String,
     exportStatus: Boolean,
+    leader: Object,
 })
 
 </script>
@@ -42,6 +43,7 @@ const props = defineProps({
                     :isLoading="isLoading"
                     :search="search"
                     :date="date"
+                    :leader="leader"
                     :exportStatus="exportStatus"
                     @update:loading="isLoading = $event"
                     @update:refresh="refresh = $event"

@@ -179,147 +179,151 @@ const closeModal = () => {
         </div>
         <table v-else class="w-[850px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
-            <tr>
-                <th scope="col" colspan="4" class="px-3 py-2.5">
-                    <div class="flex gap-2">
-                        <div>
-                            <span>Name</span>
+                <tr>
+                    <th scope="col" colspan="4" class="px-3 py-2.5">
+                        <div class="flex gap-2">
+                            <div>
+                                <span>Name</span>
+                            </div>
+                            <div
+                                class="transition-transform transform"
+                                :class="{ 'rotate-180': sortDescending === 'asc' && types === 'name' }"
+                                @click="toggleSort('name')"
+                            >
+                                <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
+                            </div>
                         </div>
-                        <div
-                            class="transition-transform transform"
-                            :class="{ 'rotate-180': sortDescending === 'asc' && types === 'name' }"
-                            @click="toggleSort('name')"
-                        >
-                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
+                        <div class="flex gap-2 justify-center">
+                            <div>
+                                <span>Joining Date</span>
+                            </div>
+                            <div
+                                class="transition-transform transform"
+                                :class="{ 'rotate-180': sortDescending === 'asc' && types === 'created_at' }"
+                                @click="toggleSort('created_at')"
+                            >
+                                <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
+                            </div>
                         </div>
-                    </div>
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                    <div class="flex gap-2 justify-center">
-                        <div>
-                            <span>Joining Date</span>
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
+                        MT5 Account
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
+                        Top Leader
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 w-40">
+                        First Leader
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
+                        Wallet Balance
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-24">
+                        <div class="flex gap-2 justify-center">
+                            <div>
+                                <span>Country</span>
+                            </div>
+                            <div
+                                class="transition-transform transform"
+                                :class="{ 'rotate-180': sortDescending === 'asc' && types === 'country' }"
+                                @click="toggleSort('country')"
+                            >
+                                <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
+                            </div>
                         </div>
-                        <div
-                            class="transition-transform transform"
-                            :class="{ 'rotate-180': sortDescending === 'asc' && types === 'created_at' }"
-                            @click="toggleSort('created_at')"
-                        >
-                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
-                        </div>
-                    </div>
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
-                    MT5 Account
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
-                    Top Leader
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
-                    First Leader
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
-                    Wallet Balance
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-24">
-                    <div class="flex gap-2 justify-center">
-                        <div>
-                            <span>Country</span>
-                        </div>
-                        <div
-                            class="transition-transform transform"
-                            :class="{ 'rotate-180': sortDescending === 'asc' && types === 'country' }"
-                            @click="toggleSort('country')"
-                        >
-                            <SortAscendingIcon class="w-5 h-5 hover:cursor-pointer" />
-                        </div>
-                    </div>
-                </th>
-                <th scope="col" colspan="1" class="px-3 py-2.5 text-center w-24">
-                    Rank
-                </th>
-                <th v-if="kycStatus !== 'Pending'" scope="col" colspan="1"  class="px-3 py-2.5 text-center w-24">
-                    Status
-                </th>
-                <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-36">
-                    Action
-                </th>
-            </tr>
+                    </th>
+                    <th scope="col" colspan="1" class="px-3 py-2.5 text-center w-24">
+                        Rank
+                    </th>
+                    <th v-if="kycStatus !== 'Pending'" scope="col" colspan="1"  class="px-3 py-2.5 text-center w-24">
+                        Status
+                    </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-36">
+                        Action
+                    </th>
+                </tr>
             </thead>
             <tbody>
-            <tr
-                v-for="member in members.data"
-                class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-800"
-            >
-                <td class="pl-3 py-2.5" colspan="4">
-                    <div class="inline-flex items-center gap-2 mr-3">
-                        <img :src="member.profile_photo_url ? member.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
-                        <div class="flex flex-col">
-                            <div>
-                                {{ member.name }}
-                            </div>
-                            <div class="dark:text-gray-400">
-                                {{ member.email }}
+                <tr
+                    v-for="member in members.data"
+                    class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-800"
+                >
+                    <td class="pl-3 py-2.5" colspan="4">
+                        <div class="inline-flex items-center gap-2 mr-3">
+                            <img :src="member.profile_photo_url ? member.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
+                            <div class="flex flex-col">
+                                <div>
+                                    {{ member.name }}
+                                </div>
+                                <div class="dark:text-gray-400">
+                                    {{ member.email }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    {{ formatDateTime(member.created_at, false) }}
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    <div v-if="member.trading_accounts.length > 0">
-                        <Tooltip content="View MT5 account" placement="bottom">
-                            <Button
-                                type="button"
-                                variant="gray"
-                                size="sm"
-                                @click="openMT5Modal(member)"
-                                class="flex justify-center"
-                            >
-                                <span class="text-xs">View</span>
-                            </Button>
-                        </Tooltip>
-                    </div>
-                    <div v-else>
-                        -
-                    </div>
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    {{ member.top_leader ? member.top_leader.name : 'LuckyAnt Trading' }} <!--top leader-->
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    {{ member.first_leader ? member.first_leader.name : 'LuckyAnt Trading' }} <!--first leader-->
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    $ {{ formatAmount(member.walletBalance) }}
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    {{ member.country.name }}
-                </td>
-                <td class="px-3 py-2.5 text-center uppercase" colspan="1">
-                    {{ member.rank.name }}
-                </td>
-                <td v-if="kycStatus !== 'Pending'" class="px-3 py-2.5 text-center" colspan="1">
-                    <Badge
-                        :variant="kycVariant(member.kyc_approval)"
-                    >
-                        {{ member.kyc_approval }}
-                    </Badge>
-                </td>
-                <td class="px-3 py-2.5 text-center" colspan="2">
-                    <Action
-                        v-if="kycStatus !== 'Pending' && kycStatus !== 'Unverified'"
-                        :members="member"
-                        type="member"
-                    />
-                    <KycAction
-                        v-else
-                        :member="member"
-                        :countries="countries"
-                        :nationalities="nationalities"
-                    />
-                </td>
-            </tr>
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        {{ formatDateTime(member.created_at, false) }}
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        <div v-if="member.trading_accounts.length > 0">
+                            <Tooltip content="View MT5 account" placement="bottom">
+                                <Button
+                                    type="button"
+                                    variant="gray"
+                                    size="sm"
+                                    @click="openMT5Modal(member)"
+                                    class="flex justify-center"
+                                >
+                                    <span class="text-xs">View</span>
+                                </Button>
+                            </Tooltip>
+                        </div>
+                        <div v-else>
+                            -
+                        </div>
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        {{ member.top_leader ? member.top_leader.name : 'LuckyAnt Trading' }} <!--top leader-->
+                    </td>
+                    <td class="px-3 py-2.5" colspan="2">
+                        <div class="flex flex-col">
+                            <span>{{ member.first_leader ? member.first_leader.name : 'LuckyAnt Trading' }} <!--first leader--></span>
+                            <span>{{ member.first_leader ? member.first_leader.email : 'LuckyAntTrading@LuckyAntTrading.com' }}</span>
+                        </div>
+                        
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        $ {{ formatAmount(member.walletBalance) }}
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        {{ member.country.name }}
+                    </td>
+                    <td class="px-3 py-2.5 text-center uppercase" colspan="1">
+                        {{ member.rank.name }}
+                    </td>
+                    <td v-if="kycStatus !== 'Pending'" class="px-3 py-2.5 text-center" colspan="1">
+                        <Badge
+                            :variant="kycVariant(member.kyc_approval)"
+                        >
+                            {{ member.kyc_approval }}
+                        </Badge>
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        <Action
+                            v-if="kycStatus !== 'Pending' && kycStatus !== 'Unverified'"
+                            :members="member"
+                            type="member"
+                        />
+                        <KycAction
+                            v-else
+                            :member="member"
+                            :countries="countries"
+                            :nationalities="nationalities"
+                        />
+                    </td>
+                </tr>
             </tbody>
         </table>
         <div class="flex justify-center mt-4" v-if="!isLoading">

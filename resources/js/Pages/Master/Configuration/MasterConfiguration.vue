@@ -24,6 +24,8 @@ const form = useForm({
     master_id: props.masterConfigurations.id,
     min_join_equity: props.masterConfigurations.min_join_equity,
     sharing_profit: props.masterConfigurations.sharing_profit,
+    market_profit: props.masterConfigurations.market_profit,
+    company_profit: props.masterConfigurations.company_profit,
     subscription_fee: props.masterConfigurations.subscription_fee,
     signal_status: '',
     eta_montly_return: props.masterConfigurations.estimated_monthly_returns,
@@ -33,6 +35,7 @@ const form = useForm({
     roi_period: props.masterConfigurations.roi_period,
     total_subscriber: props.masterConfigurations.total_subscribers,
     max_drawdown: props.masterConfigurations.max_drawdown,
+    management_fee: props.masterConfigurations.management_fee,
 })
 
 const plans = [
@@ -114,21 +117,58 @@ const badgeVariant = (status) => {
                             <InputError :message="form.errors.min_join_equity" />
                         </div>
                         <div class="space-y-2">
-                            <Label
-                                for="sharing_profit"
-                                value="Sharing Profit (%)"
-                            />
-                            <Input
-                                id="sharing_profit"
-                                type="number"
-                                min="0"
-                                placeholder="50%"
-                                class="block w-full"
-                                v-model="form.sharing_profit"
-                                :invalid="form.errors.sharing_profit"
-                            />
+                            <div class="space-x-2 flex">
+                                <div class="space-y-1.5">
+                                    <Label
+                                        for="sharing_profit"
+                                        value="Sharing Profit (%)"
+                                    />
+                                    <Input
+                                        id="sharing_profit"
+                                        type="number"
+                                        min="0"
+                                        placeholder="60%"
+                                        class="block w-full"
+                                        v-model="form.sharing_profit"
+                                        :invalid="form.errors.sharing_profit"
+                                    />
+                                </div>
+                                
+                                <div class="space-y-1.5">
+                                    <Label
+                                        for="market_profit"
+                                        value="Market Profit (%)"
+                                    />
+                                    <Input
+                                        id="market_profit"
+                                        type="number"
+                                        min="0"
+                                        placeholder="20%"
+                                        class="block w-full"
+                                        v-model="form.market_profit"
+                                        :invalid="form.errors.market_profit"
+                                    />
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <Label
+                                        for="company_profit"
+                                        value="Company Profit (%)"
+                                    />
+                                    <Input
+                                        id="company_profit"
+                                        type="number"
+                                        min="0"
+                                        placeholder="20%"
+                                        class="block w-full"
+                                        v-model="form.company_profit"
+                                        :invalid="form.errors.company_profit"
+                                    />
+                                </div>
+                            </div>
                             <InputError :message="form.errors.sharing_profit" />
                         </div>
+                        
                         <div class="space-y-2">
                             <Label
                                 for="subscription_fee"
@@ -252,6 +292,21 @@ const badgeVariant = (status) => {
                                 :invalid="form.errors.max_drawdown"
                             />
                             <InputError :message="form.errors.max_drawdown" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="management_fee"
+                                value="Management Fee (%)"
+                            />
+                            <Input
+                                id="management_fee"
+                                type="text"
+                                placeholder="%"
+                                class="block w-full"
+                                v-model="form.management_fee"
+                                :invalid="form.errors.management_fee"
+                            />
+                            <InputError :message="form.errors.management_fee" />
                         </div>
                         <div class="space-y-2">
                             <Label

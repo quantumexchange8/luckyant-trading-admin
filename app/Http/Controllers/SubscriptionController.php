@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\Subscriber;
 use App\Models\Wallet;
 use App\Models\Master;
+use App\Models\User;
 use App\Exports\SubscriptionHistoryExport;
 use Auth;
 use Carbon\Carbon;
@@ -262,6 +263,14 @@ class SubscriptionController extends Controller
             $activeSubscriber->whereBetween('created_at', [$start_date, $end_date]);
         }
 
+        if ($request->filled('leader')) {
+            $leader = $request->input('leader');
+            $leaderUser = User::find($leader);
+            if ($leaderUser) {
+                $activeSubscriber->whereIn('user_id', $leaderUser->getChildrenIds());
+            }
+        }
+
         $results = $activeSubscriber->latest()->paginate(10);
 
         return response()->json($results);
@@ -300,6 +309,14 @@ class SubscriptionController extends Controller
             $historySubscriber->where(function ($q) use ($filter) {
                 $q->where('status', $filter);
             });
+        }
+
+        if ($request->filled('leader')) {
+            $leader = $request->input('leader');
+            $leaderUser = User::find($leader);
+            if ($leaderUser) {
+                $historySubscriber->whereIn('user_id', $leaderUser->getChildrenIds());
+            }
         }
 
         if ($request->has('exportStatus')) {

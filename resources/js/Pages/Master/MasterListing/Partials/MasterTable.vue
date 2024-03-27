@@ -81,6 +81,9 @@ const transactionVariant = (transactionStatus) => {
                         Sharing Profit
                     </th>
                     <th scope="col" class="p-3">
+                        Management Fee
+                    </th>
+                    <th scope="col" class="p-3">
                         Status
                     </th>
                     <th scope="col" class="p-3">
@@ -96,7 +99,7 @@ const transactionVariant = (transactionStatus) => {
                 </tr>
                 <tr 
                     v-for="master in masters.data"
-                    class="bg-white hover:bg-gray-100 dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800 hover:cursor-pointer dark:hover:bg-gray-800"
+                    class="bg-white hover:bg-gray-100 dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800 dark:hover:bg-gray-800"
 
                 >
                 <td class="p-3">
@@ -121,6 +124,9 @@ const transactionVariant = (transactionStatus) => {
                     </td>
                     <td class="p-3">
                         {{ master.sharing_profit }}
+                    </td>
+                    <td class="p-3">
+                        $ {{ master.management_fee ?  master.management_fee : '0.00'}}
                     </td>
                     <td class="p-3">
                         <Badge

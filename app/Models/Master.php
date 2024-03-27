@@ -15,6 +15,8 @@ class Master extends Model
         'meta_login',
         'min_join_equity',
         'sharing_profit',
+        'market_profit',
+        'company_profit',
         'estimated_monthly_returns',
         'estimated_lot_size',
         'subscription_fee',
@@ -25,6 +27,7 @@ class Master extends Model
         'status',
         'total_subscribers',
         'max_drawdown',
+        'management_fee',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
