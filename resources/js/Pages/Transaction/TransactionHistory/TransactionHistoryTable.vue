@@ -15,6 +15,7 @@ import {CheckIcon, ChevronDownIcon, SortAscendingIcon } from '@heroicons/vue/sol
 const props = defineProps({
     search: String,
     date: String,
+    category: String,
     fund_type: String,
     methods: String,
     status: String,
@@ -31,11 +32,10 @@ const transactions = ref({data: []});
 const currentPage = ref(1);
 const refreshTransaction = ref(props.refresh);
 const transactionLoading = ref(props.isLoading);
-const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
+const emit = defineEmits(['update:loading', 'update:refresh', 'update:export', 'update:totalAmount', 'update:successAmount', 'update:rejectedAmount']);
 const { formatDateTime, formatAmount, formatType } = transactionFormat();
 const transactionModal = ref(false);
 const transactionDetail = ref(null);
-const totalAmount = ref(null);
 
 const sortDescending = ref('desc');
 const types = ref('')
@@ -46,13 +46,13 @@ const toggleSort = (sortType) => {
 }
 
 watch(
-    [() => props.search, () => props.fund_type, () => props.methods, () => props.status, () => props.date, () => props.transactionType, () => types.value, () => sortDescending.value],
-    debounce(([searchValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue]) => {
-        getResults(1, searchValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue);
+    [() => props.search, () => props.category, () => props.fund_type, () => props.methods, () => props.status, () => props.date, () => props.transactionType, () => types.value, () => sortDescending.value],
+    debounce(([searchValue, categoryValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue]) => {
+        getResults(1, searchValue, categoryValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search, fund_type = props.fund_type, methods = props.methods, status = props.status, date = props.date, type = props.transactionType, sortType = types.value, sort = sortDescending.value) => {
+const getResults = async (page = 1, search = props.search, category = props.category, fund_type = props.fund_type, methods = props.methods, status = props.status, date = props.date, type = props.transactionType, sortType = types.value, sort = sortDescending.value) => {
     transactionLoading.value = true
     try {
         let url = `/transaction/getTransactionHistory?page=${page}`;
@@ -63,6 +63,10 @@ const getResults = async (page = 1, search = props.search, fund_type = props.fun
 
         if (type) {
             url += `&type=${type}`;
+        }
+
+        if (category) {
+            url += `&category=${category}`;
         }
 
         if (fund_type) {
@@ -88,7 +92,9 @@ const getResults = async (page = 1, search = props.search, fund_type = props.fun
 
         const response = await axios.get(url);
         transactions.value = response.data.transactions;
-        totalAmount.value = response.data.totalAmount;
+        emit('update:totalAmount', response.data.totalAmount);
+        emit('update:successAmount', response.data.successAmount);
+        emit('update:rejectedAmount', response.data.rejectedAmount);
     } catch (error) {
         console.error(error);
     } finally {
@@ -104,7 +110,7 @@ const handlePageChange = (newPage) => {
 
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.fund_type, props.methods, props.status, props.date, props.kycStatus, types.value, sortDescending.value);
+        getResults(currentPage.value, props.search, props.category, props.fund_type, props.methods, props.status, props.date, props.kycStatus, types.value, sortDescending.value);
     }
 };
 
@@ -133,6 +139,10 @@ watch(() => props.exportStatus, (newVal) => {
 
         if (props.transactionType) {
             url += `&type=${props.transactionType}`;
+        }
+
+        if (props.category) {
+            url += `&category=${props.category}`;
         }
 
         if (props.fund_type) {
@@ -194,8 +204,11 @@ const closeModal = () => {
                 <th scope="col" class="p-3">
                     {{ $t('public.date') }}
                 </th>
-                <th scope="col" class="p-3">
+                <th scope="col" class="p-3 min-w-40">
                     {{ $t('public.name') }}
+                </th>
+                <th scope="col" class="p-3 min-w-40">
+                    {{ $t('public.first_leader') }}
                 </th>
                 <th scope="col" class="p-3">
                     {{ $t('public.from') }}
@@ -214,6 +227,18 @@ const closeModal = () => {
                 </th>
                 <th scope="col" class="p-3">
                     {{ $t('public.amount') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ $t('public.payment_charges') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ formatType(transactionType) }} {{ $t('public.amount') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ $t('public.profit') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ $t('public.bonus') }}
                 </th>
                 <th scope="col" class="p-3 text-center">
                     {{ $t('public.status') }}
@@ -252,6 +277,16 @@ const closeModal = () => {
                 <td class="p-3">
                     <div class="flex flex-col gap-1">
                         <div>
+                            {{ transaction.user.first_leader ? transaction.user.first_leader.name : '-' }}
+                        </div>
+                        <div>
+                            {{ transaction.user.first_leader ? transaction.user.first_leader.email : '-' }}
+                        </div>
+                    </div>
+                </td>
+                <td class="p-3">
+                    <div class="flex flex-col gap-1">
+                        <div>
                             {{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : (transaction.from_meta_login ? $t('public.account_no') : '-') }}
                         </div>
                         <div v-if="transaction.from_meta_login" class="font-semibold">
@@ -260,7 +295,15 @@ const closeModal = () => {
                     </div>
                 </td>
                 <td class="p-3">
-                    <div class="flex flex-col gap-1">
+                    <div v-if="transaction.category === 'wallet' && transaction.transaction_type === 'Withdrawal'" class="flex flex-col gap-1">
+                        <div>
+                            {{ transaction.payment_account ? transaction.payment_account.payment_account_name : '-' }} <span v-if="transaction.payment_account && transaction.payment_account.payment_platform === 'Bank'">({{ transaction.payment_account ? transaction.payment_account.payment_platform_name : '' }})</span>
+                        </div>
+                        <div>
+                            {{ transaction.payment_account ? transaction.payment_account.account_no : '-' }}
+                        </div>
+                    </div>
+                    <div v-else class="flex flex-col gap-1">
                         <div>
                             {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? $t('public.account_no') : '-') }}
                         </div>
@@ -281,6 +324,18 @@ const closeModal = () => {
                 <td class="p-3">
                     $ {{ transaction.amount }}
                 </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3">
+                    $ {{ transaction.transaction_charges }}
+                </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3 text-red-500">
+                    $ {{ transaction.transaction_amount }}
+                </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3">
+                    $ {{ formatAmount(transaction.profit_amount ? transaction.profit_amount : 0) }}
+                </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3">
+                    $ {{ formatAmount(transaction.bonus_amount ? transaction.bonus_amount : 0) }}
+                </td>
                 <td class="p-3">
                     <div class="flex items-center justify-center">
                         <Badge :variant="statusVariant(transaction.status)">{{ transaction.status }}</Badge>
@@ -297,9 +352,6 @@ const closeModal = () => {
                 :limit=2
                 @pagination-change-page="handlePageChange"
             />
-        </div>
-        <div class="text-xl font-semibold">
-            {{ formatType(transactionType) }} Total Amount: ${{ formatAmount(totalAmount ? totalAmount : 0) }}
         </div>
     </div>
 

@@ -347,4 +347,7 @@ return [
     'fund_type' => "Fund Type",
     'updated_trading_account' => 'Updated Password',
     'error_updating_account' => 'Error Updating',
+    'first_leader' => "First Leader",
+    'capital' => "Capital",
+    'bonus' => "Bonus",
 ];
