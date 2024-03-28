@@ -72,7 +72,10 @@ const transactionVariant = (transactionStatus) => {
                         Name
                     </th>
                     <th scope="col" class="p-3">
-                        Trading Account
+                        Trading User Name
+                    </th>
+                    <th scope="col" class="p-3">
+                        Account No
                     </th>
                     <th scope="col" class="p-3">
                         Min Join Equity
@@ -116,6 +119,9 @@ const transactionVariant = (transactionStatus) => {
                         </div>
                     </div>
                 </td>
+                    <td class="p-3">
+                        {{ master.trading_user.name }}
+                    </td>
                     <td class="p-3">
                         {{ master.trading_account.meta_login }}
                     </td>

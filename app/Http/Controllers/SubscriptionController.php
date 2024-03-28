@@ -238,7 +238,7 @@ class SubscriptionController extends Controller
     public function getActiveSubscriber(Request $request)
     {
         $activeSubscriber = Subscriber::query()
-            ->with(['user', 'master', 'master.user', 'transaction', 'subscription'])
+            ->with(['user', 'master', 'master.user', 'transaction', 'subscription', 'master.tradingUser'])
             ->where('status', 'Subscribing');
 
         if ($request->filled('search')) {
@@ -273,13 +273,17 @@ class SubscriptionController extends Controller
 
         $results = $activeSubscriber->latest()->paginate(10);
 
+        $results->each(function ($user) {
+            $user->first_leader = $user->user->getFirstLeader() ?? null;
+        });
+
         return response()->json($results);
     }
 
     public function getHistorySubscriber(Request $request)
     {
         $historySubscriber = Subscription::query()
-            ->with(['user', 'master', 'master.user', 'transaction'])
+            ->with(['user', 'master', 'master.user', 'transaction', 'master.tradingUser'])
             ->whereNot('status', 'Pending');
 
         if ($request->filled('search')) {
@@ -324,6 +328,10 @@ class SubscriptionController extends Controller
         }
 
         $results = $historySubscriber->latest()->paginate(10);
+
+        $results->each(function ($user) {
+            $user->first_leader = $user->user->getFirstLeader() ?? null;
+        });
 
         return response()->json($results);
     }

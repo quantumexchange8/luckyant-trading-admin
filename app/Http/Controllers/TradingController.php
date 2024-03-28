@@ -58,7 +58,7 @@ class TradingController extends Controller
             return Excel::download(new TradingAccountExport($tradingListing), Carbon::now() . '_Trading Account' .'_History-report.xlsx');
         }
 
-        $results = $tradingListing->paginate(10);
+        $results = $tradingListing->latest()->paginate(10);
 
         return response()->json($results);
     }

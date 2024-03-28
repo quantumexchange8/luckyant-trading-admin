@@ -45,5 +45,8 @@ class Master extends Model
         return $this->hasMany(Subscriber::class, 'master_id', 'id');
     }
 
-
+    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(TradingUser::class, 'meta_login', 'meta_login');
+    }
 }

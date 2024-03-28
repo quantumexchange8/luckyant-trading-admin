@@ -163,7 +163,7 @@ class MasterController extends Controller
     public function getAllMaster(Request $request)
     {
 
-        $master = Master::query()->with(['trading_account', 'user']);
+        $master = Master::query()->with(['trading_account', 'user', 'tradingUser']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';

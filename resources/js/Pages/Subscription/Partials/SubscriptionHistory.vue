@@ -162,6 +162,9 @@ const closeModal = () => {
                         Trading Account
                     </th>
                     <th scope="col" class="p-3">
+                        First Leader
+                    </th>
+                    <th scope="col" class="p-3">
                         Master
                     </th>
                     <th scope="col" class="p-3">
@@ -199,7 +202,11 @@ const closeModal = () => {
                         {{ subscriber.meta_login }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.master ? subscriber.master.user.name : '-' }}
+                        {{ subscriber.first_leader ? subscriber.first_leader.name : 'LuckyAnt Trading' }}
+                    </td>
+                    <td class="p-3">
+                        <!-- {{ subscriber.master ? subscriber.master.trading_user.name : '-' }} -->
+                        {{ subscriber.master.trading_user ? subscriber.master.trading_user.name : '-' }}
                     </td>
                     <td class="p-3">
                         {{ subscriber.master ? subscriber.master.meta_login : '-' }}

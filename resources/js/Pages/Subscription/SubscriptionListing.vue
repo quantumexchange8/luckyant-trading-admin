@@ -33,7 +33,7 @@ function refreshTable() {
     search.value = '';
     date.value = '';
     filter.value = '';
-    leader.value = '';
+    leader.value = null;
     isLoading.value = !isLoading.value;
     refresh.value = true;
 }
