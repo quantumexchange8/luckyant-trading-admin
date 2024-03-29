@@ -66,6 +66,7 @@ class TransactionsExport implements FromCollection, WithHeadings
         return [
             'Name',
             'Email',
+            'First Leader',
             'Country',
             'Transaction Type',
             'Fund Type',

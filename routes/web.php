@@ -55,13 +55,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/validateKyc', [MemberController::class, 'validateKyc'])->name('member.validateKyc');
         Route::post('/verifyMember', [MemberController::class, 'verifyMember'])->name('member.verify_member');
         Route::get('/impersonate/{user}', [MemberController::class, 'impersonate'])->name('member.impersonate');
+        Route::get('/affiliate_listing', [MemberController::class, 'affiliate_listing'])->name('member.affiliate_listing');
+        Route::get('/getAffiliateSummaries', [MemberController::class, 'getAffiliateSummaries'])->name('member.getAffiliateSummaries');
 
         // live trading
         Route::get('/live_trading', [TradingController::class, 'liveTrading'])->name('member.live_trading');
         Route::get('/getTradingAccount', [TradingController::class, 'getTradingAccount'])->name('member.getTradingAccount');
         Route::post('/edit_leverage', [TradingController::class, 'edit_leverage'])->name('member.edit_leverage');
         Route::post('/change_password', [TradingController::class, 'change_password'])->name('member.change_password');
-  
+
     });
 
     /**

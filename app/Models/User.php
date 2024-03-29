@@ -89,6 +89,16 @@ class User extends Authenticatable implements HasMedia
         return $this->belongsTo(User::class, 'top_leader_id', 'id');
     }
 
+    public function walletLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WalletLog::class);
+    }
+
+    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
     public function getFirstLeader()
     {
         $first_leader = null;

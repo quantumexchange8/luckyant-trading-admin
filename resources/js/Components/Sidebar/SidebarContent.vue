@@ -43,6 +43,11 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :active="route().current('member.member_listing')"
             />
             <SidebarCollapsibleItem
+                :href="route('member.affiliate_listing')"
+                title="Affiliate Listing"
+                :active="route().current('member.affiliate_listing')"
+            />
+            <SidebarCollapsibleItem
                 :href="route('member.live_trading')"
                 title="Live Account Listing"
                 :active="route().current('member.live_trading')"

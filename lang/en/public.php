@@ -350,4 +350,12 @@ return [
     'first_leader' => "First Leader",
     'capital' => "Capital",
     'bonus' => "Bonus",
+    'affiliate' => "Affiliate",
+    'profit_in' => "Profit In",
+    'bonus_wallet_in' => "Bonus Wallet In",
+    'bonus_wallet_out' => "Bonus Wallet Out",
+    'e_wallet_in' => "E-Wallet In",
+    'e_wallet_out' => "E-Wallet Out",
+    'total_funding' => "Total Funding",
+    'total_demo_fund' => "Total Demo Fund",
 ];
