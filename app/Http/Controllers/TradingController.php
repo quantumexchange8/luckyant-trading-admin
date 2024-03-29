@@ -28,6 +28,16 @@ class TradingController extends Controller
 
     public function getTradingAccount(Request $request)
     {
+        $connection = (new MetaFiveService())->getConnectionStatus();
+
+        if ($connection == 0) {
+            try {
+                (new MetaFiveService())->getUserInfo(TradingAccount::all());
+            } catch (\Exception $e) {
+                \Log::error('Error fetching trading accounts: '. $e->getMessage());
+            }
+        }
+
         $tradingListing = TradingAccount::query()
             ->with(['user', 'accountType', 'tradingUser']);
 
@@ -70,7 +80,7 @@ class TradingController extends Controller
         $leverage->update([
             'margin_leverage' => $request->margin_leverage,
         ]);
-        
+
 
         return back()->with('toast', trans('public.created_trading_account'));
     }
@@ -78,7 +88,7 @@ class TradingController extends Controller
     public function change_password(Request $request)
     {
         $password = TradingAccount::find($request->id);
-        
+
         $rules = [
             'meta_login' => ['required'],
             'master_password' => ['sometimes', 'string', 'regex:/^(?=.*[A-Z])(?=.*\d).+$/'],
@@ -97,14 +107,14 @@ class TradingController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         } else {
-            
+
             $user = User::find($request->user_id);
             $meta_login = $request->meta_login;
             $master_password = $request->master_password;
             $investor_password = $request->investor_password;
             $metaService = new MetaFiveService();
             $connection = $metaService->getConnectionStatus();
-            
+
             if ($connection != 0) {
                 return redirect()->back()
                     ->with('title', trans('public.server_under_maintenance'))
@@ -115,21 +125,21 @@ class TradingController extends Controller
                 if ($master_password) {
                     $metaService->changePassword($meta_login, passwordType::MAIN, $master_password);
                 }
-    
+
                 if ($investor_password) {
                     $metaService->changePassword($meta_login, passwordType::INVESTOR, $investor_password);
                 }
 
                 Notification::route('mail', $user->email)
                     ->notify(new ChangeTradingAccountPassowrdNotification($user, $meta_login, $master_password, $investor_password));
-            
+
                 return back()->with('toast', trans('public.updated_trading_account'));
             }
-            
+
             return back()->with('toast', trans('public.error_updating_account'));
         }
-    
+
         return back()->with('toast', trans('public.error_updating_account'));
-        
+
     }
 }

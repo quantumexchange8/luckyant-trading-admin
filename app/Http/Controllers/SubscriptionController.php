@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TradingAccount;
+use App\Services\MetaFiveService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Subscription;
@@ -65,16 +67,34 @@ class SubscriptionController extends Controller
 
     public function approveSubscribe(Request $request)
     {
-
         $subscribe = Subscriber::find($request->id);
         $subscriptionId = Subscription::find($request->subscriptionId);
-
         $cashWallet = Wallet::where('user_id', $request->userId)->where('type', 'cash_wallet')->first();
-
         $masterPeriod = Master::find($subscribe->master_id);
-        
+
+        $connection = (new MetaFiveService())->getConnectionStatus();
+        if ($connection != 0) {
+            return redirect()->back()
+                ->with('title', trans('public.server_under_maintenance'))
+                ->with('warning', trans('public.try_again_later'));
+        }
+
+        try {
+            (new MetaFiveService())->getUserInfo(TradingAccount::where('meta_login', $subscriptionId->meta_login)->get());
+        } catch (\Exception $e) {
+            \Log::error('Error fetching trading accounts: '. $e->getMessage());
+
+            return redirect()->back()
+                ->with('title', trans('public.server_under_maintenance'))
+                ->with('warning', trans('public.try_again_later'));
+        }
+
+        $trading_account = TradingAccount::where('meta_login', $subscriptionId->meta_login)->first();
+
         $subscribe->update([
-            'status' => 'Subscribing'
+            'initial_meta_balance' => $trading_account->balance,
+            'status' => 'Subscribing',
+            'approval_date' => now(),
         ]);
 
         $subscriptionId->update([
@@ -112,7 +132,7 @@ class SubscriptionController extends Controller
 
         $reject = Subscriber::find($request->id);
         $subscriptionId = Subscription::find($request->subscriptionId);
-        
+
         $reject->update([
             'status' => 'Rejected'
         ]);
@@ -141,14 +161,14 @@ class SubscriptionController extends Controller
     public function terminateSubscribe(Request $request)
     {
 
-        
+
         $request->validate([
             'remarks' => ['required'],
         ]);
 
         $terminate = Subscriber::find($request->id);
         $subscriptionId = Subscription::find($request->subscriptionId);
-        
+
         $terminate->update([
             'status' => 'Terminated',
         ]);
@@ -168,7 +188,7 @@ class SubscriptionController extends Controller
                 'handle_by' => Auth::user()->id,
             ]);
         }
-        
+
         return redirect()->back()
             ->with('title', 'Success terminated')
             ->with('terminated', 'Terminated this subscription');
@@ -178,7 +198,7 @@ class SubscriptionController extends Controller
     {
         $renewal_request = SubscriptionRenewalRequest::find($request->id);
         $subscriptionId = Subscription::find($request->subscriptionId);
-        
+
         $renewal_request->update([
             'status' => 'Success',
             'approval_date' => now(),
@@ -206,7 +226,7 @@ class SubscriptionController extends Controller
 
         $reject_renewal = SubscriptionRenewalRequest::find($request->id);
         $subscriptionId = Subscription::find($request->subscriptionId);
-        
+
         $reject_renewal->update([
             'status' => 'Rejected',
             'approval_date' => now(),
@@ -341,7 +361,7 @@ class SubscriptionController extends Controller
         $pendingRenewal = SubscriptionRenewalRequest::query()
             ->with(['user', 'subscription', 'subscription.master', 'subscription.master.user'])
             ->where('status', 'Pending');
-        
+
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
             $pendingRenewal->where(function ($q) use ($search) {
