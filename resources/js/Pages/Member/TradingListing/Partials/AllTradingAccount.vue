@@ -9,6 +9,7 @@ import Badge from "@/Components/Badge.vue";
 import Modal from "@/Components/Modal.vue";
 import debounce from "lodash/debounce.js";
 import Action from "@/Pages/Member/TradingListing/Partials/Action.vue";
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     refresh: Boolean,
@@ -101,6 +102,12 @@ const paginationClass = [
 const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-primary-500 dark:text-white'
 ];
+
+watchEffect(() => {
+    if (usePage().props.title !== null) {
+        getResults();
+    }
+});
 </script>
 
 <template>
