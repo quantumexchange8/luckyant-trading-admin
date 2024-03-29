@@ -2,7 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BalanceAdjustmentRequest;
+use App\Models\Subscription;
+use App\Models\TradingUser;
+use App\Models\Transaction;
+use App\Services\dealAction;
+use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use App\Models\TradingAccount;
 use App\Models\User;
@@ -141,5 +148,104 @@ class TradingController extends Controller
 
         return back()->with('toast', trans('public.error_updating_account'));
 
+    }
+
+    public function balanceAdjustment(BalanceAdjustmentRequest $request)
+    {
+        $user = User::find($request->user_id);
+        $meta_login = $request->meta_login;
+        $amount = $request->amount;
+        $transaction_type = $request->transaction_type;
+        $fund_type = $request->fund_type;
+
+        $subscription = Subscription::where('user_id', $user->id)
+            ->where('meta_login', $meta_login)
+            ->where('status', 'Active')
+            ->first();
+
+        $connection = (new MetaFiveService())->getConnectionStatus();
+        $metaService = new MetaFiveService();
+
+        if ($connection != 0) {
+            return redirect()->back()
+                ->with('title', trans('public.server_under_maintenance'))
+                ->with('warning', trans('public.try_again_later'));
+        }
+
+        $tradingAccount = TradingAccount::with('subscriber')->where('meta_login', $meta_login)->first();
+
+        try {
+            $metaService->getUserInfo(collect([$tradingAccount]));
+        } catch (\Exception $e) {
+            \Log::error('Error fetching trading accounts: '. $e->getMessage());
+        }
+
+        if ($transaction_type == 'Withdrawal') {
+            // Check if balance is sufficient
+            if (!empty($tradingAccount->subscriber) &&
+                !empty($tradingAccount->unsubscribe_date) &&
+                $tradingAccount->subscriber->unsubscribe_date->greaterThan(Carbon::now()->subHours(24))
+            ) {
+                throw ValidationException::withMessages(['amount' => trans('public.terminatiion_message')]);
+            }
+
+            // Check if balance is sufficient
+            if ($fund_type == 'DemoFund') {
+                if ($tradingAccount->demo_fund < $amount || $amount <= 0) {
+                    throw ValidationException::withMessages(['amount' => 'Insufficient Demo Fund']);
+                }
+            } else {
+                if ($tradingAccount->balance - $tradingAccount->demo_fund < $amount || $amount <= 0) {
+                    throw ValidationException::withMessages(['amount' => trans('public.insufficient_balance')]);
+                }
+            }
+        }
+
+        $deal = [];
+
+        try {
+            $deal = (new MetaFiveService())->createDeal($meta_login, $amount, $request->description, $transaction_type == 'Deposit' ? dealAction::DEPOSIT : dealAction::WITHDRAW);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching trading accounts: '. $e->getMessage());
+        }
+
+        Transaction::create([
+            'category' => 'trading_account',
+            'user_id' => $user->id,
+            'to_meta_login' => $meta_login,
+            'ticket' => $deal['deal_Id'],
+            'transaction_number' => RunningNumberService::getID('transaction'),
+            'transaction_type' => $request->transaction_type,
+            'fund_type' => $fund_type,
+            'amount' => $amount,
+            'transaction_charges' => 0,
+            'transaction_amount' => $amount,
+            'status' => 'Success',
+            'comment' => $deal['conduct_Deal']['comment'],
+        ]);
+
+        if ($request->fund_type == 'DemoFund') {
+            $tradingUser = TradingUser::where('meta_login', $meta_login)->first();
+            $tradingAccount = TradingAccount::where('meta_login', $meta_login)->first();
+
+            if ($transaction_type == 'Deposit') {
+                $tradingUser->demo_fund += $amount;
+                $tradingAccount->demo_fund += $amount;
+            } else {
+                $tradingUser->demo_fund -= $amount;
+                $tradingAccount->demo_fund -= $amount;
+            }
+            $tradingUser->save();
+            $tradingAccount->save();
+        }
+
+        if ($subscription) {
+            $subscription->meta_balance += $amount;
+            $subscription->save();
+        }
+
+        return redirect()->back()
+            ->with('title', 'Success adjustment')
+            ->with('success', 'Successfully ' . $request->transaction_type . ' to LOGIN: ' . $meta_login);
     }
 }

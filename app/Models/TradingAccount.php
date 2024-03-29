@@ -35,7 +35,6 @@ class TradingAccount extends Model
         'blocked_profit' => 'decimal:2',
         'margin_initial' => 'decimal:2',
         'margin_maintenance' => 'decimal:2',
-        'created_at' => 'datetime:Y-m-d',
     ];
 
 //    public function getActivitylogOptions(): LogOptions
@@ -65,4 +64,9 @@ class TradingAccount extends Model
    {
        return $this->hasOne(TradingUser::class, 'meta_login', 'meta_login');
    }
+
+    public function subscriber(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Subscriber::class, 'trading_account_id', 'id');
+    }
 }

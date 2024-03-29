@@ -8,6 +8,7 @@ import {transactionFormat} from "@/Composables/index.js";
 import {useForm} from "@inertiajs/vue3";
 import EditLeverage from "@/Pages/Member/TradingListing/Partials/EditLeverage.vue";
 import ChangePassword from "@/Pages/Member/TradingListing/Partials/ChangePassword.vue";
+import BalanceAdjustment from "@/Pages/Member/TradingListing/Partials/BalanceAdjustment.vue";
 
 const props = defineProps({
     tradingListing: Object,
@@ -26,6 +27,8 @@ const openTradingModal = (id, componentType) => {
         modalComponent.value = 'Change Password';
     } else if (componentType === 'edit_leverage') {
         modalComponent.value = 'Edit Leverage';
+    } else if (componentType === 'balance_adjustment') {
+        modalComponent.value = 'Balance Adjustment';
     }
 }
 
@@ -87,20 +90,20 @@ const toggleMasterPasswordVisibilityConfirm = () => {
             <span class="sr-only">Change Password</span>
         </Button>
     </Tooltip>
-    <Tooltip content="View" placement="bottom">
+    <Tooltip content="Balance Adjustment" placement="bottom">
         <Button
             type="button"
             pill
             class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
             variant="gray"
-            @click="openTradingModal(tradingListing.id, 'view')"
+            @click="openTradingModal(tradingListing.id, 'balance_adjustment')"
         >
             <MemberDetailIcon aria-hidden="true" class="w-6 h-6 absolute" />
-            <span class="sr-only">View</span>
+            <span class="sr-only">Balance Adjustment</span>
         </Button>
     </Tooltip>
 
-    <Modal :show="tradingModal" :title="modalComponent" @close="closeModal" max-width="lg">
+    <Modal :show="tradingModal" :title="modalComponent" @close="closeModal" max-width="2xl">
         <div v-if="modalComponent === 'View Details'">
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
@@ -136,16 +139,23 @@ const toggleMasterPasswordVisibilityConfirm = () => {
             <EditLeverage
                 :leverageSel="leverageSel"
                 :tradingListing="tradingListing"
-                @update:tradingModal="tradingModal = $event" 
+                @update:tradingModal="tradingModal = $event"
             />
         </div>
 
         <div v-if="modalComponent === 'Change Password'">
-            <ChangePassword 
+            <ChangePassword
                 :tradingListing="tradingListing"
                 :leverageSel="leverageSel"
-                @update:tradingModal="tradingModal = $event" 
+                @update:tradingModal="tradingModal = $event"
             />
         </div>
+
+        <template v-if="modalComponent === 'Balance Adjustment'">
+            <BalanceAdjustment
+                :tradingListing="tradingListing"
+                @update:tradingModal="tradingModal = $event"
+            />
+        </template>
     </Modal>
 </template>

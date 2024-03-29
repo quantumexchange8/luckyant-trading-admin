@@ -394,33 +394,18 @@ class MemberController extends Controller
             'transaction_number' => RunningNumberService::getID('transaction')
         ];
 
-        if ($wallet->type == 'cash_wallet') {
+        if ($transaction_type == 'Deposit') {
             $transactionData['amount'] = $amount;
             $transactionData['transaction_amount'] = $amount;
-            $transactionData['transaction_type'] = $transaction_type;
-            $transactionData['fund_type'] = $request->fund_type;
-
-            if ($transaction_type == 'Deposit') {
-                $transactionData['to_wallet_id'] = $wallet->id;
-                $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
-            } else {
-                $transactionData['from_wallet_id'] = $wallet->id;
-                $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
-            }
+            $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
         } else {
-            if ($transaction_type == 'Deposit') {
-                $transactionData['amount'] = $amount;
-                $transactionData['transaction_amount'] = $amount;
-                $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
-            } else {
-                $transactionData['amount'] = -$amount;
-                $transactionData['transaction_amount'] = -$amount;
-                $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
-            }
-
-            $transactionData['from_wallet_id'] = $wallet->id;
-            $transactionData['transaction_type'] = 'WalletAdjustment';
+            $transactionData['amount'] = -$amount;
+            $transactionData['transaction_amount'] = -$amount;
+            $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
         }
+
+        $transactionData['from_wallet_id'] = $wallet->id;
+        $transactionData['transaction_type'] = 'WalletAdjustment';
 
         if ($transactionData['new_wallet_amount'] < 0) {
             throw ValidationException::withMessages(['amount' => 'Insufficient balance']);

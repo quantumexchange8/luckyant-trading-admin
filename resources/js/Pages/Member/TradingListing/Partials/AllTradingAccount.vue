@@ -99,7 +99,7 @@ const paginationClass = [
 ];
 
 const paginationActiveClass = [
-    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
+    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-primary-500 dark:text-white'
 ];
 </script>
 
@@ -112,25 +112,25 @@ const paginationActiveClass = [
             <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
                 <tr>
                     <th scope="col" class="p-3">
-                        Date 
+                        Date
                     </th>
                     <th scope="col" class="p-3">
-                        Trading Account  
+                        Trading Account
                     </th>
                     <th scope="col" class="p-3">
-                        Balance 
+                        Balance
                     </th>
                     <th scope="col" class="p-3">
-                        Margin Leverage 
+                        Margin Leverage
                     </th>
                     <th scope="col" class="p-3">
-                        Equity 
+                        Equity
                     </th>
                     <th scope="col" class="p-3">
-                        User 
+                        User
                     </th>
                     <th scope="col" class="p-3">
-                        Action 
+                        Action
                     </th>
                 </tr>
             </thead>
@@ -145,14 +145,13 @@ const paginationActiveClass = [
                     class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
                 >
                     <td class="p-3">
-                        {{ tradingListing.created_at }}
+                        {{ formatDateTime(tradingListing.created_at) }}
                     </td>
                     <td class="p-3">
                         <div class="flex flex-col ">
                             <span>Account: {{ tradingListing.meta_login }}</span>
                             <span>Name: {{ tradingListing.trading_user.name }}</span>
                         </div>
-                        
                     </td>
                     <td class="p-3">
                         $ {{ formatAmount(tradingListing.balance) }}
@@ -163,7 +162,7 @@ const paginationActiveClass = [
                     <td class="p-3">
                        $ {{ formatAmount(tradingListing.equity) }}
                     </td>
-                    <td class="p-3">
+                    <td class="p-3 flex items-center">
                     <div class="inline-flex gap-2">
                         <div>
                             <img :src="tradingListing.user.profile_photo_url ? tradingListing.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
@@ -172,9 +171,9 @@ const paginationActiveClass = [
                             <span>{{ tradingListing.user.name }}</span>
                             <span>{{ tradingListing.user.email }}</span>
                         </div>
-                        
+
                     </div>
-                        
+
                     </td>
                     <td class="p-3">
                         <Action :tradingListing="tradingListing" :leverageSel="leverageSel"/>
@@ -199,5 +198,5 @@ const paginationActiveClass = [
             </TailwindPagination>
         </div>
     </div>
-    
+
 </template>

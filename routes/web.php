@@ -63,6 +63,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/getTradingAccount', [TradingController::class, 'getTradingAccount'])->name('member.getTradingAccount');
         Route::post('/edit_leverage', [TradingController::class, 'edit_leverage'])->name('member.edit_leverage');
         Route::post('/change_password', [TradingController::class, 'change_password'])->name('member.change_password');
+        Route::post('/balanceAdjustment', [TradingController::class, 'balanceAdjustment'])->name('member.balanceAdjustment');
 
     });
 
