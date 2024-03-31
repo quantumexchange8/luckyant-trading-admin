@@ -11,6 +11,7 @@ import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import MemberTable from "@/Pages/Member/MemberTable.vue";
 import toast from "@/Composables/toast.js";
 import Action from "@/Pages/Member/Partials/Action.vue";
+import TanstackTable from "@/Components/TanstackTable.vue";
 
 const search = ref('');
 const date = ref('');
@@ -164,23 +165,26 @@ const exportMember = () => {
                     </TabList>
 
                     <TabPanels>
-                        <TabPanel
-                            v-for="kycStatus in kycStatuses"
-                        >
-                            <MemberTable
-                                :refresh="refresh"
-                                :isLoading="isLoading"
-                                :search="search"
-                                :date="date"
-                                :rank="rank"
-                                :kycStatus=kycStatus.value
-                                :exportStatus="exportStatus"
-                                :countries="countries"
-                                :nationalities="nationalities"
-                                @update:loading="isLoading = $event"
-                                @update:refresh="refresh = $event"
-                                @update:export="exportStatus = $event"
-                            />
+<!--                        <TabPanel-->
+<!--                            v-for="kycStatus in kycStatuses"-->
+<!--                        >-->
+<!--                            <MemberTable-->
+<!--                                :refresh="refresh"-->
+<!--                                :isLoading="isLoading"-->
+<!--                                :search="search"-->
+<!--                                :date="date"-->
+<!--                                :rank="rank"-->
+<!--                                :kycStatus=kycStatus.value-->
+<!--                                :exportStatus="exportStatus"-->
+<!--                                :countries="countries"-->
+<!--                                :nationalities="nationalities"-->
+<!--                                @update:loading="isLoading = $event"-->
+<!--                                @update:refresh="refresh = $event"-->
+<!--                                @update:export="exportStatus = $event"-->
+<!--                            />-->
+<!--                        </TabPanel>-->
+                        <TabPanel>
+                            <TanstackTable />
                         </TabPanel>
                     </TabPanels>
                 </TabGroup>

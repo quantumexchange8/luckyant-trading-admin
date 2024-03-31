@@ -170,12 +170,14 @@ class MemberController extends Controller
                 $query->orderBy($sortType, $sort);
             })
             // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', )
-            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
+            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser', 'top_leader'])
             ->latest();
 
         if ($request->has('exportStatus')) {
             return Excel::download(new MemberListingExport($members), Carbon::now() . '-report.xlsx');
         }
+
+        return response()->json($members->get());
 
         $members = $members->paginate(10);
 
