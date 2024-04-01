@@ -76,7 +76,7 @@ const Tag = !props.external ? Link : 'a'
             >
                 {{ title }}
             </span>
-            <span v-if="pendingCounts > 0" class="text-xs rounded-md px-2 bg-gray-200 dark:bg-primary-800 text-primary-800 dark:text-primary-100">
+            <span v-if="pendingCounts > 0 && (sidebarState.isOpen || sidebarState.isHovered)" class="text-xs rounded-md px-2 bg-gray-200 dark:bg-primary-800 text-primary-800 dark:text-primary-100">
                 Pending
             </span>
         </div>

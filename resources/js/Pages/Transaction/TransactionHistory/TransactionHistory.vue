@@ -162,7 +162,7 @@ function changeTab(index) {
         </div>
 
         <div class="flex flex-col gap-5 items-start self-stretch my-8">
-            <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                 <div class="w-full">
                     <InputIconWrapper class="w-full">
                         <template #icon>
@@ -291,19 +291,6 @@ function changeTab(index) {
                     </TabPanels>
                 </TabGroup>
             </div>
-<!--            <TransactionHistory-->
-<!--                :refresh="refresh"-->
-<!--                :isLoading="isLoading"-->
-<!--                :search="search"-->
-<!--                :date="date"-->
-<!--                :status="status"-->
-<!--                :transactionType="transactionType"-->
-<!--                :transactionTypes="transactionTypes"-->
-<!--                :exportStatus="exportStatus"-->
-<!--                @update:loading="isLoading = $event"-->
-<!--                @update:refresh="refresh = $event"-->
-<!--                @update:export="exportStatus = $event"-->
-<!--            />-->
         </div>
     </AuthenticatedLayout>
 </template>
