@@ -125,7 +125,7 @@ watchEffect(() => {
                         Trading Account
                     </th>
                     <th scope="col" class="p-3">
-                        Balance
+                        Balance ($)
                     </th>
                     <th scope="col" class="p-3">
                         Margin Leverage
@@ -161,7 +161,10 @@ watchEffect(() => {
                         </div>
                     </td>
                     <td class="p-3">
-                        $ {{ formatAmount(tradingListing.balance) }}
+                        <div class="flex flex-col ">
+                            <span>RF: {{ formatAmount(tradingListing.balance) }}</span>
+                            <span>DF: {{ formatAmount(tradingListing.demo_fund > 0 ? tradingListing.demo_fund : 0) }}</span>
+                        </div>
                     </td>
                     <td class="p-3">
                         1:{{ tradingListing.margin_leverage }}

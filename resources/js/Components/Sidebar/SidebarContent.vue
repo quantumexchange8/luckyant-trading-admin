@@ -1,10 +1,10 @@
 <script setup>
 import PerfectScrollbar from '@/Components/PerfectScrollbar.vue'
 import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
-import { DashboardIcon, Setting } from '@/Components/Icons/outline'
+import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentReportIcon } from '@heroicons/vue/outline'
+import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
 import {usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 
@@ -34,13 +34,26 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
             </template>
         </SidebarLink>
 
+        <SidebarLink
+            title="Announcement"
+            :href="route('announcement.announcement_listing')"
+            :active="route().current('announcement.announcement_listing')"
+        >
+            <template #icon>
+                <SpeakerphoneIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+        </SidebarLink>
+
         <SidebarCollapsible
             title="Members"
             :active="route().current('member.*')"
             :pending-counts="pendingKycCount"
         >
             <template #icon>
-                <UsersIcon
+                <Users01Icon
                     class="flex-shrink-0 w-6 h-6"
                     aria-hidden="true"
                 />
@@ -63,19 +76,6 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
                 :active="route().current('member.live_trading')"
             />
         </SidebarCollapsible>
-
-        <SidebarLink
-            title="Announcement"
-            :href="route('announcement.announcement_listing')"
-            :active="route().current('announcement.announcement_listing')"
-        >
-            <template #icon>
-                <SpeakerphoneIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template>
-        </SidebarLink>
 
         <SidebarCollapsible
             title="Transactions"
@@ -108,7 +108,7 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
             :pending-counts="pendingMasterCount"
         >
             <template #icon>
-                <UsersIcon
+                <UsersSquareIcon
                     class="flex-shrink-0 w-6 h-6"
                     aria-hidden="true"
                 />
@@ -132,7 +132,7 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
             :pending-counts="pendingSubscriberRequestCount"
         >
             <template #icon>
-                <UsersIcon
+                <UsersCheckIcon
                     class="flex-shrink-0 w-6 h-6"
                     aria-hidden="true"
                 />

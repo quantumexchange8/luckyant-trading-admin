@@ -73,8 +73,8 @@ function loadUsers(query, setOptions) {
                 <div>
                     <Button
                         type="button"
-                        class="justify-center w-full gap-2 border border-gray-600 text-white text-sm dark:hover:bg-gray-600"
-                        variant="transparent"
+                        variant="gray"
+                        class="flex gap-1 justify-center"
                         v-slot="{ iconSizeClasses }"
                         @click="exportTransaction"
                     >
@@ -115,7 +115,7 @@ function loadUsers(query, setOptions) {
                         :formatter="formatter"
                         separator=" - "
                         v-model="date"
-                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
                     />
                 </div>
                 <div>
@@ -123,7 +123,6 @@ function loadUsers(query, setOptions) {
                         type="button"
                         variant="secondary"
                         @click="refreshTable"
-                        class="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
                     >
                         Clear
                     </Button>
