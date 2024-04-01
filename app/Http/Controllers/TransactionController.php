@@ -202,7 +202,7 @@ class TransactionController extends Controller
     public function getTransactionHistory(Request $request)
     {
         $query = Transaction::query()
-            ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
+            ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
             ->whereNotIn('status', ['Processing', 'Pending']);
 
         if ($request->filled('search')) {
@@ -276,12 +276,12 @@ class TransactionController extends Controller
             return Excel::download(new TransactionsExport($query), $fileName);
         }
 
-        $successAmountQuery = clone $query;
+        $totalAmountQuery = clone $query;
         $rejectedAmountQuery = clone $query;
         $results = $query->latest()->paginate(10);
 
-        $totalAmount = $query->sum('transaction_amount');
-        $successAmount = $successAmountQuery->where('status', 'Success')->sum('transaction_amount');
+        $totalAmount = $totalAmountQuery->sum('transaction_amount');
+        $successAmount = $totalAmountQuery->where('status', 'Success')->sum('transaction_amount');
         $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('transaction_amount');
 
         $results->each(function ($transaction) {
