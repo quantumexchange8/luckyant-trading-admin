@@ -178,11 +178,11 @@ watch(() => props.exportStatus, (newVal) => {
 });
 
 const paginationClass = [
-    'bg-transparent border-0 dark:text-gray-400 dark:enabled:hover:text-white'
+    'bg-transparent border-0 dark:text-gray-400'
 ];
 
 const paginationActiveClass = [
-    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
+    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-primary-500 dark:text-white'
 ];
 
 function isItemSelected(id, amount) {
@@ -319,7 +319,7 @@ const rejectTransaction = async () => {
                     {{ deposit.payment_method }}
                 </td>
                 <td class="py-3">
-                    {{ deposit.to_wallet_address }} 
+                    {{ deposit.to_wallet_address }}
                 </td>
                 <td class="py-3">
                     ${{ deposit.amount }}
@@ -339,14 +339,7 @@ const rejectTransaction = async () => {
                 :data="withdrawals"
                 :limit=2
                 @pagination-change-page="handlePageChange"
-            >
-                <template #prev-nav>
-                    <span class="flex gap-2"><ArrowLeftIcon class="w-5 h-5" /> Previous</span>
-                </template>
-                <template #next-nav>
-                    <span class="flex gap-2">Next <ArrowRightIcon class="w-5 h-5" /></span>
-                </template>
-            </TailwindPagination>
+            />
         </div>
         <div class="flex justify-between items-center">
             <div class="text-xl font-semibold">

@@ -1,7 +1,7 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
 import { sidebarState } from '@/Composables'
-import { EmptyCircleIcon } from '@/Components/Icons/outline'
+import { EmptyCircleIcon, InfoCircleIcon } from '@/Components/Icons/outline'
 
 const props = defineProps({
     href: {
@@ -20,6 +20,7 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    pendingCounts: Number,
 })
 
 const Tag = !props.external ? Link : 'a'
@@ -68,12 +69,17 @@ const Tag = !props.external ? Link : 'a'
             <EmptyCircleIcon aria-hidden="true" class="flex-shrink-0 w-6 h-6" />
         </slot>
 
-        <span
-            class="text-base font-medium"
-            v-show="sidebarState.isOpen || sidebarState.isHovered"
-        >
-            {{ title }}
-        </span>
+        <div class="flex items-center gap-2">
+            <span
+                class="text-base font-medium"
+                v-show="sidebarState.isOpen || sidebarState.isHovered"
+            >
+                {{ title }}
+            </span>
+            <span v-if="pendingCounts > 0" class="text-xs rounded-md px-2 bg-gray-200 dark:bg-primary-800 text-primary-800 dark:text-primary-100">
+                Pending
+            </span>
+        </div>
         <slot name="arrow" />
     </button>
 </template>

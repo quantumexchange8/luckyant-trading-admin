@@ -5,6 +5,14 @@ import { DashboardIcon, Setting } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
 import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentReportIcon } from '@heroicons/vue/outline'
+import {usePage} from "@inertiajs/vue3";
+import {ref} from "vue";
+
+const page = usePage();
+const pendingTransactionCount = ref(page.props.pendingTransactionCount);
+const pendingKycCount = ref(page.props.pendingKycCount);
+const pendingMasterCount = ref(page.props.pendingMasterCount);
+const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
 </script>
 
 <template>
@@ -29,6 +37,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         <SidebarCollapsible
             title="Members"
             :active="route().current('member.*')"
+            :pending-counts="pendingKycCount"
         >
             <template #icon>
                 <UsersIcon
@@ -41,6 +50,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('member.member_listing')"
                 title="Member Listing"
                 :active="route().current('member.member_listing')"
+                :pending-counts="pendingKycCount"
             />
             <SidebarCollapsibleItem
                 :href="route('member.affiliate_listing')"
@@ -70,6 +80,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         <SidebarCollapsible
             title="Transactions"
             :active="route().current('transaction.*')"
+            :pending-counts="pendingTransactionCount"
         >
             <template #icon>
                 <ClipboardListIcon
@@ -82,6 +93,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('transaction.pending_transaction')"
                 title="Pending Transaction"
                 :active="route().current('transaction.pending_transaction')"
+                :pending-counts="pendingTransactionCount"
             />
 
             <SidebarCollapsibleItem
@@ -93,6 +105,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         <SidebarCollapsible
             title="Master"
             :active="route().current('master.*')"
+            :pending-counts="pendingMasterCount"
         >
             <template #icon>
                 <UsersIcon
@@ -105,6 +118,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('master.master_request')"
                 title="Master Request"
                 :active="route().current('master.master_request')"
+                :pending-counts="pendingMasterCount"
             />
             <SidebarCollapsibleItem
                 :href="route('master.getMasterListing')"
@@ -115,6 +129,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         <SidebarCollapsible
             title="Subscribers"
             :active="route().current('subscription.*')"
+            :pending-counts="pendingSubscriberRequestCount"
         >
             <template #icon>
                 <UsersIcon
@@ -127,6 +142,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('subscription.subscribers')"
                 title="Pending Request"
                 :active="route().current('subscription.subscribers')"
+                :pending-counts="pendingSubscriberRequestCount"
             />
             <SidebarCollapsibleItem
                 :href="route('subscription.subscribersListing')"
