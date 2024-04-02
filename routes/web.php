@@ -3,6 +3,7 @@
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterController;
@@ -148,7 +149,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      * ==============================
      */
     Route::prefix('report')->group(function () {
-
+        Route::get('/trading_rebate', [ReportController::class, 'trading_rebate'])->name('report.trading_rebate');
     });
 
     /**

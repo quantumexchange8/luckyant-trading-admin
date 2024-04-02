@@ -1,7 +1,7 @@
 <script setup>
 import PerfectScrollbar from '@/Components/PerfectScrollbar.vue'
 import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
-import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon } from '@/Components/Icons/outline'
+import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon, File06Icon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
 import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
@@ -155,24 +155,23 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
                 :active="route().current('subscription.subscriptionHistory')"
             />
         </SidebarCollapsible>
-        <!-- <SidebarCollapsible
-            title="Report"
-            :active="route().current('report.*')"
-        >
-            <template #icon>
-                <DocumentReportIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template> -->
+<!--        <SidebarCollapsible-->
+<!--            title="Report"-->
+<!--            :active="route().current('report.*')"-->
+<!--        >-->
+<!--            <template #icon>-->
+<!--                <File06Icon-->
+<!--                    class="flex-shrink-0 w-6 h-6"-->
+<!--                    aria-hidden="true"-->
+<!--                />-->
+<!--            </template>-->
 
-            <!-- <SidebarCollapsibleItem
-                :href="route('setting.payment_setting')"
-                title="Payment Setting"
-                :active="route().current('setting.payment_setting')"
-            /> -->
-            <!-- <SidebarCollapsibleItem title="In Progress..."/>
-        </SidebarCollapsible> -->
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('report.trading_rebate')"-->
+<!--                title="Trading Rebate"-->
+<!--                :active="route().current('report.trading_rebate')"-->
+<!--            />-->
+<!--        </SidebarCollapsible>-->
         <SidebarCollapsible
             title="Setting"
             :active="route().current('setting.*')"

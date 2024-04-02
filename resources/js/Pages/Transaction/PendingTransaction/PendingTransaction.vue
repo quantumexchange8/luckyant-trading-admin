@@ -87,7 +87,6 @@ function loadUsers(query, setOptions) {
                         </div>
                     </Button>
                 </div>
-
             </div>
         </template>
 
