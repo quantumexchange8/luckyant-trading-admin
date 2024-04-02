@@ -12,6 +12,7 @@ import BaseListbox from "@/Components/BaseListbox.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import TransactionHistoryTable from "@/Pages/Transaction/TransactionHistory/TransactionHistoryTable.vue";
 import {transactionFormat} from "@/Composables/index.js";
+import {Coins01Icon, CreditCardCheckIcon, CreditCardXIcon} from "@/Components/Icons/outline.jsx";
 
 const props = defineProps({
     transactionTypes: Array,
@@ -22,25 +23,40 @@ const isLoading = ref(false);
 const search = ref('');
 const date = ref('');
 const type = ref('');
-const filter = ref('');
+const category = ref('wallet');
+const fund_type = ref('');
+const status = ref('');
 const methods = ref('');
 const transactionType = ref('');
 const exportStatus = ref(false);
-const { formatType } = transactionFormat();
+const { formatType, formatAmount } = transactionFormat();
+
+//Amount Overview
+const totalAmount = ref(null);
+const successAmount = ref(null);
+const rejectedAmount = ref(null);
+
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MM'
 });
+
+const categoryList = [
+    {value: '', label:"All"},
+    {value:'wallet', label:"Wallet"},
+    {value:'trading_account', label:"Trading Account"},
+];
 
 const statusList = [
     {value:'Success', label:"Success"},
     {value:'Rejected', label:"Rejected"},
 ];
 
-const category = [
-    { value: 'wallet', label: 'Wallet' },
-    { value: 'trading_account', label: 'Trading Account' },
-]
+const fundTypes = [
+    {value: '', label:"All"},
+    {value: 'DemoFund', label:"Demo Fund"},
+    {value: 'RealFund', label:"Real Fund"},
+];
 
 const paymentMethods = [
     {value: '', label:"All"},
@@ -52,7 +68,7 @@ const paymentMethods = [
 function refreshTable() {
     search.value = '';
     date.value = '';
-    filter.value = '';
+    status.value = '';
     transactionType.value = '';
     isLoading.value = !isLoading.value;
     refresh.value = true;
@@ -88,8 +104,65 @@ function changeTab(index) {
             </div>
         </template>
 
-        <div class="flex flex-col gap-5 items-start self-stretch">
-            <div class="flex flex-col md:flex-row items-center gap-4 w-full">
+        <div class="grid grid-cols-1 sm:grid-cols-3 w-full gap-4">
+            <div class="flex justify-between items-center p-6 overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-900">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        Total Amount
+                    </div>
+                    <div class="text-2xl font-bold">
+                        <span v-if="totalAmount !== null">
+                          $ {{ formatAmount(totalAmount ? totalAmount : 0) }}
+                        </span>
+                        <span v-else>
+                          Loading...
+                        </span>
+                    </div>
+                </div>
+                <div class="rounded-full flex items-center justify-center w-14 h-14 bg-primary-200">
+                    <Coins01Icon class="text-primary-500 w-8 h-8" />
+                </div>
+            </div>
+            <div class="flex justify-between items-center p-6 overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-900">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        Success Amount
+                    </div>
+                    <div class="text-2xl font-bold">
+                        <span v-if="successAmount !== null">
+                          $ {{ formatAmount(successAmount ? successAmount : 0) }}
+                        </span>
+                        <span v-else>
+                          Loading...
+                        </span>
+                    </div>
+                </div>
+                <div class="rounded-full flex items-center justify-center w-14 h-14 bg-success-200">
+                    <CreditCardCheckIcon class="text-success-500 w-8 h-8" />
+                </div>
+            </div>
+            <div class="flex justify-between items-center p-6 overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-900">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        Rejected Amount
+                    </div>
+                    <div class="text-2xl font-bold">
+                        <span v-if="rejectedAmount !== null">
+                          $ {{ formatAmount(rejectedAmount ? rejectedAmount : 0) }}
+                        </span>
+                        <span v-else>
+                          Loading...
+                        </span>
+                    </div>
+                </div>
+                <div class="rounded-full flex items-center justify-center w-14 h-14 bg-error-200">
+                    <CreditCardXIcon class="text-error-500 w-8 h-8" />
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-5 items-start self-stretch my-8">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                 <div class="w-full">
                     <InputIconWrapper class="w-full">
                         <template #icon>
@@ -104,23 +177,41 @@ function changeTab(index) {
                         :formatter="formatter"
                         separator=" - "
                         v-model="date"
-                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
                     />
                 </div>
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
-                        v-model="transactionType"
-                        :options="category"
-                        placeholder="Filter type"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
+                        v-model="category"
+                        :options="categoryList"
+                        placeholder="Filter Category"
                     />
                 </div>
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-600"
-                        v-model="filter"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
+                        v-model="methods"
+                        :options="paymentMethods"
+                        placeholder="Filter Payment Methods"
+                    />
+                </div>
+                <div class="w-full">
+                    <BaseListbox
+                        id="statusID"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
+                        v-model="fund_type"
+                        :options="fundTypes"
+                        placeholder="Filter Fund Type"
+                    />
+                </div>
+                <div class="w-full">
+                    <BaseListbox
+                        id="statusID"
+                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
+                        v-model="status"
                         :options="statusList"
                         placeholder="Filter status"
                     />
@@ -184,30 +275,22 @@ function changeTab(index) {
                                 :search="search"
                                 :date="date"
                                 :category="category"
+                                :fund_type="fund_type"
                                 :methods="methods"
+                                :status="status"
                                 :transactionType=transactionType.value
                                 :exportStatus="exportStatus"
                                 @update:loading="isLoading = $event"
                                 @update:refresh="refresh = $event"
                                 @update:export="exportStatus = $event"
+                                @update:totalAmount="totalAmount = $event"
+                                @update:successAmount="successAmount = $event"
+                                @update:rejectedAmount="rejectedAmount = $event"
                             />
                         </TabPanel>
                     </TabPanels>
                 </TabGroup>
             </div>
-<!--            <TransactionHistory-->
-<!--                :refresh="refresh"-->
-<!--                :isLoading="isLoading"-->
-<!--                :search="search"-->
-<!--                :date="date"-->
-<!--                :filter="filter"-->
-<!--                :transactionType="transactionType"-->
-<!--                :transactionTypes="transactionTypes"-->
-<!--                :exportStatus="exportStatus"-->
-<!--                @update:loading="isLoading = $event"-->
-<!--                @update:refresh="refresh = $event"-->
-<!--                @update:export="exportStatus = $event"-->
-<!--            />-->
         </div>
     </AuthenticatedLayout>
 </template>

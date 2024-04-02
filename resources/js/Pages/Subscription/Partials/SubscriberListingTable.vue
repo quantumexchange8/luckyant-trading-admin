@@ -9,6 +9,8 @@ const props = defineProps({
     isLoading: Boolean,
     search: String,
     date: String,
+    exportStatus: Boolean,
+    leader: Object,
 })
 
 </script>
@@ -36,7 +38,17 @@ const props = defineProps({
             </TabList>
             <TabPanels>
                 <TabPanel>
-                    <AllSubscriber/>
+                    <AllSubscriber
+                    :refresh="refresh"
+                    :isLoading="isLoading"
+                    :search="search"
+                    :date="date"
+                    :leader="leader"
+                    :exportStatus="exportStatus"
+                    @update:loading="isLoading = $event"
+                    @update:refresh="refresh = $event"
+                    @update:export="exportStatus = $event"
+                    />
                 </TabPanel>
             </TabPanels>
         </TabGroup>

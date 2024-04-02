@@ -11,7 +11,7 @@ import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 import MemberTable from "@/Pages/Member/MemberTable.vue";
 import toast from "@/Composables/toast.js";
 import Action from "@/Pages/Member/Partials/Action.vue";
-import TanstackTable from "@/Components/TanstackTable.vue";
+import Combobox from "@/Components/Combobox.vue";
 
 const search = ref('');
 const date = ref('');
@@ -61,6 +61,32 @@ const updateKycCounts = () => {
 const exportMember = () => {
     exportStatus.value = true;
 }
+
+const leader = ref()
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllLeaders?query=' + query)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.name,
+                        img: user.profile_photo
+                    }
+                })
+            )
+        });
+}
+
+function refreshTable() {
+    search.value = '';
+    date.value = '';
+    rank.value = null;
+    leader.value = null;
+    isLoading.value = !isLoading.value;
+    refresh.value = true;
+}
 </script>
 
 <template>
@@ -109,17 +135,35 @@ const exportMember = () => {
                         :formatter="formatter"
                         separator=" - "
                         v-model="date"
-                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
                     />
                 </div>
                 <div class="w-full md:w-[240px]">
                     <BaseListbox
                         id="rankID"
-                        class="w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600"
+                        class="w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-800"
                         v-model="rank"
                         :options="rankLists"
                         placeholder="Filter rank"
                     />
+                </div>
+                <div class="w-full md:w-[240px]">
+                    <Combobox
+                        :load-options="loadUsers"
+                        v-model="leader"
+                        placeholder="Leader"
+                        image
+                    />
+                </div>
+                <div>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="lg"
+                        @click="refreshTable"
+                    >
+                        <span class="text-lg">Clear</span>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -165,26 +209,24 @@ const exportMember = () => {
                     </TabList>
 
                     <TabPanels>
-<!--                        <TabPanel-->
-<!--                            v-for="kycStatus in kycStatuses"-->
-<!--                        >-->
-<!--                            <MemberTable-->
-<!--                                :refresh="refresh"-->
-<!--                                :isLoading="isLoading"-->
-<!--                                :search="search"-->
-<!--                                :date="date"-->
-<!--                                :rank="rank"-->
-<!--                                :kycStatus=kycStatus.value-->
-<!--                                :exportStatus="exportStatus"-->
-<!--                                :countries="countries"-->
-<!--                                :nationalities="nationalities"-->
-<!--                                @update:loading="isLoading = $event"-->
-<!--                                @update:refresh="refresh = $event"-->
-<!--                                @update:export="exportStatus = $event"-->
-<!--                            />-->
-<!--                        </TabPanel>-->
-                        <TabPanel>
-                            <TanstackTable />
+                        <TabPanel
+                            v-for="kycStatus in kycStatuses"
+                        >
+                            <MemberTable
+                                :leader="leader"
+                                :refresh="refresh"
+                                :isLoading="isLoading"
+                                :search="search"
+                                :date="date"
+                                :rank="rank"
+                                :kycStatus=kycStatus.value
+                                :exportStatus="exportStatus"
+                                :countries="countries"
+                                :nationalities="nationalities"
+                                @update:loading="isLoading = $event"
+                                @update:refresh="refresh = $event"
+                                @update:export="exportStatus = $event"
+                            />
                         </TabPanel>
                     </TabPanels>
                 </TabGroup>

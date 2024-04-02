@@ -13,7 +13,6 @@ class WalletAdjustmentRequest extends FormRequest
 
         return [
             'transaction_type' => $wallet->type == 'cash_wallet' ? ['required'] : ['nullable'],
-            'fund_type' => $wallet->type == 'cash_wallet' ? ['required'] : ['nullable'],
             'amount' => ['required', 'min:1'],
             'description' => ['required']
         ];
@@ -28,7 +27,6 @@ class WalletAdjustmentRequest extends FormRequest
     {
         return [
             'transaction_type' => 'Transaction Type',
-            'fund_type' => 'Fund Type',
             'amount' => 'Amount',
             'description' => 'Description',
         ];

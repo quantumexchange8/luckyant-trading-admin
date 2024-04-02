@@ -22,18 +22,6 @@ const transactionTypes = [
 ]
 const selectedTransactionType = ref(transactionTypes[0]);
 
-const fundTypes = [
-    {
-        name: 'Real Fund',
-        value: 'RealFund',
-    },
-    {
-        name: 'Demo Fund',
-        value: 'DemoFund',
-    },
-]
-const selectedFundType = ref(fundTypes[0]);
-
 const props = defineProps({
     member_detail: Object,
     wallet: Object
@@ -45,16 +33,12 @@ const form = useForm({
     user_id: props.member_detail.id,
     wallet_id: props.wallet.id,
     transaction_type: '',
-    fund_type: '',
     amount: '',
     description: '',
 })
 
 const submit = () => {
     form.transaction_type = selectedTransactionType.value.value;
-    if (props.wallet.type === 'cash_wallet') {
-        form.fund_type = selectedFundType.value.value;
-    }
     form.post(route('member.wallet_adjustment'), {
         preserveScroll: true,
         onSuccess: () => {
@@ -126,47 +110,6 @@ const closeModal = () => {
                         </div>
                     </RadioGroup>
                     <InputError :message="form.errors.transaction_type" class="mt-1 col-span-4" />
-                </div>
-            </div>
-            <div v-if="wallet.type === 'cash_wallet'" class="space-y-2">
-                <Label class="text-sm dark:text-white" for="fund_type" value="Fund Type" />
-                <div class="md:col-span-3">
-                    <RadioGroup v-model="selectedFundType">
-                        <RadioGroupLabel class="sr-only">Fund Type</RadioGroupLabel>
-                        <div class="flex gap-3 items-center self-stretch w-full">
-                            <RadioGroupOption
-                                as="template"
-                                v-for="(fundType, index) in fundTypes"
-                                :key="index"
-                                :value="fundType"
-                                v-slot="{ active, checked }"
-                            >
-                                <div
-                                    :class="[
-                                            active
-                                                ? 'ring-0 ring-white ring-offset-0'
-                                                : '',
-                                            checked ? 'border-gray-400 dark:border-white bg-gray-500 dark:bg-gray-600 text-white' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white',
-                                        ]"
-                                    class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
-                                >
-                                    <div class="flex items-center w-full">
-                                        <div class="text-sm flex flex-col gap-3 w-full">
-                                            <RadioGroupLabel
-                                                as="div"
-                                                class="font-medium"
-                                            >
-                                                <div class="flex justify-center items-center gap-3">
-                                                    {{ fundType.name }}
-                                                </div>
-                                            </RadioGroupLabel>
-                                        </div>
-                                    </div>
-                                </div>
-                            </RadioGroupOption>
-                        </div>
-                    </RadioGroup>
-                    <InputError :message="form.errors.fund_type" class="mt-1" />
                 </div>
             </div>
             <div class="space-y-2">

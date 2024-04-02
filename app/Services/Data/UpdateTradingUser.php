@@ -17,10 +17,19 @@ class UpdateTradingUser
     {
         $tradingUser = TradingUser::query()->where('meta_login', $meta_login)->first();
 
-        $tradingUser->meta_group = $data['groupName'];
-        $tradingUser->leverage = $data['marginLeverage'];
+        $tradingUser->name = $data['name'];
+        $tradingUser->company = $data['company'];
+        $tradingUser->leverage = $data['leverage'];
         $tradingUser->balance = $data['balance'];
         $tradingUser->credit = $data['credit'];
+        $tradingUser->rights = $data['rights'];
+
+        if ($data['rights'] == 5) {
+            $tradingUser->allow_trade = false;
+        } elseif ($data['rights'] == 1) {
+            $tradingUser->allow_trade = true;
+        }
+
         DB::transaction(function () use ($tradingUser) {
             $tradingUser->save();
         });

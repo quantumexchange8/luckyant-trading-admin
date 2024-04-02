@@ -94,7 +94,7 @@ export default {
                                 v-if="hasChildren"
                                 aria-hidden="true"
                                 @click="nodeClicked"
-                                :class="['w-5 h-5 cursor-pointer text-pink-500']"
+                                :class="['w-5 h-5 cursor-pointer text-primary-500']"
                             />
                         </template>
                     </div>
@@ -131,7 +131,7 @@ export default {
                                 <div class="flex whitespace-nowrap gap-2 text-sm font-semibold items-center">
                                     <div class="whitespace-normal">{{ node.name }}</div>
                                     <span
-                                        class="text-xs px-2 py-0.5 rounded-full dark:bg-warning-400 dark:text-gray-800">{{ $t('public.Level') }} {{
+                                        class="text-xs px-2 py-0.5 rounded-full text-primary-100 bg-primary-400 dark:bg-warning-400 dark:text-gray-800">{{ $t('public.level') }} {{
                                             node.level
                                         }}</span>
                                 </div>
@@ -150,22 +150,22 @@ export default {
                                         node.direct_affiliate ? node.direct_affiliate : 0
                                     }}</span>
                                 <span
-                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.Direct Clients') }}</span>
+                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.direct_clients') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
                                 <span class="text-sm font-semibold">{{ node.total_affiliate }}</span>
                                 <span
-                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.Total Clients') }}</span>
+                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.total_clients') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
-                                <span class="text-sm font-semibold">$ {{ formatAmount(node.self_deposit ? formatAmount(node.self_deposit) : 0) }}</span>
+                                <span class="text-sm font-semibold">$ {{ formatAmount(node.self_deposit ? node.self_deposit : 0) }}</span>
                                 <span
-                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.Total Deposit') }}</span>
+                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.total_deposit') }}</span>
                             </div>
                             <div class="flex flex-col text-center">
-                                <span class="text-sm font-semibold">$ {{ formatAmount(node.total_group_deposit ? formatAmount(node.total_group_deposit) : 0) }}</span>
+                                <span class="text-sm font-semibold">$ {{ formatAmount(node.total_group_deposit ? node.total_group_deposit : 0) }}</span>
                                 <span
-                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.Total Group Deposit') }}</span>
+                                    class="text-xs font-normal dark:text-gray-400">{{ $t('public.total_group_deposit') }}</span>
                             </div>
                         </div>
                     </div>
@@ -193,7 +193,7 @@ export default {
                         <div class="flex gap-2 text-sm font-semibold">
                             {{ selectedAffiliate.name }}
                             <span
-                                class="text-xs px-2 py-0.5 rounded-full dark:bg-warning-400 dark:text-gray-800">{{ $t('public.Level') }} {{
+                                class="text-xs px-2 py-0.5 rounded-full text-primary-100 bg-primary-400 dark:bg-warning-400 dark:text-gray-800">{{ $t('public.level') }} {{
                                     selectedAffiliate.level
                                 }}</span>
                         </div>
@@ -201,25 +201,25 @@ export default {
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
-                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Direct Clients') }}</span>
+                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.direct_clients') }}</span>
                     <span class="text-black dark:text-white py-2">{{
                             selectedAffiliate.direct_affiliate ? selectedAffiliate.direct_affiliate : 0
                         }}</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
-                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Clients') }}</span>
+                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.total_clients') }}</span>
                     <span class="text-black dark:text-white py-2">{{ selectedAffiliate.total_affiliate }}</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
                         class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Deposit') }}</span>
-                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.self_deposit ? formatAmount(selectedAffiliate.self_deposit) : 0) }}</span>
+                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.self_deposit ? selectedAffiliate.self_deposit : 0) }}</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
                         class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Group Deposit') }}</span>
-                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.total_group_deposit ? formatAmount(selectedAffiliate.total_group_deposit) : 0) }}</span>
+                    <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.total_group_deposit ? selectedAffiliate.total_group_deposit : 0) }}</span>
                 </div>
             </div>
         </Modal>

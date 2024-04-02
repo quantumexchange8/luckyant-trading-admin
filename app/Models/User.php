@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -13,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasMedia
 {
-    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -87,6 +88,35 @@ class User extends Authenticatable implements HasMedia
     public function top_leader(): \Illuminate\Database\Eloquent\Relations\belongsTo
     {
         return $this->belongsTo(User::class, 'top_leader_id', 'id');
+    }
+
+    public function walletLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WalletLog::class);
+    }
+
+    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function getFirstLeader()
+    {
+        $first_leader = null;
+
+        $upline = explode("-", substr($this->hierarchyList, 1, -1));
+        $count = count($upline) - 1;
+        if ($count > 0) {
+            while ($count > -1) {
+                $user = User::find($upline[$count]);
+                if (!empty($user->leader_status) && $user->leader_status == 1) {
+                    $first_leader = $user;
+                    break; // Found the first leader, exit the loop
+                }
+                $count--;
+            }
+        }
+        return $first_leader;
     }
 
     public function setReferralId(): void

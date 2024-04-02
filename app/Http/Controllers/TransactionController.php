@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Exports\DepositExport;
+use App\Exports\TransactionsExport;
 use App\Exports\WithdrawalExport;
 use App\Exports\InternalTransferExport;
+use App\Exports\PendingDepositExport;
+use App\Exports\PendingWithdrawalExport;
 // use App\Exports\BalanceAdjustmentExport;
 use App\Models\Wallet;
+use App\Models\User;
 // use App\Models\BalanceAdjustment;
 use App\Models\Transaction;
+use App\Models\WalletLog;
 use App\Services\SelectOptionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -62,13 +67,22 @@ class TransactionController extends Controller
             $query->whereBetween('created_at', [$start_date, $end_date]);
         }
 
-        // if ($request->has('exportStatus')) {
-        //     if ($type == 'Deposit') {
-        //         return Excel::download(new DepositExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
-        //     } elseif ($type == 'Withdrawal') {
-        //         return Excel::download(new WithdrawalExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
-        //     }
-        // }
+        if ($request->filled('leader')) {
+            $leader = $request->input('leader');
+            $leaderUser = User::find($leader);
+            if ($leaderUser) {
+                $query->whereIn('user_id', $leaderUser->getChildrenIds());
+            }
+        }
+
+        if ($request->has('exportStatus')) {
+
+            if ($type == 'Deposit') {
+                return Excel::download(new PendingDepositExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
+            } elseif ($type == 'Withdrawal') {
+                return Excel::download(new PendingWithdrawalExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
+            }
+        }
 
         $results = $query->latest()->paginate(10);
 
@@ -188,7 +202,7 @@ class TransactionController extends Controller
     public function getTransactionHistory(Request $request)
     {
         $query = Transaction::query()
-            ->with(['user:id,name,email', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
+            ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
             ->whereNotIn('status', ['Processing', 'Pending']);
 
         if ($request->filled('search')) {
@@ -197,7 +211,7 @@ class TransactionController extends Controller
                 // $q->whereHas('wallet', function ($wallet_query) use ($search) {
                 //     $wallet_query->where('name', 'like', $search);
                 // })
-                $q->WhereHas('user', function ($user) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
                          ->orWhere('email', 'like', $search);
                 })
@@ -222,42 +236,73 @@ class TransactionController extends Controller
             });
         }
 
-        if ($request->filled('transactionType')) {
-            $transactionType = $request->input('transactionType');
-            $query->where(function ($q) use ($transactionType) {
-                $q->where('category',  $transactionType);
-            });
-        }
-
         if ($request->filled('type')) {
             $type = $request->input('type');
             $query->where(function ($q) use ($type) {
-                $q->where('transaction_type', $type);
+                $q->where('transaction_type',  $type);
             });
         }
 
-//        if ($request->has('exportStatus')) {
-//            if ($type == 'Deposit') {
-//                return Excel::download(new DepositExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-//            } elseif ($type == 'Withdrawal') {
-//                return Excel::download(new WithdrawalExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-//            } elseif ($type == 'InternalTransfer') {
-//                return Excel::download(new InternalTransferExport($query), Carbon::now() . '-' . $type . '_History-report.xlsx');
-//            }
-//        }
+        if ($request->filled('category')) {
+            $category = $request->input('category');
+            $query->where(function ($q) use ($category) {
+                $q->where('category', $category);
+            });
+        }
 
+        if ($request->filled('methods')) {
+            $methods = $request->input('methods');
+            $query->where(function ($q) use ($methods) {
+                $q->where('payment_method', $methods);
+            });
+        }
+
+        if ($request->filled('fund_type')) {
+            $fund_type = $request->input('fund_type');
+            $query->where(function ($q) use ($fund_type) {
+                $q->where('fund_type', $fund_type);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where(function ($q) use ($status) {
+                $q->where('status', $status);
+            });
+        }
+
+        if ($request->has('exportStatus')) {
+            $fileName = Carbon::now() . '-' . $request->type . '_History-report.xlsx';
+            return Excel::download(new TransactionsExport($query), $fileName);
+        }
+
+        $totalAmountQuery = clone $query;
+        $rejectedAmountQuery = clone $query;
         $results = $query->latest()->paginate(10);
 
-        $totalAmount = $query->sum('amount');
+        $totalAmount = $totalAmountQuery->sum('transaction_amount');
+        $successAmount = $totalAmountQuery->where('status', 'Success')->sum('transaction_amount');
+        $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('transaction_amount');
 
-        $results->each(function ($user_deposit) {
-            $user_deposit->user->profile_photo_url = $user_deposit->user->getFirstMediaUrl('profile_photo');
+        $results->each(function ($transaction) {
+            $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
+            $transaction->user->first_leader = $transaction->user->getFirstLeader() ?? null;
         });
 
+        if ($request->input('type') == 'Withdrawal') {
+            $results->each(function ($transaction) {
+                $profit = WalletLog::where('user_id', $transaction->user_id)->where('category', 'profit')->sum('amount');
+                $bonus = WalletLog::where('user_id', $transaction->user_id)->where('category', 'bonus')->sum('amount');
+                $transaction->profit_amount = $profit;
+                $transaction->bonus_amount = $bonus;
+            });
+        }
 
         return response()->json([
             'transactions' => $results,
-            'totalAmount' => $totalAmount
+            'totalAmount' => $totalAmount,
+            'successAmount' => $successAmount,
+            'rejectedAmount' => $rejectedAmount,
         ]);
     }
 

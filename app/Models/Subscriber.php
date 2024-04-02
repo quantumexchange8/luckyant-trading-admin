@@ -13,10 +13,12 @@ class Subscriber extends Model
         'user_id',
         'trading_account_id',
         'meta_login',
+        'initial_meta_balance',
         'master_id',
         'master_meta_login',
         'subscription_id',
         'status',
+        'approval_date',
     ];
 
     public function tradingAccount(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -42,5 +44,10 @@ class Subscriber extends Model
     public function transaction(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'transaction_id', 'id');
+    }
+
+    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(TradingUser::class, 'master_meta_login', 'meta_login');
     }
 }

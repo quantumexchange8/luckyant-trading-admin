@@ -1,10 +1,18 @@
 <script setup>
 import PerfectScrollbar from '@/Components/PerfectScrollbar.vue'
 import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
-import { DashboardIcon, Setting } from '@/Components/Icons/outline'
+import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon, File06Icon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
-import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentReportIcon } from '@heroicons/vue/outline'
+import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
+import {usePage} from "@inertiajs/vue3";
+import {ref} from "vue";
+
+const page = usePage();
+const pendingTransactionCount = ref(page.props.pendingTransactionCount);
+const pendingKycCount = ref(page.props.pendingKycCount);
+const pendingMasterCount = ref(page.props.pendingMasterCount);
+const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
 </script>
 
 <template>
@@ -26,29 +34,6 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
             </template>
         </SidebarLink>
 
-        <SidebarCollapsible
-            title="Members"
-            :active="route().current('member.*')"
-        >
-            <template #icon>
-                <UsersIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template>
-
-            <SidebarCollapsibleItem
-                :href="route('member.member_listing')"
-                title="Member Listing"
-                :active="route().current('member.member_listing')"
-            />
-            <!-- <SidebarCollapsibleItem
-                :href="route('member.live_trading')"
-                title="Live Trading Listing"
-                :active="route().current('member.live_trading')"
-            /> -->
-        </SidebarCollapsible>
-
         <SidebarLink
             title="Announcement"
             :href="route('announcement.announcement_listing')"
@@ -63,8 +48,39 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         </SidebarLink>
 
         <SidebarCollapsible
+            title="Members"
+            :active="route().current('member.*')"
+            :pending-counts="pendingKycCount"
+        >
+            <template #icon>
+                <Users01Icon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('member.member_listing')"
+                title="Member Listing"
+                :active="route().current('member.member_listing')"
+                :pending-counts="pendingKycCount"
+            />
+            <SidebarCollapsibleItem
+                :href="route('member.affiliate_listing')"
+                title="Affiliate Listing"
+                :active="route().current('member.affiliate_listing')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('member.live_trading')"
+                title="Live Account Listing"
+                :active="route().current('member.live_trading')"
+            />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
             title="Transactions"
             :active="route().current('transaction.*')"
+            :pending-counts="pendingTransactionCount"
         >
             <template #icon>
                 <ClipboardListIcon
@@ -77,6 +93,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('transaction.pending_transaction')"
                 title="Pending Transaction"
                 :active="route().current('transaction.pending_transaction')"
+                :pending-counts="pendingTransactionCount"
             />
 
             <SidebarCollapsibleItem
@@ -88,9 +105,10 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         <SidebarCollapsible
             title="Master"
             :active="route().current('master.*')"
+            :pending-counts="pendingMasterCount"
         >
             <template #icon>
-                <UsersIcon
+                <UsersSquareIcon
                     class="flex-shrink-0 w-6 h-6"
                     aria-hidden="true"
                 />
@@ -100,6 +118,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('master.master_request')"
                 title="Master Request"
                 :active="route().current('master.master_request')"
+                :pending-counts="pendingMasterCount"
             />
             <SidebarCollapsibleItem
                 :href="route('master.getMasterListing')"
@@ -110,9 +129,10 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
         <SidebarCollapsible
             title="Subscribers"
             :active="route().current('subscription.*')"
+            :pending-counts="pendingSubscriberRequestCount"
         >
             <template #icon>
-                <UsersIcon
+                <UsersCheckIcon
                     class="flex-shrink-0 w-6 h-6"
                     aria-hidden="true"
                 />
@@ -122,6 +142,7 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :href="route('subscription.subscribers')"
                 title="Pending Request"
                 :active="route().current('subscription.subscribers')"
+                :pending-counts="pendingSubscriberRequestCount"
             />
             <SidebarCollapsibleItem
                 :href="route('subscription.subscribersListing')"
@@ -134,24 +155,23 @@ import { TemplateIcon, UsersIcon, ClipboardListIcon, SpeakerphoneIcon, DocumentR
                 :active="route().current('subscription.subscriptionHistory')"
             />
         </SidebarCollapsible>
-        <!-- <SidebarCollapsible
-            title="Report"
-            :active="route().current('report.*')"
-        >
-            <template #icon>
-                <DocumentReportIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template> -->
+<!--        <SidebarCollapsible-->
+<!--            title="Report"-->
+<!--            :active="route().current('report.*')"-->
+<!--        >-->
+<!--            <template #icon>-->
+<!--                <File06Icon-->
+<!--                    class="flex-shrink-0 w-6 h-6"-->
+<!--                    aria-hidden="true"-->
+<!--                />-->
+<!--            </template>-->
 
-            <!-- <SidebarCollapsibleItem
-                :href="route('setting.payment_setting')"
-                title="Payment Setting"
-                :active="route().current('setting.payment_setting')"
-            /> -->
-            <!-- <SidebarCollapsibleItem title="In Progress..."/>
-        </SidebarCollapsible> -->
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('report.trading_rebate')"-->
+<!--                title="Trading Rebate"-->
+<!--                :active="route().current('report.trading_rebate')"-->
+<!--            />-->
+<!--        </SidebarCollapsible>-->
         <SidebarCollapsible
             title="Setting"
             :active="route().current('setting.*')"

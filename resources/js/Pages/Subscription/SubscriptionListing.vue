@@ -10,6 +10,7 @@ import Button from "@/Components/Button.vue";
 import SubscriptionHistoryTable from "@/Pages/Subscription/Partials/SubscriptionHistoryTable.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
+import Combobox from "@/Components/Combobox.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
@@ -32,12 +33,30 @@ function refreshTable() {
     search.value = '';
     date.value = '';
     filter.value = '';
+    leader.value = null;
     isLoading.value = !isLoading.value;
     refresh.value = true;
 }
 
 const exportTransaction = () => {
     exportStatus.value = true;
+}
+
+const leader = ref()
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllLeaders?query=' + query)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.name,
+                        img: user.profile_photo
+                    }
+                })
+            )
+        });
 }
 </script>
 
@@ -82,15 +101,6 @@ const exportTransaction = () => {
                         <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />
                     </InputIconWrapper>
                 </div>
-                <div class="w-full">
-                    <vue-tailwind-datepicker
-                        placeholder="Select dates"
-                        :formatter="formatter"
-                        separator=" - "
-                        v-model="date"
-                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
-                    />
-                </div>
                 <div>
                     <BaseListbox
                         id="statusID"
@@ -98,6 +108,23 @@ const exportTransaction = () => {
                         v-model="filter"
                         :options="statusList"
                         placeholder="Filter status"
+                    />
+                </div>
+                <div class="w-full col-span-3 md:col-span-1">
+                    <Combobox
+                        :load-options="loadUsers"
+                        v-model="leader"
+                        placeholder="Leader"
+                        image
+                    />
+                </div>
+                <div class="w-full">
+                    <vue-tailwind-datepicker
+                        placeholder="Select dates"
+                        :formatter="formatter"
+                        separator=" - "
+                        v-model="date"
+                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
                     />
                 </div>
                 <div>
@@ -122,6 +149,7 @@ const exportTransaction = () => {
                 :search="search"
                 :date="date"
                 :filter="filter"
+                :leader="leader"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"
                 @update:refresh="refresh = $event"

@@ -35,7 +35,6 @@ class TradingAccount extends Model
         'blocked_profit' => 'decimal:2',
         'margin_initial' => 'decimal:2',
         'margin_maintenance' => 'decimal:2',
-        'created_at' => 'datetime:Y-m-d',
     ];
 
 //    public function getActivitylogOptions(): LogOptions
@@ -53,7 +52,7 @@ class TradingAccount extends Model
 //            ->dontSubmitEmptyLogs();
 //    }
 
-    public function ofUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
@@ -61,8 +60,13 @@ class TradingAccount extends Model
     {
         return $this->belongsTo(AccountType::class, 'account_type', 'id');
     }
-//    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\HasOne
-//    {
-//        return $this->hasOne(TradingUser::class, 'meta_login', 'meta_login');
-//    }
+   public function tradingUser(): \Illuminate\Database\Eloquent\Relations\HasOne
+   {
+       return $this->hasOne(TradingUser::class, 'meta_login', 'meta_login');
+   }
+
+    public function subscriber(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Subscriber::class, 'trading_account_id', 'id');
+    }
 }

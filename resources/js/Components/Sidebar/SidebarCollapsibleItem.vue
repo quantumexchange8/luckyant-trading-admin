@@ -1,5 +1,6 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
+import {sidebarState} from "@/Composables/index.js";
 
 const props = defineProps({
     href: String,
@@ -11,7 +12,8 @@ const props = defineProps({
     external: {
         type: Boolean,
         default: false,
-    }
+    },
+    pendingCounts: Number
 })
 
 const { external } = props
@@ -40,7 +42,17 @@ const Tag = external ? 'a' : Link
                 },
             ]"
         >
-            {{ title }}
+            <div class="flex items-center gap-2">
+                <span
+                    class="text-base font-medium"
+                    v-show="sidebarState.isOpen || sidebarState.isHovered"
+                >
+                    {{ title }}
+                </span>
+                <span v-if="pendingCounts > 0" class="text-xs flex items-center rounded-md px-2 h-5 bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-white">
+                    {{ pendingCounts }}
+                </span>
+            </div>
         </component>
     </li>
 </template>

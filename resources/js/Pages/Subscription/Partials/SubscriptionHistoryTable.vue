@@ -12,6 +12,7 @@ const props = defineProps({
     filter: String,
     date: String,
     exportStatus: Boolean,
+    leader: Object,
 })
 
 const type = ref('Renewal');
@@ -52,6 +53,8 @@ const updateSubscriptionType = (subscription_type) => {
                     :isLoading="isLoading"
                     :search="search"
                     :date="date"
+                    :filter="filter"
+                    :leader="leader"
                     :exportStatus="exportStatus"
                     @update:loading="$emit('update:loading', $event)"
                     @update:refresh="$emit('update:refresh', $event)"

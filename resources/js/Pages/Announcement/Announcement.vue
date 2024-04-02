@@ -106,7 +106,7 @@ const updateStatus = async (announcementId, newStatus) => {
             id: announcementId,
             status: newStatus
         });
-        
+
     } catch (error) {
         console.error('Error updating status:', error);
     }
@@ -148,8 +148,7 @@ const updateStatus = async (announcementId, newStatus) => {
                             :formatter="formatter"
                             separator=" - "
                             v-model="date"
-                            input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
-                        />
+                            input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"                        />
                     </div>
                 </div>
             </form>
@@ -215,7 +214,7 @@ const updateStatus = async (announcementId, newStatus) => {
                                 <Action
                                     :announcement="announcement"
                                 />
-                                
+
                             </td>
                         </tr>
                     </tbody>

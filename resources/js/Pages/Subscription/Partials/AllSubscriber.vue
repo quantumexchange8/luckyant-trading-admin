@@ -15,27 +15,25 @@ const props = defineProps({
     isLoading: Boolean,
     search: String,
     date: String,
-    // exportStatus: Boolean,
+    exportStatus: Boolean,
+    leader: Object,
 })
 
 const subscribers = ref({data: []});
 const depositLoading = ref(props.isLoading);
-const formatter = ref({
-    date: 'YYYY-MM-DD',
-    month: 'MM'
-});
+const currentPage = ref(1);
 const { formatDateTime, formatAmount } = transactionFormat();
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 const refreshDeposit = ref(props.refresh);
 
 watch(
-    [() => props.search, () => props.date],
-    debounce(([searchValue, dateValue]) => {
-        getResults(1, searchValue, dateValue);
+    [() => props.search, () => props.date, () => props.leader],
+    debounce(([searchValue, dateValue, leaderValue]) => {
+        getResults(1, searchValue, dateValue, leaderValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '') => {
+const getResults = async (page = 1, search = '', date = '', leader = '') => {
     depositLoading.value = true
     try {
         let url = `/subscription/getActiveSubscriber?page=${page}`;
@@ -48,6 +46,10 @@ const getResults = async (page = 1, search = '', date = '') => {
             url += `&date=${date}`;
         }
 
+        if (leader) {
+            url += `&leader=${leader.value}`;
+        }
+        
         const response = await axios.get(url);
         subscribers.value = response.data;
 
@@ -65,7 +67,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date);
+        getResults(currentPage.value, props.search, props.date, props.leader);
     }
 };
 
@@ -123,6 +125,9 @@ const closeModal = () => {
                         Trading Account
                     </th>
                     <th scope="col" class="p-3">
+                        First Leader
+                    </th>
+                    <th scope="col" class="p-3">
                         Master
                     </th>
                     <th scope="col" class="p-3">
@@ -160,10 +165,13 @@ const closeModal = () => {
                         {{ subscriber.meta_login }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.master.user.name }}
+                        {{ subscriber.first_leader ? subscriber.first_leader.name : 'LuckyAnt Trading' }}
                     </td>
                     <td class="p-3">
-                        {{ subscriber.master_meta_login }}
+                        {{ subscriber.master ? subscriber.master.trading_user.name : '-'}}
+                    </td>
+                    <td class="p-3">
+                        {{ subscriber.master_meta_login ? subscriber.master_meta_login : '-' }}
                     </td>
                     <td class="p-3">
                         $ {{ subscriber.subscription.meta_balance }}

@@ -1,7 +1,7 @@
 <script setup>
 import { Link } from '@inertiajs/vue3'
 import { sidebarState } from '@/Composables'
-import { EmptyCircleIcon } from '@/Components/Icons/outline'
+import { EmptyCircleIcon, InfoCircleIcon } from '@/Components/Icons/outline'
 
 const props = defineProps({
     href: {
@@ -20,6 +20,7 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    pendingCounts: Number,
 })
 
 const Tag = !props.external ? Link : 'a'
@@ -33,7 +34,7 @@ const Tag = !props.external ? Link : 'a'
         :class="[
             'p-2 flex items-center gap-2 rounded-md transition-colors',
             {
-                'text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-dark-eval-2':
+                'text-gray-400 dark:text-white hover:text-gray-700 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-dark-eval-2':
                     !active,
                 'text-white bg-primary-500 shadow-lg hover:bg-primary-600':
                     active,
@@ -57,7 +58,7 @@ const Tag = !props.external ? Link : 'a'
         :class="[
             'p-2 w-full flex items-center gap-2 rounded-md transition-colors',
             {
-                'text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-dark-eval-2':
+                'text-gray-400 dark:text-white hover:text-gray-500 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-dark-eval-2':
                     !active,
                 'text-white bg-primary-500 shadow-lg hover:bg-primary-600':
                     active,
@@ -68,12 +69,17 @@ const Tag = !props.external ? Link : 'a'
             <EmptyCircleIcon aria-hidden="true" class="flex-shrink-0 w-6 h-6" />
         </slot>
 
-        <span
-            class="text-base font-medium"
-            v-show="sidebarState.isOpen || sidebarState.isHovered"
-        >
-            {{ title }}
-        </span>
+        <div class="flex items-center gap-2">
+            <span
+                class="text-base font-medium"
+                v-show="sidebarState.isOpen || sidebarState.isHovered"
+            >
+                {{ title }}
+            </span>
+            <span v-if="pendingCounts > 0 && (sidebarState.isOpen || sidebarState.isHovered)" class="text-xs rounded-md px-2 bg-gray-200 dark:bg-primary-800 text-primary-800 dark:text-primary-100">
+                Pending
+            </span>
+        </div>
         <slot name="arrow" />
     </button>
 </template>

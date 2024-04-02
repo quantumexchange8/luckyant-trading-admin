@@ -15,6 +15,8 @@ class Master extends Model
         'meta_login',
         'min_join_equity',
         'sharing_profit',
+        'market_profit',
+        'company_profit',
         'estimated_monthly_returns',
         'estimated_lot_size',
         'subscription_fee',
@@ -24,6 +26,8 @@ class Master extends Model
         'signal_status',
         'status',
         'total_subscribers',
+        'max_drawdown',
+        'management_fee',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -41,5 +45,8 @@ class Master extends Model
         return $this->hasMany(Subscriber::class, 'master_id', 'id');
     }
 
-
+    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(TradingUser::class, 'meta_login', 'meta_login');
+    }
 }

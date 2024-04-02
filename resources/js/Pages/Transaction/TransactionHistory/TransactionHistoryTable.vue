@@ -16,7 +16,9 @@ const props = defineProps({
     search: String,
     date: String,
     category: String,
+    fund_type: String,
     methods: String,
+    status: String,
     refresh: Boolean,
     isLoading: Boolean,
     transactionType: String,
@@ -30,8 +32,8 @@ const transactions = ref({data: []});
 const currentPage = ref(1);
 const refreshTransaction = ref(props.refresh);
 const transactionLoading = ref(props.isLoading);
-const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
-const { formatDateTime, formatAmount } = transactionFormat();
+const emit = defineEmits(['update:loading', 'update:refresh', 'update:export', 'update:totalAmount', 'update:successAmount', 'update:rejectedAmount']);
+const { formatDateTime, formatAmount, formatType } = transactionFormat();
 const transactionModal = ref(false);
 const transactionDetail = ref(null);
 
@@ -41,17 +43,16 @@ const types = ref('')
 const toggleSort = (sortType) => {
     sortDescending.value = sortDescending.value === 'desc' ? 'asc' : 'desc';
     types.value = sortType;
-    console.log(sortType)
 }
 
 watch(
-    [() => props.search, () => props.category, () => props.methods, () => props.date, () => props.transactionType, () => types.value, () => sortDescending.value],
-    debounce(([searchValue, categoryValue, methodsValue, dateValue, typeValue, sortValue]) => {
-        getResults(1, searchValue, categoryValue, methodsValue, dateValue, typeValue, sortValue);
+    [() => props.search, () => props.category, () => props.fund_type, () => props.methods, () => props.status, () => props.date, () => props.transactionType, () => types.value, () => sortDescending.value],
+    debounce(([searchValue, categoryValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue]) => {
+        getResults(1, searchValue, categoryValue, fundTypeValue, methodsValue, statusValue, dateValue, typeValue, sortValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = props.search, category = props.category, methods = props.methods, date = props.date, type = props.transactionType, sortType = types.value, sort = sortDescending.value) => {
+const getResults = async (page = 1, search = props.search, category = props.category, fund_type = props.fund_type, methods = props.methods, status = props.status, date = props.date, type = props.transactionType, sortType = types.value, sort = sortDescending.value) => {
     transactionLoading.value = true
     try {
         let url = `/transaction/getTransactionHistory?page=${page}`;
@@ -68,8 +69,16 @@ const getResults = async (page = 1, search = props.search, category = props.cate
             url += `&category=${category}`;
         }
 
+        if (fund_type) {
+            url += `&fund_type=${fund_type}`;
+        }
+
         if (methods) {
             url += `&methods=${methods}`;
+        }
+
+        if (status) {
+            url += `&status=${status}`;
         }
 
         if (date) {
@@ -83,6 +92,9 @@ const getResults = async (page = 1, search = props.search, category = props.cate
 
         const response = await axios.get(url);
         transactions.value = response.data.transactions;
+        emit('update:totalAmount', response.data.totalAmount);
+        emit('update:successAmount', response.data.successAmount);
+        emit('update:rejectedAmount', response.data.rejectedAmount);
     } catch (error) {
         console.error(error);
     } finally {
@@ -98,7 +110,7 @@ const handlePageChange = (newPage) => {
 
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.category, props.methods, props.date, props.kycStatus, types.value, sortDescending.value);
+        getResults(currentPage.value, props.search, props.category, props.fund_type, props.methods, props.status, props.date, props.kycStatus, types.value, sortDescending.value);
     }
 };
 
@@ -115,7 +127,7 @@ watch(() => props.exportStatus, (newVal) => {
     refreshTransaction.value = newVal;
     if(newVal) {
 
-        let url = `/transaction/getTransactionData?exportStatus=yes`;
+        let url = `/transaction/getTransactionHistory?exportStatus=yes`;
 
         if (props.date) {
             url += `&date=${props.date}`;
@@ -125,12 +137,24 @@ watch(() => props.exportStatus, (newVal) => {
             url += `&search=${props.search}`;
         }
 
+        if (props.transactionType) {
+            url += `&type=${props.transactionType}`;
+        }
+
         if (props.category) {
             url += `&category=${props.category}`;
         }
 
+        if (props.fund_type) {
+            url += `&fund_type=${props.fund_type}`;
+        }
+
         if (props.methods) {
             url += `&methods=${props.methods}`;
+        }
+
+        if (props.status) {
+            url += `&status=${props.status}`;
         }
 
         window.location.href = url;
@@ -180,8 +204,11 @@ const closeModal = () => {
                 <th scope="col" class="p-3">
                     {{ $t('public.date') }}
                 </th>
-                <th scope="col" class="p-3">
+                <th scope="col" class="p-3 min-w-40">
                     {{ $t('public.name') }}
+                </th>
+                <th scope="col" class="p-3 min-w-40">
+                    {{ $t('public.first_leader') }}
                 </th>
                 <th scope="col" class="p-3">
                     {{ $t('public.from') }}
@@ -193,10 +220,25 @@ const closeModal = () => {
                     {{ $t('public.payment_methods') }}
                 </th>
                 <th scope="col" class="p-3">
+                    {{ $t('public.fund_type') }}
+                </th>
+                <th scope="col" class="p-3">
                     {{ $t('public.transaction_no') }}
                 </th>
                 <th scope="col" class="p-3">
                     {{ $t('public.amount') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ $t('public.payment_charges') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ formatType(transactionType) }} {{ $t('public.amount') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ $t('public.profit') }}
+                </th>
+                <th v-if="transactionType === 'Withdrawal'" scope="col" class="p-3">
+                    {{ $t('public.bonus') }}
                 </th>
                 <th scope="col" class="p-3 text-center">
                     {{ $t('public.status') }}
@@ -233,15 +275,40 @@ const closeModal = () => {
                     </div>
                 </td>
                 <td class="p-3">
-                    {{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : (transaction.from_meta_login ? $t('public.account_no') + ' - ' + transaction.from_meta_login.meta_login : '-') }}
+                    <div class="flex flex-col gap-1">
+                        <div>
+                            {{ transaction.user.first_leader ? transaction.user.first_leader.name : '-' }}
+                        </div>
+                        <div>
+                            {{ transaction.user.first_leader ? transaction.user.first_leader.email : '-' }}
+                        </div>
+                    </div>
                 </td>
                 <td class="p-3">
                     <div class="flex flex-col gap-1">
                         <div>
-                            {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? $t('public.account_no') : '-') }}
+                            {{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : (transaction.from_meta_login ? $t('public.account_no') : '-') }}
+                        </div>
+                        <div v-if="transaction.from_meta_login" class="font-semibold">
+                            {{ transaction.from_meta_login ? transaction.from_meta_login.meta_login : '-' }}
+                        </div>
+                    </div>
+                </td>
+                <td class="p-3">
+                    <div v-if="transaction.category === 'wallet' && transaction.transaction_type === 'Withdrawal'" class="flex flex-col gap-1">
+                        <div>
+                            {{ transaction.payment_account ? transaction.payment_account.payment_account_name : '-' }} <span v-if="transaction.payment_account && transaction.payment_account.payment_platform === 'Bank'">({{ transaction.payment_account ? transaction.payment_account.payment_platform_name : '' }})</span>
                         </div>
                         <div>
-                            {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? transaction.to_meta_login.meta_login : '-') }}
+                            {{ transaction.payment_account ? transaction.payment_account.account_no : '-' }}
+                        </div>
+                    </div>
+                    <div v-else class="flex flex-col gap-1">
+                        <div>
+                            {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? $t('public.account_no') : '-') }}
+                        </div>
+                        <div v-if="transaction.to_meta_login" class="font-semibold">
+                            {{ transaction.to_meta_login ? transaction.to_meta_login.meta_login : '-' }}
                         </div>
                     </div>
                 </td>
@@ -249,13 +316,30 @@ const closeModal = () => {
                     {{ transaction.payment_method ?? '-' }}
                 </td>
                 <td class="p-3">
+                    {{ formatType(transaction.fund_type ? transaction.fund_type : '-' ) }}
+                </td>
+                <td class="p-3">
                     {{ transaction.transaction_number }}
                 </td>
                 <td class="p-3">
                     $ {{ transaction.amount }}
                 </td>
-                <td class="p-3 flex items-center justify-center">
-                    <Badge :variant="statusVariant(transaction.status)">{{ transaction.status }}</Badge>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3">
+                    $ {{ transaction.transaction_charges }}
+                </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3 text-red-500">
+                    $ {{ transaction.transaction_amount }}
+                </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3">
+                    $ {{ formatAmount(transaction.profit_amount ? transaction.profit_amount : 0) }}
+                </td>
+                <td v-if="transaction.transaction_type === 'Withdrawal'" class="p-3">
+                    $ {{ formatAmount(transaction.bonus_amount ? transaction.bonus_amount : 0) }}
+                </td>
+                <td class="p-3">
+                    <div class="flex items-center justify-center">
+                        <Badge :variant="statusVariant(transaction.status)">{{ transaction.status }}</Badge>
+                    </div>
                 </td>
             </tr>
             </tbody>
@@ -287,6 +371,10 @@ const closeModal = () => {
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.payment_methods') }}</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.payment_method ?? '-' }}</span>
+        </div>
+        <div class="grid grid-cols-3 items-center gap-2">
+            <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.fund_type') }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ formatType(transactionDetail.fund_type ? transactionDetail.fund_type : '-' ) }}</span>
         </div>
         <div v-if="transactionDetail.transaction_type === 'Deposit'" class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.to_account') }}</span>

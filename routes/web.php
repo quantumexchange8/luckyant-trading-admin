@@ -3,12 +3,14 @@
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\TradingController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
@@ -46,6 +48,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/payment_account', [MemberController::class, 'paymentAccount'])->name('member.payment_account');
         Route::patch('/advanceEditMember', [MemberController::class, 'advanceEditMember'])->name('member.advanceEdit_member');
         Route::get('/getAllUsers', [MemberController::class, 'getAllUsers'])->name('member.getAllUsers');
+        Route::get('/getAllLeaders', [MemberController::class, 'getAllLeaders'])->name('member.getAllLeaders');
         Route::get('/refreshTradingAccountsData', [MemberController::class, 'refreshTradingAccountsData'])->name('member.refreshTradingAccountsData');
         Route::get('/member_affiliates/{id}', [MemberController::class, 'affiliate_tree'])->name('member.affiliate_tree');
         Route::get('/getTreeData/{id}', [MemberController::class, 'getTreeData'])->name('member.getTreeData');
@@ -53,9 +56,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::post('/validateKyc', [MemberController::class, 'validateKyc'])->name('member.validateKyc');
         Route::post('/verifyMember', [MemberController::class, 'verifyMember'])->name('member.verify_member');
         Route::get('/impersonate/{user}', [MemberController::class, 'impersonate'])->name('member.impersonate');
+        Route::get('/affiliate_listing', [MemberController::class, 'affiliate_listing'])->name('member.affiliate_listing');
+        Route::get('/getAffiliateSummaries', [MemberController::class, 'getAffiliateSummaries'])->name('member.getAffiliateSummaries');
 
         // live trading
-        Route::get('/live_trading', [MemberController::class, 'liveTrading'])->name('member.live_trading');
+        Route::get('/live_trading', [TradingController::class, 'liveTrading'])->name('member.live_trading');
+        Route::get('/getTradingAccount', [TradingController::class, 'getTradingAccount'])->name('member.getTradingAccount');
+        Route::post('/edit_leverage', [TradingController::class, 'edit_leverage'])->name('member.edit_leverage');
+        Route::post('/change_password', [TradingController::class, 'change_password'])->name('member.change_password');
+        Route::post('/balanceAdjustment', [TradingController::class, 'balanceAdjustment'])->name('member.balanceAdjustment');
 
     });
 
@@ -140,7 +149,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      * ==============================
      */
     Route::prefix('report')->group(function () {
-
+        Route::get('/trading_rebate', [ReportController::class, 'trading_rebate'])->name('report.trading_rebate');
     });
 
     /**

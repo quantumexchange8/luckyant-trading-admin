@@ -135,6 +135,7 @@ const paginationActiveClass = [
                     </td>
                     <td class="p-2.5">
                         {{ subscriber.user.name }}
+                        <!-- {{ subscriber.trading_user.name }} -->
                     </td>
                     <td class="p-2.5">
                         {{ subscriber.meta_login }}

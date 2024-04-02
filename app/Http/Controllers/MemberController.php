@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AffiliateSummaryExport;
 use App\Exports\MemberListingExport;
 use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
@@ -13,6 +14,7 @@ use App\Models\Wallet;
 use App\Models\Transaction;
 use App\Models\PaymentAccount;
 use App\Models\Subscription;
+use App\Models\WalletLog;
 use App\Notifications\KycApprovalNotification;
 use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
@@ -166,18 +168,22 @@ class MemberController extends Controller
             ->when($request->filled('sortType'), function($query) use ($request) {
                 $sortType = $request->input('sortType');
                 $sort = $request->input('sort');
-
                 $query->orderBy($sortType, $sort);
             })
-            // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', )
-            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser', 'top_leader'])
+            ->when($request->filled('leader'), function($query) use ($request) {
+                $leader = $request->input('leader');
+                $leaderUser = User::find($leader);
+                if ($leaderUser) {
+                    $query->whereIn('id', $leaderUser->getChildrenIds());
+                }
+            })
+            // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', 'top_leader_id', 'upline_id')
+            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
             ->latest();
 
         if ($request->has('exportStatus')) {
             return Excel::download(new MemberListingExport($members), Carbon::now() . '-report.xlsx');
         }
-
-        return response()->json($members->get());
 
         $members = $members->paginate(10);
 
@@ -187,7 +193,8 @@ class MemberController extends Controller
             $user->back_identity = $user->getFirstMediaUrl('back_identity');
             $user->kyc_upload_date = $user->getMedia('back_identity')->first()->created_at ?? null;
             $user->walletBalance = $user->wallets->sum('balance');
-            $user->userName = $user->top_leader->name ?? null;
+            $user->top_leader = $user->top_leader->name ?? null;
+            $user->first_leader = $user->getFirstLeader() ?? null;
         });
 
         return response()->json($members);
@@ -238,10 +245,10 @@ class MemberController extends Controller
 
         $settingRanks = SettingRank::all();
 
-        $formattedRanks = $settingRanks->map(function ($country) {
+        $formattedRanks = $settingRanks->map(function ($rank) {
             return [
-                'value' => $country->id,
-                'label' => $country->name,
+                'value' => $rank->id,
+                'label' => $rank->getNameAttribute($rank->name),
             ];
         });
 
@@ -253,10 +260,10 @@ class MemberController extends Controller
             ];
         });
 
-        $formattedNationalities = $countries->map(function ($country) {
+        $formattedNationalities = $countries->map(function ($nationality) {
             return [
-                'value' => $country->nationality,
-                'label' => $country->nationality,
+                'value' => $nationality->nationality,
+                'label' => $nationality->nationality,
             ];
         });
 
@@ -387,33 +394,18 @@ class MemberController extends Controller
             'transaction_number' => RunningNumberService::getID('transaction')
         ];
 
-        if ($wallet->type == 'cash_wallet') {
+        if ($transaction_type == 'Deposit') {
             $transactionData['amount'] = $amount;
             $transactionData['transaction_amount'] = $amount;
-            $transactionData['transaction_type'] = $transaction_type;
-            $transactionData['fund_type'] = $request->fund_type;
-
-            if ($transaction_type == 'Deposit') {
-                $transactionData['to_wallet_id'] = $wallet->id;
-                $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
-            } else {
-                $transactionData['from_wallet_id'] = $wallet->id;
-                $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
-            }
+            $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
         } else {
-            if ($transaction_type == 'Deposit') {
-                $transactionData['amount'] = $amount;
-                $transactionData['transaction_amount'] = $amount;
-                $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
-            } else {
-                $transactionData['amount'] = -$amount;
-                $transactionData['transaction_amount'] = -$amount;
-                $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
-            }
-
-            $transactionData['from_wallet_id'] = $wallet->id;
-            $transactionData['transaction_type'] = 'WalletAdjustment';
+            $transactionData['amount'] = -$amount;
+            $transactionData['transaction_amount'] = -$amount;
+            $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
         }
+
+        $transactionData['from_wallet_id'] = $wallet->id;
+        $transactionData['transaction_type'] = 'WalletAdjustment';
 
         if ($transactionData['new_wallet_amount'] < 0) {
             throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
@@ -492,6 +484,28 @@ class MemberController extends Controller
         $users = User::query()
             ->where('role', '=', 'member')
             ->whereNot('id', $request->id)
+            ->when($request->filled('query'), function ($query) use ($request) {
+                $search = $request->input('query');
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->select('id', 'name', 'email')
+            ->get();
+
+        $users->each(function ($users) {
+            $users->profile_photo = $users->getFirstMediaUrl('profile_photo');
+        });
+
+        return response()->json($users);
+    }
+
+    public function getAllLeaders(Request $request)
+    {
+        $users = User::query()
+            ->where('role', '=', 'member')
+            ->where('leader_status', 1)
             ->when($request->filled('query'), function ($query) use ($request) {
                 $search = $request->input('query');
                 $query->where(function ($innerQuery) use ($search) {
@@ -704,4 +718,95 @@ class MemberController extends Controller
             ]);
         }
     }
+
+    protected function affiliate_listing(Request $request)
+    {
+        return Inertia::render('Member/AffiliateListing');
+    }
+
+    protected function calculateWalletTransactions($user, $walletType)
+    {
+        $wallet = $user->wallets->where('type', $walletType)->first();
+
+        $walletIn = $user->walletLogs->where('category', 'bonus')->where('wallet_type', $walletType)->sum('amount') +
+            $user->transactions->where('category', 'wallet')->where('to_wallet_id', optional($wallet)->id)->sum('transaction_amount');
+
+        $walletOut = $user->transactions->where('category', 'wallet')->where('from_wallet_id', optional($wallet)->id)->sum('transaction_amount');
+
+        return [
+            'in' => $walletIn,
+            'out' => $walletOut,
+        ];
+    }
+
+    protected function getAffiliateSummaries(Request $request)
+    {
+        $leader = User::with(['rank:id,name', 'wallets', 'walletLogs', 'transactions'])->find($request->firstLeader);
+        $leader->profile_photo_url = $leader->getFirstMediaUrl('profile_photo');
+        $leader->profit = $leader->walletLogs->where('category', 'profit')->sum('amount');
+
+        $bonusWalletTransactions = $this->calculateWalletTransactions($leader, 'bonus_wallet');
+        $eWalletTransactions = $this->calculateWalletTransactions($leader, 'e_wallet');
+
+        $leader->bonus_in = $bonusWalletTransactions['in'];
+        $leader->bonus_out = $bonusWalletTransactions['out'];
+
+        $leader->e_wallet_in = $eWalletTransactions['in'];
+        $leader->e_wallet_out = $eWalletTransactions['out'];
+
+        $leader->total_funding = $leader->transactions->where('category', 'wallet')->where('transaction_type', 'Deposit')->where('status', 'Success')->sum('transaction_amount');
+        $leader->total_withdrawal = $leader->transactions->where('category', 'wallet')->where('transaction_type', 'Withdrawal')->where('status', 'Success')->sum('transaction_amount');
+        $leader->total_demo_fund = $leader->transactions->where('category', 'trading_account')->where('transaction_type', 'Deposit')->where('fund_type', 'DemoFund')->where('status', 'Success')->sum('transaction_amount');
+
+        $children = User::whereIn('id', $leader->getChildrenIds())
+            ->with('wallets', 'walletLogs', 'transactions');
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->input('search') . '%';
+            $children->where(function ($query) use ($search) {
+                $query->where('name', 'like', $search)
+                    ->orWhere('email', 'like', $search);
+            });
+        }
+
+        if ($request->filled('date')) {
+            $date = $request->input('date');
+            $dateRange = explode(' - ', $date);
+            $start_date = \Carbon\Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
+            $end_date = \Carbon\Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+
+            $children->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        if ($request->has('exportStatus')) {
+            return Excel::download(new AffiliateSummaryExport($children), Carbon::now() . '-summary-report.xlsx');
+        }
+
+        $results = $children->paginate(10);
+
+        $results->each(function ($child) {
+            $child->profile_photo_url = $child->getFirstMediaUrl('profile_photo');
+            $child->profit = $child->walletLogs->where('category', 'profit')->sum('amount');
+
+            $bonusWalletTransactions = $this->calculateWalletTransactions($child, 'bonus_wallet');
+            $eWalletTransactions = $this->calculateWalletTransactions($child, 'e_wallet');
+
+            $child->bonus_in = $bonusWalletTransactions['in'];
+            $child->bonus_out = $bonusWalletTransactions['out'];
+
+            $child->e_wallet_in = $eWalletTransactions['in'];
+            $child->e_wallet_out = $eWalletTransactions['out'];
+
+            $child->total_funding = $child->transactions->where('category', 'wallet')->where('transaction_type', 'Deposit')->where('status', 'Success')->sum('transaction_amount');
+            $child->total_withdrawal = $child->transactions->where('category', 'wallet')->where('transaction_type', 'Withdrawal')->where('status', 'Success')->sum('transaction_amount');
+            $child->total_demo_fund = $child->transactions->where('category', 'trading_account')->where('transaction_type', 'Deposit')->where('fund_type', 'DemoFund')->where('status', 'Success')->sum('transaction_amount');
+        });
+
+        return response()->json([
+            'children' => $results,
+            'first_leader' => $leader,
+        ]);
+    }
+
+
 }

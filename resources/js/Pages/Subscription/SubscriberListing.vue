@@ -7,6 +7,7 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import {SearchIcon} from "@heroicons/vue/outline";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import SubscriberListingTable from "@/Pages/Subscription/Partials/SubscriberListingTable.vue";
+import Combobox from "@/Components/Combobox.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
@@ -19,6 +20,31 @@ const formatter = ref({
     month: 'MM'
 });
 
+function refreshTable() {
+    search.value = '';
+    date.value = '';
+    filter.value = '';
+    leader.value = '';
+    isLoading.value = !isLoading.value;
+    refresh.value = true;
+}
+
+const leader = ref()
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllLeaders?query=' + query)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.name,
+                        img: user.profile_photo
+                    }
+                })
+            )
+        });
+}
 
 </script>
 
@@ -48,6 +74,14 @@ const formatter = ref({
                     </InputIconWrapper>
                 </div>
                 <div class="w-full col-span-3 md:col-span-1">
+                    <Combobox
+                        :load-options="loadUsers"
+                        v-model="leader"
+                        placeholder="Leader"
+                        image
+                    />
+                </div>
+                <div class="w-full col-span-3 md:col-span-1">
                     <vue-tailwind-datepicker
                         placeholder="Select dates"
                         :formatter="formatter"
@@ -75,6 +109,7 @@ const formatter = ref({
                 :isLoading="isLoading"
                 :search="search"
                 :date="date"
+                :leader="leader"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"
                 @update:refresh="refresh = $event"

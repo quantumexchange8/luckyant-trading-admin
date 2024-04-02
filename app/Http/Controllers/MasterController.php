@@ -107,6 +107,13 @@ class MasterController extends Controller
         $masterRequest = MasterRequest::find($request->id);
         $tradingAccount = TradingAccount::find($masterRequest->trading_account_id);
 
+        if ($masterRequest->sharing_profit) {
+            $profit = $masterRequest->sharing_profit;
+            $total = 100;
+
+            $defualt = ( $total - $profit) / 2;
+        }
+
         $masterRequest->update([
             'status' => 'Success',
             'approval_date' => now(),
@@ -118,7 +125,9 @@ class MasterController extends Controller
             'trading_account_id' => $masterRequest->trading_account_id,
             'meta_login' => $tradingAccount->meta_login,
             'min_join_equity' => $masterRequest->min_join_equity,
-            'sharing_profit' => $masterRequest->sharing_profit,
+            'sharing_profit' => $masterRequest->sharing_profit ?? '60',
+            'market_profit' => $defualt ?? '20',
+            'company_profit' => $defualt ?? '20',
             'subscription_fee' => $masterRequest->subscription_fee,
             'roi_period' => $masterRequest->roi_period,
         ]);
@@ -154,7 +163,7 @@ class MasterController extends Controller
     public function getAllMaster(Request $request)
     {
 
-        $master = Master::query()->with(['trading_account', 'user']);
+        $master = Master::query()->with(['trading_account', 'user', 'tradingUser']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
@@ -193,6 +202,8 @@ class MasterController extends Controller
         $master->update([
             'min_join_equity' => $request->min_join_equity,
             'sharing_profit' => $request->sharing_profit,
+            'market_profit' => $request->market_profit,
+            'company_profit' => $request->company_profit,
             'subscription_fee' => $request->subscription_fee,
             'signal_status' => $request->signal_status,
             'estimated_monthly_returns' => $request->eta_montly_return,
@@ -201,6 +212,8 @@ class MasterController extends Controller
             'total_fund' => $request->total_fund,
             'roi_period' => $request->roi_period,
             'total_subscribers' => $request->total_subscriber,
+            'max_drawdown' => $request->max_drawdown,
+            'management_fee' => $request->management_fee,
         ]);
 
         if ($master->min_join_equity != null &&

@@ -9,6 +9,7 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
 import BaseListbox from "@/Components/BaseListbox.vue";
+import Combobox from "@/Components/Combobox.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
@@ -29,12 +30,30 @@ const statusList = [
 function refreshTable() {
     search.value = '';
     date.value = '';
+    leader.value = '';
     isLoading.value = !isLoading.value;
     refresh.value = true;
 }
 
 const exportTransaction = () => {
     exportStatus.value = true;
+}
+
+const leader = ref()
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllLeaders?query=' + query)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.name,
+                        img: user.profile_photo
+                    }
+                })
+            )
+        });
 }
 </script>
 
@@ -54,8 +73,8 @@ const exportTransaction = () => {
                 <div>
                     <Button
                         type="button"
-                        class="justify-center w-full gap-2 border border-gray-600 text-white text-sm dark:hover:bg-gray-600"
-                        variant="transparent"
+                        variant="gray"
+                        class="flex gap-1 justify-center"
                         v-slot="{ iconSizeClasses }"
                         @click="exportTransaction"
                     >
@@ -68,13 +87,12 @@ const exportTransaction = () => {
                         </div>
                     </Button>
                 </div>
-
             </div>
         </template>
 
         <div class="pt-3 md:flex md:justify-end items-center">
             <div class="flex flex-wrap md:flex-nowrap md:items-center gap-3 mt-3 md:mt-0">
-                <div class="w-full col-span-5 md:col-span-2">
+                <div class="w-full col-span-4 md:col-span-2">
                     <InputIconWrapper>
                         <template #icon>
                             <SearchIcon aria-hidden="true" class="w-5 h-5" />
@@ -83,12 +101,20 @@ const exportTransaction = () => {
                     </InputIconWrapper>
                 </div>
                 <div class="w-full col-span-3 md:col-span-1">
+                    <Combobox
+                        :load-options="loadUsers"
+                        v-model="leader"
+                        placeholder="Leader"
+                        image
+                    />
+                </div>
+                <div class="w-full col-span-3 md:col-span-1">
                     <vue-tailwind-datepicker
                         placeholder="Select dates"
                         :formatter="formatter"
                         separator=" - "
                         v-model="date"
-                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"
+                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
                     />
                 </div>
                 <div>
@@ -96,7 +122,6 @@ const exportTransaction = () => {
                         type="button"
                         variant="secondary"
                         @click="refreshTable"
-                        class="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
                     >
                         Clear
                     </Button>
@@ -109,6 +134,7 @@ const exportTransaction = () => {
                 :refresh="refresh"
                 :isLoading="isLoading"
                 :search="search"
+                :leader="leader"
                 :date="date"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"

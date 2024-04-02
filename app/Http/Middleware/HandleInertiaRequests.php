@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SidebarService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tightenco\Ziggy\Ziggy;
@@ -30,6 +31,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $sidebarService = new SidebarService();
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -43,6 +46,10 @@ class HandleInertiaRequests extends Middleware
             'title' => session('title'),
             'success' => session('success'),
             'warning' => session('warning'),
+            'pendingTransactionCount' => $sidebarService->getPendingTransactionCount(),
+            'pendingKycCount' => $sidebarService->getPendingKycCount(),
+            'pendingMasterCount' => $sidebarService->getPendingMasterCount(),
+            'pendingSubscriberRequestCount' => $sidebarService->getPendingSubscriberRequestCount(),
         ];
     }
 }
