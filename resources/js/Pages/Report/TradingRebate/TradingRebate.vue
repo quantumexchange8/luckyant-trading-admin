@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/Authenticated.vue";
+import TanstackTable from "@/Components/TanstackTable.vue";
 </script>
 
 <template>
@@ -16,5 +17,9 @@ import AuthenticatedLayout from "@/Layouts/Authenticated.vue";
                 </div>
             </div>
         </template>
+
+        <div class="p-5 my-8 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-gray-900">
+            <TanstackTable />
+        </div>
     </AuthenticatedLayout>
 </template>

@@ -12,6 +12,9 @@ const props = defineProps({
     width: {
         default: '20',
     },
+    status: {
+        type: String,
+    }
 })
 
 const {variant} = props
@@ -44,6 +47,7 @@ const classes = computed(() => [
 
 <template>
     <div :class="[widthClass, classes]">
+        {{ status }}
         <slot></slot>
     </div>
 </template>

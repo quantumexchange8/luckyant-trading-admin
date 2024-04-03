@@ -150,6 +150,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      */
     Route::prefix('report')->group(function () {
         Route::get('/trading_rebate', [ReportController::class, 'trading_rebate'])->name('report.trading_rebate');
+        Route::get('/getTradingRebate', [ReportController::class, 'getTradingRebate'])->name('report.getTradingRebate');
     });
 
     /**
