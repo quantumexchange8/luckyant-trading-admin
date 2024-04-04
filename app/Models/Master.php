@@ -24,6 +24,7 @@ class Master extends Model
         'extra_fund',
         'roi_period',
         'signal_status',
+        'is_public',
         'status',
         'total_subscribers',
         'max_drawdown',
@@ -34,7 +35,7 @@ class Master extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    
+
     public function trading_account(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'trading_account_id', 'id');

@@ -96,15 +96,15 @@ class MasterController extends Controller
 
             $masterHistory->whereBetween('created_at', [$start_date, $end_date]);
         }
-        
+
         $results = $masterHistory->latest()->paginate(10);
-        
+
         return response()->json($results);
     }
 
     public function approveRequest(Request $request)
     {
-        $masterRequest = MasterRequest::find($request->id);
+        $masterRequest = MasterRequest::with('user:id,is_public')->find($request->id);
         $tradingAccount = TradingAccount::find($masterRequest->trading_account_id);
 
         if ($masterRequest->sharing_profit) {
@@ -130,8 +130,9 @@ class MasterController extends Controller
             'company_profit' => $defualt ?? '20',
             'subscription_fee' => $masterRequest->subscription_fee,
             'roi_period' => $masterRequest->roi_period,
+            'is_public' => $masterRequest->user->is_public,
         ]);
-    
+
         return redirect()->route('master.viewMasterConfiguration', ['id' => $master->id])
             ->with('title', 'Success approve')
             ->with('success', 'Successfully approved LOGIN: ' . $tradingAccount->meta_login . ' to MASTER');
@@ -186,7 +187,7 @@ class MasterController extends Controller
     {
 
         $masterConfigurations = Master::find($id);
-        
+
 
         return Inertia::render('Master/Configuration/MasterConfiguration', [
             'masterConfigurations' => $masterConfigurations,
@@ -196,7 +197,7 @@ class MasterController extends Controller
 
     public function updateMasterConfiguration(MasterConfigurationRequest $request)
     {
-        
+
         $master = Master::find($request->master_id);
 
         $master->update([
@@ -214,6 +215,7 @@ class MasterController extends Controller
             'total_subscribers' => $request->total_subscriber,
             'max_drawdown' => $request->max_drawdown,
             'management_fee' => $request->management_fee,
+            'is_public' => $request->is_public,
         ]);
 
         if ($master->min_join_equity != null &&

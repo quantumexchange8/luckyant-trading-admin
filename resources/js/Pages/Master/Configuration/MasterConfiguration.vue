@@ -36,6 +36,7 @@ const form = useForm({
     total_subscriber: props.masterConfigurations.total_subscribers,
     max_drawdown: props.masterConfigurations.max_drawdown,
     management_fee: props.masterConfigurations.management_fee,
+    is_public: ''
 })
 
 const plans = [
@@ -54,8 +55,25 @@ const getSelectedPlan = (status) => {
 }
 const selected = ref(getSelectedPlan(props.masterConfigurations.signal_status));
 
+const publicStatus = [
+    {
+        name: 'Public',
+        value: 1,
+    },
+    {
+        name: 'Private',
+        value: 0,
+    },
+]
+
+const getSelectedPublicStatus = (public_status) => {
+    return publicStatus.find(plan => plan.value === public_status);
+}
+const selectedPublicStatus = ref(getSelectedPublicStatus(props.masterConfigurations.is_public));
+
 const submit = () => {
     form.signal_status = selected.value.value;
+    form.is_public = selectedPublicStatus.value.value;
     form.post(route('master.updateMasterConfiguration'))
 }
 
@@ -133,7 +151,7 @@ const badgeVariant = (status) => {
                                         :invalid="form.errors.sharing_profit"
                                     />
                                 </div>
-                                
+
                                 <div class="space-y-1.5">
                                     <Label
                                         for="market_profit"
@@ -168,7 +186,7 @@ const badgeVariant = (status) => {
                             </div>
                             <InputError :message="form.errors.sharing_profit" />
                         </div>
-                        
+
                         <div class="space-y-2">
                             <Label
                                 for="subscription_fee"
@@ -340,6 +358,47 @@ const badgeVariant = (status) => {
                                                     >
                                                         <div class="flex justify-center items-center gap-3">
                                                             {{ plan.name }}
+                                                        </div>
+                                                    </RadioGroupLabel>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </RadioGroupOption>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                        <div class="space-y-2">
+                            <Label
+                                for="master_status"
+                                value="Master Status"
+                            />
+                            <RadioGroup v-model="selectedPublicStatus">
+                                <RadioGroupLabel class="sr-only">Master Status</RadioGroupLabel>
+                                <div class="flex gap-3 items-center self-stretch w-full">
+                                    <RadioGroupOption
+                                        as="template"
+                                        v-for="(public_status, index) in publicStatus"
+                                        :key="index"
+                                        :value="public_status"
+                                        v-slot="{ active, checked }"
+                                    >
+                                        <div
+                                            :class="[
+                                                active
+                                                  ? 'ring-0 ring-white ring-offset-0'
+                                                  : '',
+                                                checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 bg-white dark:bg-gray-700',
+                                            ]"
+                                            class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
+                                        >
+                                            <div class="flex items-center w-full">
+                                                <div class="text-sm flex flex-col gap-3 w-full">
+                                                    <RadioGroupLabel
+                                                        as="div"
+                                                        class="font-medium"
+                                                    >
+                                                        <div class="flex justify-center items-center gap-3">
+                                                            {{ public_status.name }}
                                                         </div>
                                                     </RadioGroupLabel>
                                                 </div>

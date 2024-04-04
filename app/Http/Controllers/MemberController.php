@@ -380,13 +380,11 @@ class MemberController extends Controller
                 'is_public' => $request->is_public,
             ]);
 
-            if ($user->leader_status == 1 && $user->is_public == 0) {
-                $childrenIds = $user->getChildrenIds();
+            $childrenIds = $user->getChildrenIds();
 
-                User::whereIn('id', $childrenIds)->update([
-                    'is_public' => 0
-                ]);
-            }
+            User::whereIn('id', $childrenIds)->update([
+                'is_public' => $user->is_public
+            ]);
         }
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
