@@ -22,6 +22,7 @@ const form = useForm({
     upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.email } : {},
     password: '',
     leader_status: props.member_detail.leader_status,
+    is_public: props.member_detail.is_public,
 })
 
 const showPassword = ref(false)
@@ -57,6 +58,11 @@ const submit = () => {
 const leaderStatus = [
     { label: 'Yes', value: 1},
     { label: 'No', value: 0},
+];
+
+const groupStatus = [
+    { label: 'Public', value: 1},
+    { label: 'Private', value: 0},
 ];
 </script>
 
@@ -122,6 +128,16 @@ const leaderStatus = [
                     <BaseListbox
                         v-model="form.leader_status"
                         :options="leaderStatus"
+                    />
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="group_status" value="Group Status" />
+                <div class="md:col-span-3">
+                    <BaseListbox
+                        v-model="form.is_public"
+                        :options="groupStatus"
                     />
                 </div>
             </div>

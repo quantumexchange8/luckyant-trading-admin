@@ -375,6 +375,20 @@ class MemberController extends Controller
             ]);
         }
 
+        if ($user->is_public != $request->is_public) {
+            $user->update([
+                'is_public' => $request->is_public,
+            ]);
+
+            if ($user->leader_status == 1 && $user->is_public == 0) {
+                $childrenIds = $user->getChildrenIds();
+
+                User::whereIn('id', $childrenIds)->update([
+                    'is_public' => 0
+                ]);
+            }
+        }
+
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
     }
 

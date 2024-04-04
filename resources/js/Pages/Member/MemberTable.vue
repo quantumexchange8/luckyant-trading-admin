@@ -217,6 +217,9 @@ const closeModal = () => {
                     <th scope="col" colspan="2" class="px-3 py-2.5 w-40">
                         First Leader
                     </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-40">
+                        Group Status
+                    </th>
                     <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
                         Wallet Balance
                     </th>
@@ -292,7 +295,10 @@ const closeModal = () => {
                             <span>{{ member.first_leader ? member.first_leader.name : 'LuckyAnt Trading' }} <!--first leader--></span>
                             <span>{{ member.first_leader ? member.first_leader.email : 'LuckyAntTrading@LuckyAntTrading.com' }}</span>
                         </div>
-                        
+
+                    </td>
+                    <td class="px-3 py-2.5 text-center" colspan="2">
+                        {{ member.is_public === 1 ? 'Public' : 'Private' }}
                     </td>
                     <td class="px-3 py-2.5 text-center" colspan="2">
                         $ {{ formatAmount(member.walletBalance) }}
