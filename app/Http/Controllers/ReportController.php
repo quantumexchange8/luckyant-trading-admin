@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\TradeRebatesExport;
 use App\Models\TradeRebateHistory;
+use App\Models\TradeRebateSummary;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,7 +27,7 @@ class ReportController extends Controller
         $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
-        $query = TradeRebateHistory::query()
+        $query = TradeRebateSummary::query()
             ->with('upline_user:id,name,email', 'user:id,name,email');
 
         if ($request->filled('search')) {

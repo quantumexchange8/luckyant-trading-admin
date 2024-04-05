@@ -115,22 +115,18 @@ const columnsMembers = [
         enableSorting: false,
     },
     {
-        accessorKey: 'trade_volume',
+        accessorKey: 'volume',
         header: 'Trade Volume',
     },
     {
-        accessorKey: 'net_rebate_amt',
-        header: 'Rebate ($)'
-    },
-    {
-        accessorKey: 'rebate_final_amt_get',
+        accessorKey: 'rebate',
         header: 'Total Rebate ($)'
     },
     {
-        accessorKey: 'is_claimed',
+        accessorKey: 'status',
         header: 'Status',
         enableSorting: false,
-        cell: ({ row }) => h(Badge, {status: row.original.is_claimed}),
+        cell: ({ row }) => h(Badge, {status: row.original.status}),
     },
 ];
 

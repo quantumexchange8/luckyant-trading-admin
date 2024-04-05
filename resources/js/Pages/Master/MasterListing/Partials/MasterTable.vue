@@ -87,6 +87,9 @@ const transactionVariant = (transactionStatus) => {
                         Management Fee
                     </th>
                     <th scope="col" class="p-3">
+                        Public Status
+                    </th>
+                    <th scope="col" class="p-3">
                         Status
                     </th>
                     <th scope="col" class="p-3">
@@ -100,7 +103,7 @@ const transactionVariant = (transactionStatus) => {
                         No History
                     </th>
                 </tr>
-                <tr 
+                <tr
                     v-for="master in masters.data"
                     class="bg-white hover:bg-gray-100 dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800 dark:hover:bg-gray-800"
 
@@ -111,10 +114,10 @@ const transactionVariant = (transactionStatus) => {
                         <img :src="'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
                         <div class="flex flex-col">
                             <div>
-                                {{ master.user.name }} 
+                                {{ master.user.name }}
                             </div>
                             <div class="dark:text-gray-400">
-                                {{ master.user.email }} 
+                                {{ master.user.email }}
                             </div>
                         </div>
                     </div>
@@ -133,6 +136,12 @@ const transactionVariant = (transactionStatus) => {
                     </td>
                     <td class="p-3">
                         $ {{ master.management_fee ?  master.management_fee : '0.00'}}
+                    </td>
+                    <td
+                        class="p-3 font-semibold uppercase"
+                        :class="{'text-primary-500': master.is_public === 1}"
+                    >
+                        {{ master.is_public === 1 ? 'Public' : 'Private' }}
                     </td>
                     <td class="p-3">
                         <Badge

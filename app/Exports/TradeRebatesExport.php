@@ -26,7 +26,7 @@ class TradeRebatesExport implements FromCollection, WithHeadings, ShouldQueue, W
     public function collection(): \Illuminate\Support\Collection
     {
         $result = collect();
-    
+
         $this->query->chunk($this->chunkSize, function ($records) use ($result) {
             foreach ($records as $row) {
                 $result->push([
@@ -35,17 +35,16 @@ class TradeRebatesExport implements FromCollection, WithHeadings, ShouldQueue, W
                     'email' => $row->upline_user->email,
                     'affiliate_name' => $row->user->name,
                     'affiliate_email' => $row->user->email,
-                    'trade_volume' => $row->trade_volume,
-                    'net_rebate_amt' => $row->net_rebate_amt,
-                    'rebate_final_amt_get' => $row->rebate_final_amt_get,
-                    'status' => $row->is_claimed,
+                    'volume' => $row->volume,
+                    'rebate' => $row->rebate,
+                    'status' => $row->status,
                 ]);
             }
         });
-    
+
         return $result;
     }
-    
+
     public function headings(): array
     {
         return [
@@ -55,8 +54,7 @@ class TradeRebatesExport implements FromCollection, WithHeadings, ShouldQueue, W
             'Affiliate Name',
             'Affiliate Email',
             'Trade Volume',
-            'Rebate',
-            'Total Rebate Earn',
+            'Total Rebate',
             'Status',
         ];
     }
