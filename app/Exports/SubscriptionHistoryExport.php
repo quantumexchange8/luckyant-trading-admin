@@ -28,6 +28,7 @@ class SubscriptionHistoryExport implements FromCollection, WithHeadings
             $result[] = array(
                 'date' => Carbon::parse($subscriptions->created_at)->format('Y-m-d'),
                 'name' => $subscriptions->user->name,
+                'email' => $subscriptions->user->email,
                 'trading_account' => $subscriptions->meta_login,
                 'first_leader' => $subscriptions->first_leader ?? 'LuckyAnt Trading',
                 'master' => $subscriptions->master->tradingUser->name ?? 'LuckyAnt Trading',
@@ -49,6 +50,7 @@ class SubscriptionHistoryExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
+            'Date',
             'Name',
             'Email',
             'Trading Account',

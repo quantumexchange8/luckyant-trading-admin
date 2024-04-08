@@ -30,6 +30,7 @@ class TradingAccountExport implements FromCollection, WithHeadings
                 'margin_leverage' => $tradings->margin_leverage,
                 'equity' => $tradings->equity,
                 'user' => $tradings->user->name,
+                'email' => $tradings->user->email,
             );
         }
 
@@ -45,6 +46,7 @@ class TradingAccountExport implements FromCollection, WithHeadings
             'Margin Level',
             'Equity',
             'User Name',
+            'User Email',
         ];
     }
 }
