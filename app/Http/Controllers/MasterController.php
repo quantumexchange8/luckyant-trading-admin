@@ -144,6 +144,10 @@ class MasterController extends Controller
         $masterRequest = MasterRequest::find($request->id);
         $tradingAccount = TradingAccount::find($masterRequest->trading_account_id);
 
+        $request->validate([
+            'remarks' => ['required'],
+        ]);
+
         $masterRequest->update([
             'status' => 'Rejected',
             'remarks' => $request->remarks,

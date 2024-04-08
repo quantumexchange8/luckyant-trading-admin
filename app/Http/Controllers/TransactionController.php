@@ -142,7 +142,7 @@ class TransactionController extends Controller
         $type = $request->type;
 
         $request->validate([
-            'remarks' => 'required',
+            'remarks' => ['required'],
         ]);
 
         if ($type == 'reject_selected') {
