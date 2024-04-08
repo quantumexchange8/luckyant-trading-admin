@@ -2,11 +2,10 @@
 
 namespace App\Exports;
 
-use Carbon\Carbon;
-use App\Models\User;
 use App\Models\Payment;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class SubscriptionHistoryExport implements FromCollection, WithHeadings
 {
@@ -31,7 +30,7 @@ class SubscriptionHistoryExport implements FromCollection, WithHeadings
                 'name' => $subscriptions->user->name,
                 'email' => $subscriptions->user->email,
                 'trading_account' => $subscriptions->meta_login,
-                'first_leader' => User::where('id', User::find($subscriptions->user_id)->top_leader_id)->value('name') ?? 'LuckyAnt Trading',
+                'first_leader' => $subscriptions->user->getFirstLeader()->name ?? 'LuckyAnt Trading',
                 'master' => $subscriptions->master->tradingUser->name ?? 'LuckyAnt Trading',
                 'master_trading_account' => $subscriptions->master->meta_login,
                 'subscription_id' => $subscriptions->subscription_number,
