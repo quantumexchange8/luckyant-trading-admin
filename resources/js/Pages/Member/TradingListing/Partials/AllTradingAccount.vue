@@ -162,7 +162,7 @@ watchEffect(() => {
                     </td>
                     <td class="p-3">
                         <div class="flex flex-col ">
-                            <span>RF: {{ formatAmount(tradingListing.balance) }}</span>
+                            <span>RF: {{ formatAmount(tradingListing.real_fund) }}</span>
                             <span>DF: {{ formatAmount(tradingListing.demo_fund > 0 ? tradingListing.demo_fund : 0) }}</span>
                         </div>
                     </td>

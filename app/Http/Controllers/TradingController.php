@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BalanceAdjustmentRequest;
+use App\Models\CopyTradeTransaction;
 use App\Models\Subscription;
 use App\Models\TradingUser;
 use App\Models\Transaction;
@@ -76,6 +77,10 @@ class TradingController extends Controller
         }
 
         $results = $tradingListing->latest()->paginate(10);
+
+        $results->each(function ($trading_account) {
+            $trading_account->real_fund = abs($trading_account->demo_fund - $trading_account->balance);
+        });
 
         return response()->json($results);
     }
@@ -158,10 +163,11 @@ class TradingController extends Controller
         $transaction_type = $request->transaction_type;
         $fund_type = $request->fund_type;
 
-        $subscription = Subscription::where('user_id', $user->id)
+        $subscriptions = Subscription::with('master:id,meta_login')
+            ->where('user_id', $user->id)
             ->where('meta_login', $meta_login)
-            ->where('status', 'Active')
-            ->first();
+            ->whereIn('status', ['Pending', 'Active'])
+            ->get();
 
         $connection = (new MetaFiveService())->getConnectionStatus();
         $metaService = new MetaFiveService();
@@ -239,9 +245,26 @@ class TradingController extends Controller
             $tradingAccount->save();
         }
 
-        if ($subscription) {
-            $subscription->meta_balance += $amount;
-            $subscription->save();
+        if (!empty($subscriptions)) {
+            foreach ($subscriptions as $subscription) {
+                $subscription->meta_balance += $amount;
+                $subscription->save();
+                if ($subscription->status == 'Active') {
+                    CopyTradeTransaction::create([
+                        'user_id' => $user->id,
+                        'trading_account_id' => $tradingAccount->id,
+                        'meta_login' => $tradingAccount->meta_login,
+                        'subscription_id' => $subscription->id,
+                        'master_id' => $subscription->master->id,
+                        'master_meta_login' => $subscription->master->meta_login,
+                        'amount' => $tradingAccount->balance,
+                        'real_fund' => abs($tradingAccount->demo_fund - $tradingAccount->balance),
+                        'demo_fund' => $tradingAccount->demo_fund,
+                        'type' => 'Deposit',
+                        'status' => 'Success',
+                    ]);
+                }
+            }
         }
 
         return redirect()->back()

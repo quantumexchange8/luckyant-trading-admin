@@ -7,6 +7,7 @@ import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import Action from "@/Pages/Subscription/Partials/Action.vue";
 import debounce from "lodash/debounce.js";
+import {usePage} from "@inertiajs/vue3";
 
 const props = defineProps({
     refresh: Boolean,
@@ -16,7 +17,7 @@ const props = defineProps({
     // exportStatus: Boolean,
 })
 
-const subscribers = ref({data: []});
+const subscriptions = ref({data: []});
 const depositLoading = ref(props.isLoading);
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -36,7 +37,7 @@ watch(
 const getResults = async (page = 1, search = '', date = '') => {
     depositLoading.value = true
     try {
-        let url = `/subscription/getPendingSubscriber?page=${page}`;
+        let url = `/subscription/getPendingSubscriptions?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
@@ -47,7 +48,7 @@ const getResults = async (page = 1, search = '', date = '') => {
         }
 
         const response = await axios.get(url);
-        subscribers.value = response.data;
+        subscriptions.value = response.data;
 
     } catch (error) {
         console.error(error);
@@ -84,6 +85,7 @@ const paginationActiveClass = [
     'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-[#FF9E23] dark:text-white'
 ];
 
+const currentLocale = ref(usePage().props.locale);
 </script>
 
 <template>
@@ -104,14 +106,8 @@ const paginationActiveClass = [
                         Trading Account
                     </th>
                     <th scope="col" class="p-3">
-                        Master
+                        Master Account
                     </th>
-                    <th scope="col" class="p-3">
-                        Master Trading Account
-                    </th>
-                    <!-- <th scope="col" class="p-3">
-                        Subscription Fee
-                    </th> -->
                     <th scope="col" class="p-3">
                         Copy Trade Balance
                     </th>
@@ -121,36 +117,52 @@ const paginationActiveClass = [
                 </tr>
             </thead>
             <tbody>
-                <tr v-if="subscribers.data.length === 0">
+                <tr v-if="subscriptions.data.length === 0">
                     <th colspan="7" class="py-4 text-lg text-center">
                         No Pending
                     </th>
                 </tr>
                 <tr
-                    v-for="subscriber in subscribers.data"
+                    v-for="subscription in subscriptions.data"
                     class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
                 >
-                    <td class="p-2.5">
-                        {{ formatDateTime(subscriber.created_at) }}
+                    <td class="p-3">
+                        {{ formatDateTime(subscription.created_at) }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.user.name }}
-                        <!-- {{ subscriber.trading_user.name }} -->
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <img :src="subscription.user.profile_photo_url ? subscription.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
+                            <div class="flex flex-col">
+                                <div>
+                                    {{ subscription.user.name }}
+                                </div>
+                                <div class="dark:text-gray-400">
+                                    {{ subscription.user.email }}
+                                </div>
+                            </div>
+                        </div>
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.meta_login }}
+                    <td class="p-3">
+                        {{ subscription.meta_login }}
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.master.user.name }}
+                    <td class="p-3">
+                        <div class="flex flex-col">
+                            <div v-if="currentLocale === 'en'">
+                                {{ subscription.master.trading_user.name }}
+                            </div>
+                            <div v-if="currentLocale === 'cn'">
+                                {{ subscription.master.trading_user.company ? subscription.master.trading_user.company : subscription.master.trading_user.name }}
+                            </div>
+                            <div class="font-semibold">
+                                {{ subscription.master.meta_login }}
+                            </div>
+                        </div>
                     </td>
-                    <td class="p-2.5">
-                        {{ subscriber.master.meta_login }}
+                    <td class="p-3">
+                        $ {{ formatAmount(subscription.meta_balance) }}
                     </td>
-                    <td class="p-2.5">
-                        $ {{ subscriber.subscription.meta_balance }}
-                    </td>
-                    <td class="p-2.5 text-center">
-                        <Action :subscriber="subscriber"/>
+                    <td class="p-3 text-center">
+                        <Action :subscription="subscription"/>
                     </td>
                 </tr>
             </tbody>
@@ -159,7 +171,7 @@ const paginationActiveClass = [
             <TailwindPagination
                 :item-classes=paginationClass
                 :active-classes=paginationActiveClass
-                :data="subscribers"
+                :data="subscriptions"
                 :limit=2
                 @pagination-change-page="handlePageChange"
             >

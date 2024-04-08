@@ -126,7 +126,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      */
     Route::prefix('subscription')->group(function () {
         Route::get('/subscribers', [SubscriptionController::class, 'subscribers'])->name('subscription.subscribers');
-        Route::get('/getPendingSubscriber', [SubscriptionController::class, 'getPendingSubscriber'])->name('subscription.getPendingSubscriber');
+        Route::get('/getPendingSubscriptions', [SubscriptionController::class, 'getPendingSubscriptions'])->name('subscription.getPendingSubscriptions');
         Route::get('/getActiveSubscriber', [SubscriptionController::class, 'getActiveSubscriber'])->name('subscription.getActiveSubscriber');
         Route::get('/subscriptionHistory', [SubscriptionController::class, 'subscriptionHistory'])->name('subscription.subscriptionHistory');
         Route::get('/getHistorySubscriber', [SubscriptionController::class, 'getHistorySubscriber'])->name('subscription.getHistorySubscriber');

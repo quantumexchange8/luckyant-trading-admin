@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CopyTradeTransaction;
 use App\Models\TradingAccount;
 use App\Services\MetaFiveService;
 use Illuminate\Http\Request;
@@ -31,18 +32,18 @@ class SubscriptionController extends Controller
         return Inertia::render('Subscription/SubscriptionListing');
     }
 
-    public function getPendingSubscriber(Request $request)
+    public function getPendingSubscriptions(Request $request)
     {
-
-        $pendingSubscriber = Subscriber::query()
-            ->with(['user', 'master', 'master.user', 'subscription', 'tradingUser'])
+        $pendingSubscriptions = Subscription::query()
+            ->with(['user:id,name,email', 'master', 'master.tradingUser', 'tradingUser'])
             ->where('status', 'Pending');
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
-            $pendingSubscriber->where(function ($q) use ($search) {
+            $pendingSubscriptions->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search);
+                    $user->where('name', 'like', $search)
+                        ->orWhere('email', 'like', $search);
                 })
                 ->orWhereHas('master', function ($master) use ($search) {
                     $master->where('meta_login', 'like', $search);
@@ -57,20 +58,24 @@ class SubscriptionController extends Controller
             $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
-            $pendingSubscriber->whereBetween('created_at', [$start_date, $end_date]);
+            $pendingSubscriptions->whereBetween('created_at', [$start_date, $end_date]);
         }
 
-        $results = $pendingSubscriber->latest()->paginate(10);
+        $results = $pendingSubscriptions->latest()->paginate(10);
+
+        $results->each(function ($transaction) {
+            $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
+        });
 
         return response()->json($results);
     }
 
     public function approveSubscribe(Request $request)
     {
-        $subscribe = Subscriber::find($request->id);
-        $subscriptionId = Subscription::find($request->subscriptionId);
-        $cashWallet = Wallet::where('user_id', $request->userId)->where('type', 'cash_wallet')->first();
-        $masterPeriod = Master::find($subscribe->master_id);
+        $subscription = Subscription::find($request->subscriptionId);
+        $user = User::find($request->userId);
+        $cashWallet = $user->wallets()->where('type', 'cash_wallet')->first();
+        $master = Master::find($subscription->master_id);
 
         $connection = (new MetaFiveService())->getConnectionStatus();
         if ($connection != 0) {
@@ -80,7 +85,7 @@ class SubscriptionController extends Controller
         }
 
         try {
-            (new MetaFiveService())->getUserInfo(TradingAccount::where('meta_login', $subscriptionId->meta_login)->get());
+            (new MetaFiveService())->getUserInfo(TradingAccount::where('meta_login', $subscription->meta_login)->get());
         } catch (\Exception $e) {
             \Log::error('Error fetching trading accounts: '. $e->getMessage());
 
@@ -89,34 +94,56 @@ class SubscriptionController extends Controller
                 ->with('warning', trans('public.try_again_later'));
         }
 
-        $trading_account = TradingAccount::where('meta_login', $subscriptionId->meta_login)->first();
+        $trading_account = TradingAccount::where('meta_login', $subscription->meta_login)->first();
 
-        $subscribe->update([
+        $subscription->update([
+            'meta_balance' => $trading_account->balance,
+            'status' => 'Active',
+            'next_pay_date' => now()->addDays($master->roi_period + 1)->startOfDay()->toDateString(),
+            'expired_date' => now()->addDays($master->roi_period + 1)->startOfDay(),
+            'approval_date' => now(),
+            'handle_by' => Auth::user()->id,
+        ]);
+
+        Subscriber::create([
+            'user_id' => $user->id,
+            'trading_account_id' => $trading_account->id,
+            'meta_login' => $trading_account->meta_login,
             'initial_meta_balance' => $trading_account->balance,
+            'master_id' => $master->id,
+            'master_meta_login' => $master->meta_login,
+            'subscription_id' => $subscription->id,
             'status' => 'Subscribing',
             'approval_date' => now(),
         ]);
 
-        $subscriptionId->update([
-            'status' => 'Active',
-            'next_pay_date' => now()->addDays($masterPeriod->roi_period + 1)->startOfDay()->toDateString(),
-            'expired_date' => now()->addDays($masterPeriod->roi_period + 1)->startOfDay(),
-            'approval_date' => now(),
-            'handle_by' => Auth::user()->id,
+        CopyTradeTransaction::create([
+            'user_id' => $user->id,
+            'trading_account_id' => $trading_account->id,
+            'meta_login' => $trading_account->meta_login,
+            'subscription_id' => $subscription->id,
+            'master_id' => $master->id,
+            'master_meta_login' => $master->meta_login,
+            'amount' => $trading_account->balance,
+            'real_fund' => abs($trading_account->demo_fund - $trading_account->balance),
+            'demo_fund' => $trading_account->demo_fund,
+            'type' => 'Deposit',
+            'status' => 'Success',
         ]);
-        if ($request->transactionId) {
-            $transactionId = Transaction::find($request->transactionId);
 
-            $transactionId->update([
+        if ($request->transactionId) {
+            $transaction = Transaction::find($request->transactionId);
+
+            $transaction->update([
                 'status' => 'Success',
-                'transaction_amount' => $subscriptionId->subscription_fee,
-                'new_wallet_amount' => $cashWallet->balance - $subscriptionId->subscription_fee
+                'transaction_amount' => $subscription->subscription_fee,
+                'new_wallet_amount' => $cashWallet->balance - $subscription->subscription_fee
+            ]);
+
+            $cashWallet->update([
+                'balance' => $cashWallet->balance - $subscription->subscription_fee
             ]);
         }
-
-        $cashWallet->update([
-            'balance' => $cashWallet->balance - $subscriptionId->subscription_fee
-        ]);
 
         return redirect()->back()
             ->with('title', 'Success approve')

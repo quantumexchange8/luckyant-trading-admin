@@ -33,15 +33,15 @@ const exportTransaction = () => {
 </script>
 
 <template>
-    <AuthenticatedLayout title="Subscription">
+    <AuthenticatedLayout title="Pending Request">
         <template #header>
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-2xl font-semibold leading-tight">
-                        Subscribers Request
+                        Pending Request
                     </h2>
                     <p class="text-base font-normal dark:text-gray-400">
-                        Manage all pending subscribers.
+                        Manage all pending subscriptions.
                     </p>
                 </div>
 

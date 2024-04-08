@@ -12,14 +12,14 @@ import Input from "@/Components/Input.vue";
 import InputError from "@/Components/InputError.vue";
 
 const props = defineProps({
-    subscriber: Object,
+    subscription: Object,
 })
 
 const transactionModal = ref(false);
-const modalComponent = ref(null);
+const modalComponent = ref('');
 const { formatDateTime, formatAmount, formatType } = transactionFormat();
 
-const openTransactionModal = (ibId, componentType) => {
+const openTransactionModal = (componentType) => {
     transactionModal.value = true;
     if (componentType === 'approve') {
         modalComponent.value = 'Approve subscription';
@@ -44,10 +44,9 @@ const closeModal = () => {
 }
 
 const form = useForm({
-    id: props.subscriber.id,
-    transactionId: props.subscriber.subscription.transaction_id,
-    subscriptionId: props.subscriber.subscription_id,
-    userId: props.subscriber.user_id,
+    subscriptionId: props.subscription.id,
+    userId: props.subscription.user_id,
+    transactionId: props.subscription.transaction_id,
     remarks: '',
 });
 
@@ -76,28 +75,28 @@ const submitForm = () => {
 </script>
 
 <template>
-    <Tooltip v-if="subscriber.status != 'Subscribing'" content="Approve" placement="bottom">
+    <Tooltip v-if="subscription.status !== 'Subscribing'" content="Approve" placement="bottom">
         <Button
             type="button"
             pill
             class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
             variant="success"
-            @click="openTransactionModal(subscriber.id, 'approve')"
+            @click="openTransactionModal('approve')"
         >
             <CheckIcon aria-hidden="true" class="w-6 h-6 absolute" />
             <span class="sr-only">Approve</span>
         </Button>
     </Tooltip>
-    <Tooltip v-if="subscriber.status != 'Subscribing'" content="Reject" placement="bottom">
+    <Tooltip v-if="subscription.status !== 'Subscribing'" content="Reject" placement="bottom">
         <Button
             type="button"
             pill
             class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
             variant="danger"
-            @click="openTransactionModal(subscriber.id, 'reject')"
+            @click="openTransactionModal('reject')"
         >
             <XIcon aria-hidden="true" class="w-6 h-6 absolute" />
-            <span class="sr-only">Transfer Upline</span>
+            <span class="sr-only">reject</span>
         </Button>
     </Tooltip>
     <Tooltip content="View" placement="bottom">
@@ -106,21 +105,20 @@ const submitForm = () => {
             pill
             class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
             variant="gray"
-            @click="openTransactionModal(subscriber.id, 'view')"
+            @click="openTransactionModal('view')"
         >
             <MemberDetailIcon aria-hidden="true" class="w-6 h-6 absolute" />
             <span class="sr-only">Reset</span>
         </Button>
     </Tooltip>
 
-
-    <Tooltip v-if="subscriber.status == 'Subscribing'" content="Termination" placement="bottom">
+    <Tooltip v-if="subscription.status === 'Subscribing'" content="Termination" placement="bottom">
         <Button
             type="button"
             pill
             class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
             variant="danger"
-            @click="openTransactionModal(subscriber.id, 'termination')"
+            @click="openTransactionModal('termination')"
         >
             <BanIcon aria-hidden="true" class="w-6 h-6 absolute" />
             <span class="sr-only">Reset</span>
@@ -156,7 +154,7 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click="openTransactionModal(subscriber.id, 'rejectRemarks')">Confirm</Button>
+                <Button class="px-6 justify-center" @click="openTransactionModal('rejectRemarks')">Confirm</Button>
             </div>
         </div>
 
@@ -172,7 +170,7 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click="openTransactionModal(subscriber.id, 'terminateRemarks')">Confirm</Button>
+                <Button class="px-6 justify-center" @click="openTransactionModal('terminateRemarks')">Confirm</Button>
             </div>
         </div>
 
@@ -221,51 +219,47 @@ const submitForm = () => {
                 <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
             </div>
         </div>
-        
-        <div v-if="modalComponent == 'Subscriber Details'">
+
+        <div v-if="modalComponent === 'Subscriber Details'">
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.created_at)}}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscription.created_at)}}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">User</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.user.name }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.user.name }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.meta_login }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.meta_login }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master.user.name }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.master.trading_user.name }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master_meta_login }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription ID</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_number }}</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Account</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.master.meta_login }}</span>
             </div>
             <!-- <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscription.subscription_fee ? subscriber.subscription.subscription_fee : '0.00' }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscription.subscription.subscription_fee ? subscription.subscription.subscription_fee : '0.00' }}</span>
             </div> -->
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Copy Trade Balance</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(subscriber.subscription.meta_balance) ? formatAmount(subscriber.subscription.meta_balance) : '0.00' }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(subscription.meta_balance ? subscription.meta_balance : 0) }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.subscription_period }} Days</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Settlement Period</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.subscription_period }} Days</span>
             </div>
-            <div v-if="subscriber.subscription.approval_date != null" class="grid grid-cols-3 items-center gap-2">
+            <div v-if="subscription.approval_date != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.approval_date }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.approval_date }}</span>
             </div>
-            <div v-if="subscriber.subscription.expired_date != null" class="grid grid-cols-3 items-center gap-2">
+            <div v-if="subscription.expired_date != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.subscription.expired_date ?  subscriber.subscription.expired_date : '-'}}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.expired_date ? subscription.expired_date : '-'}}</span>
             </div>
         </div>
     </Modal>

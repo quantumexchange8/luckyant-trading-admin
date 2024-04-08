@@ -37,7 +37,7 @@ const updateTransactionType = (transaction_type) => {
                                     : 'border-b border-gray-300 dark:border-gray-700',
                             ]"
                     >
-                        Pending Subscriber
+                        Pending Subscriptions
                     </button>
                 </Tab>
                 <Tab
