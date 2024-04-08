@@ -141,10 +141,9 @@ class TransactionController extends Controller
     {
         $type = $request->type;
 
-        if(!$request->remarks)
-        {
-            throw ValidationException::withMessages(['remarks' => 'required']);
-        }
+        $request->validate([
+            'remarks' => 'required',
+        ]);
 
         if ($type == 'reject_selected') {
             $transactions = Transaction::whereIn('id', $request->id)->get();
