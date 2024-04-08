@@ -119,25 +119,17 @@ class TransactionController extends Controller
         } else {
             $transaction = Transaction::find($request->id);
 
-
             if ($transaction->transaction_type == 'Deposit') {
                 $wallet = Wallet::find($transaction->to_wallet_id);
                 $wallet->balance += $transaction->amount;
                 $wallet->save();
 
+                $transaction->update([
+                    'status' => 'Success',
+                    'handle_by' => Auth::user()->id,
+                    'new_wallet_amount' => $wallet->balance,
+                ]);
             }
-            if ($transaction->transaction_type == 'Withdrawal') {
-                $wallet = Wallet::find($transaction->from_wallet_id);
-                $wallet->balance -= $transaction->amount;
-                $wallet->save();
-
-            }
-
-            $transaction->update([
-                'status' => 'Success',
-                'handle_by' => Auth::user()->id,
-                'new_wallet_amount' => $wallet->balance,
-            ]);
 
         }
 
@@ -158,6 +150,7 @@ class TransactionController extends Controller
                         'status' => 'Rejected',
                         'remarks' => 'MULTIPLE Reject by admin - ID ' . $transaction->transaction_number,
                         'handle_by' => Auth::user()->id,
+                        'new_wallet_amount' => $transaction->new_wallet_amount += $transaction->amount,
                     ]);
 
                     if ($transaction->transaction_type == 'Withdrawal') {
