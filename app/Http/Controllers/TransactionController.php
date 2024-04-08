@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\DepositExport;
-use App\Exports\TransactionsExport;
-use App\Exports\WithdrawalExport;
-use App\Exports\InternalTransferExport;
-use App\Exports\PendingDepositExport;
-use App\Exports\PendingWithdrawalExport;
-// use App\Exports\BalanceAdjustmentExport;
-use App\Models\Wallet;
-use App\Models\User;
-// use App\Models\BalanceAdjustment;
-use App\Models\Transaction;
-use App\Models\WalletLog;
-use App\Services\SelectOptionService;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Auth;
+use Carbon\Carbon;
+use App\Models\User;
+use Inertia\Inertia;
+use App\Models\Wallet;
+use App\Models\WalletLog;
+// use App\Exports\BalanceAdjustmentExport;
+use App\Models\Transaction;
+use Illuminate\Http\Request;
+// use App\Models\BalanceAdjustment;
+use App\Exports\DepositExport;
+use App\Exports\WithdrawalExport;
+use App\Exports\TransactionsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PendingDepositExport;
+use App\Services\SelectOptionService;
+use App\Exports\InternalTransferExport;
+use App\Exports\PendingWithdrawalExport;
+use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
@@ -139,6 +140,11 @@ class TransactionController extends Controller
     public function rejectTransaction(Request $request)
     {
         $type = $request->type;
+
+        if(!$request->remarks)
+        {
+            throw ValidationException::withMessages(['remarks' => 'required']);
+        }
 
         if ($type == 'reject_selected') {
             $transactions = Transaction::whereIn('id', $request->id)->get();
