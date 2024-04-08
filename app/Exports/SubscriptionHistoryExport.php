@@ -31,7 +31,7 @@ class SubscriptionHistoryExport implements FromCollection, WithHeadings
                 'name' => $subscriptions->user->name,
                 'email' => $subscriptions->user->email,
                 'trading_account' => $subscriptions->meta_login,
-                'first_leader' => User::where('id', User::find($subscriptions->user_id)->top_leader_id)->value('username') ?? 'LuckyAnt Trading',
+                'first_leader' => User::where('id', User::find($subscriptions->user_id)->top_leader_id)->value('name') ?? 'LuckyAnt Trading',
                 'master' => $subscriptions->master->tradingUser->name ?? 'LuckyAnt Trading',
                 'master_trading_account' => $subscriptions->master->meta_login,
                 'subscription_id' => $subscriptions->subscription_number,
