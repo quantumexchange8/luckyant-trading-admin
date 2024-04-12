@@ -128,7 +128,7 @@ class MasterController extends Controller
             'sharing_profit' => $masterRequest->sharing_profit ?? '60',
             'market_profit' => $defualt ?? '20',
             'company_profit' => $defualt ?? '20',
-            'subscription_fee' => $masterRequest->subscription_fee,
+            'subscription_fee' => $masterRequest->subscription_fee ?? 0,
             'roi_period' => $masterRequest->roi_period,
             'is_public' => $masterRequest->user->is_public,
         ]);
