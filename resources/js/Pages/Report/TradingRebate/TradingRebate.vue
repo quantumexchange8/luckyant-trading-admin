@@ -154,7 +154,7 @@ const exportReport = () => {
 </script>
 
 <template>
-    <AuthenticatedLayout title="Transaction History">
+    <AuthenticatedLayout title="Trading Rebate">
         <template #header>
             <div class="flex flex-col gap-4">
                 <div>
@@ -182,7 +182,7 @@ const exportReport = () => {
                                 type="text"
                                 class="block w-full"
                                 placeholder="Search"
-                                v-model="search" 
+                                v-model="search"
                             />
                         </InputIconWrapper>
                     </div>

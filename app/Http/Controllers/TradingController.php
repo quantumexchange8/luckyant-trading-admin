@@ -151,8 +151,6 @@ class TradingController extends Controller
             return back()->with('toast', trans('public.error_updating_account'));
         }
 
-        return back()->with('toast', trans('public.error_updating_account'));
-
     }
 
     public function balanceAdjustment(BalanceAdjustmentRequest $request)

@@ -564,6 +564,7 @@ class MemberController extends Controller
     {
         $searchUser = null;
         $searchTerm = $request->input('search');
+        $locale = app()->getLocale();
 
         if ($searchTerm) {
             $searchUser = User::where('name', 'like', '%' . $searchTerm . '%')
@@ -581,17 +582,23 @@ class MemberController extends Controller
             $query->where('id', $user->id);
         })->get();
 
+        $rank = SettingRank::where('id', $user->setting_rank_id)->first();
+
+        // Parse the JSON data in the name column to get translations
+        $translations = json_decode($rank->name, true);
+
         $level = 0;
         $rootNode = [
             'name' => $user->username,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
             'level' => $level,
+            'rank' => $translations[$locale] ?? $rank->name,
             'direct_affiliate' => count($user->children),
             'total_affiliate' => count($user->getChildrenIds()),
-           'self_deposit' => $this->getSelfDeposit($user),
-           'total_group_deposit' => $this->getTotalGroupDeposit($user),
-        //    'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
+            'self_deposit' => $this->getSelfDeposit($user),
+            'total_group_deposit' => $this->getTotalGroupDeposit($user),
+            //'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
             'children' => $users->map(function ($user) {
                 return $this->mapUser($user, 0);
             })
@@ -625,14 +632,22 @@ class MemberController extends Controller
             return $this->mapUser($child, $level + 1);
         });
 
+        $locale = app()->getLocale();
+
+        $rank = SettingRank::where('id', $user->setting_rank_id)->first();
+
+        // Parse the JSON data in the name column to get translations
+        $translations = json_decode($rank->name, true);
+
         $mappedUser = [
             'name' => $user->username,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
             'level' => $level + 1,
+            'rank' => $translations[$locale] ?? $rank->name,
             'total_affiliate' => count($user->getChildrenIds()),
-           'self_deposit' => $this->getSelfDeposit($user),
-           'total_group_deposit' => $this->getTotalGroupDeposit($user),
+            'self_deposit' => $this->getSelfDeposit($user),
+            'total_group_deposit' => $this->getTotalGroupDeposit($user),
         //    'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
         ];
 

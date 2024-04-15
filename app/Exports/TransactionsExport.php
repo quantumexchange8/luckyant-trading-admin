@@ -32,7 +32,7 @@ class TransactionsExport implements FromCollection, WithHeadings
             $profit = WalletLog::where('user_id', $record->user_id)->where('category', 'profit')->sum('amount');
             $bonus = WalletLog::where('user_id', $record->user_id)->where('category', 'bonus')->sum('amount');
 
-            $first_leader = $record->user->getFirstLeader()->email ?? $record->user->top_leader->email ?? 'LuckyAnt Trading';
+            $first_leader = $record->user->getFirstLeader()->name ?? $record->user->top_leader->name ?? 'LuckyAnt Trading';
 
             $result[] = array(
                 'name' => $record->user->name,

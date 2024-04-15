@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SubscriberExport;
 use App\Models\CopyTradeTransaction;
 use App\Models\TradingAccount;
 use App\Services\MetaFiveService;
@@ -284,9 +285,15 @@ class SubscriptionController extends Controller
 
     public function getActiveSubscriber(Request $request)
     {
+        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        // Decode the JSON
+        $decodedColumnName = json_decode(urldecode($columnName), true);
+
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
+        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+
         $activeSubscriber = Subscriber::query()
-            ->with(['user', 'master', 'master.user', 'transaction', 'subscription', 'master.tradingUser'])
-            ->where('status', 'Subscribing');
+            ->with(['user', 'master', 'master.user', 'transaction', 'subscription', 'master.tradingUser']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
@@ -318,13 +325,48 @@ class SubscriptionController extends Controller
             }
         }
 
-        $results = $activeSubscriber->latest()->paginate(10);
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $activeSubscriber->where('status', $status);
+        }
+
+        if ($request->has('exportStatus')) {
+            return Excel::download(new SubscriberExport($activeSubscriber), Carbon::now() . '-subscribers-report.xlsx');
+        }
+
+        $totalSubscriberQuery = clone $activeSubscriber;
+        $totalCopyTradeBalanceQuery = clone $activeSubscriber;
+
+        if ($column == 'subscription_meta_balance') {
+            $results = $activeSubscriber->join('subscriptions', 'subscribers.subscription_id', '=', 'subscriptions.id')
+                ->orderBy('subscriptions.meta_balance', $sortOrder)
+                ->paginate($request->input('paginate', 10));
+        } else {
+            $results = $activeSubscriber
+                ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+                ->paginate($request->input('paginate', 10));
+        }
+
+        $totalSubscriber = $totalSubscriberQuery->count();
+        $totalSubscribingSubscriber = $totalSubscriberQuery->where('status', 'Subscribing')->count();
+        $totalCopyTradeBalance = $totalCopyTradeBalanceQuery
+            ->where('status', 'Subscribing')
+            ->with('subscription')
+            ->get()
+            ->sum(function ($subscriber) {
+                return $subscriber->subscription->meta_balance;
+            });
 
         $results->each(function ($user) {
             $user->first_leader = $user->user->getFirstLeader() ?? null;
         });
 
-        return response()->json($results);
+        return response()->json([
+            'subscribers' => $results,
+            'totalSubscriber' => $totalSubscriber,
+            'totalSubscribingSubscriber' => $totalSubscribingSubscriber,
+            'totalCopyTradeBalance' => $totalCopyTradeBalance,
+        ]);
     }
 
     public function getHistorySubscriber(Request $request)
