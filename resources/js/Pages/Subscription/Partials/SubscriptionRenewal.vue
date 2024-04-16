@@ -7,6 +7,7 @@ import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import Action from "@/Pages/Subscription/Partials/RenewalAction.vue";
 import debounce from "lodash/debounce.js";
+import NoData from "@/Components/NoData.vue";
 
 const props = defineProps({
     refresh: Boolean,
@@ -112,8 +113,8 @@ const transactionVariant = (transactionStatus) => {
             </thead>
             <tbody>
                 <tr v-if="subscribers.data.length === 0">
-                    <th colspan="7" class="py-4 text-lg text-center">
-                        No Pending
+                    <th colspan="7" class="py-4">
+                        <NoData />
                     </th>
                 </tr>
                 <tr

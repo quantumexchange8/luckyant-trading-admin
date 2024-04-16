@@ -8,6 +8,7 @@ import {transactionFormat} from "@/Composables/index.js";
 import Action from "@/Pages/Subscription/Partials/Action.vue";
 import debounce from "lodash/debounce.js";
 import {usePage} from "@inertiajs/vue3";
+import NoData from "@/Components/NoData.vue";
 
 const props = defineProps({
     refresh: Boolean,
@@ -77,6 +78,12 @@ watch(() => props.refresh, (newVal) => {
     }
 });
 
+watchEffect(() => {
+    if (usePage().props.title !== null) {
+        getResults();
+    }
+});
+
 const paginationClass = [
     'bg-transparent border-0 dark:text-gray-400 dark:enabled:hover:text-white'
 ];
@@ -118,8 +125,8 @@ const currentLocale = ref(usePage().props.locale);
             </thead>
             <tbody>
                 <tr v-if="subscriptions.data.length === 0">
-                    <th colspan="7" class="py-4 text-lg text-center">
-                        No Pending
+                    <th colspan="6" class="py-4">
+                        <NoData />
                     </th>
                 </tr>
                 <tr

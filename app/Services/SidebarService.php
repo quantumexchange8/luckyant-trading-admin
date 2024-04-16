@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\MasterRequest;
 use App\Models\Subscriber;
+use App\Models\Subscription;
 use App\Models\SubscriptionRenewalRequest;
 use App\Models\Transaction;
 use App\Models\User;
@@ -34,7 +35,7 @@ class SidebarService {
     public function getPendingSubscriberRequestCount(): int
     {
         $subscription_renewal = SubscriptionRenewalRequest::where('status', 'Pending')->count();
-        $subscriber = Subscriber::where('status', 'Pending')->count();
+        $subscriber = Subscription::where('status', 'Pending')->count();
 
         return $subscription_renewal + $subscriber;
     }
