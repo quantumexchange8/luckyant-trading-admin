@@ -32,7 +32,7 @@ class MemberListingExport implements FromCollection, WithHeadings
                 'name' => $record->name,
                 'email' => $record->email,
                 'created_at' => Carbon::parse($record->created_at)->format('Y-m-d'),
-                'first_leader' => $record->top_leader->name ?? '',
+                'first_leader' => $record->getFirstLeader()->name ?? '',
                 'wallets_sum_balance' => $record->wallets->sum('balance'),
                 'country' => Country::find($record->country)->name,
                 'rank' => $record->rank->name,

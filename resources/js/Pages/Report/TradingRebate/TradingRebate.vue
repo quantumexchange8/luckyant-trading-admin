@@ -98,40 +98,41 @@ getResults()
 const columns = [
     {
         accessorKey: 'created_at',
-        header: 'Date',
+        header: 'date',
         cell: info => formatDateTime(info.getValue()),
     },
     {
         accessorKey: 'upline_user.name',
-        header: 'Name',
+        header: 'name',
         enableSorting: false,
     },
     {
         accessorKey: 'upline_user.email',
-        header: 'Email',
+        header: 'email',
         enableSorting: false,
     },
     {
         accessorKey: 'user.name',
-        header: 'Affiliate',
+        header: 'affiliate',
         enableSorting: false,
     },
     {
         accessorKey: 'user.email',
-        header: 'Affiliate Email',
+        header: 'affiliate_email',
         enableSorting: false,
     },
     {
         accessorKey: 'volume',
-        header: 'Trade Volume',
+        header: 'trade_volume',
     },
     {
         accessorKey: 'rebate',
-        header: 'Total Rebate ($)'
+        header: 'total_rebate',
+        cell: info => '$ ' + formatAmount(info.getValue()),
     },
     {
         accessorKey: 'status',
-        header: 'Status',
+        header: 'status',
         enableSorting: false,
         cell: ({ row }) => h(Badge, {status: row.original.status}),
     },

@@ -786,6 +786,7 @@ class MemberController extends Controller
         $leader->total_demo_fund = $leader->transactions->where('category', 'trading_account')->where('transaction_type', 'Deposit')->where('fund_type', 'DemoFund')->where('status', 'Success')->sum('transaction_amount');
 
         $children = User::whereIn('id', $leader->getChildrenIds())
+            ->select('id', 'name', 'email', 'leader_status', 'top_leader_id', 'hierarchyList', 'upline_id')
             ->with('wallets', 'walletLogs', 'transactions');
 
         if ($request->filled('search')) {
@@ -809,7 +810,7 @@ class MemberController extends Controller
             return Excel::download(new AffiliateSummaryExport($children), Carbon::now() . '-summary-report.xlsx');
         }
 
-        $results = $children->paginate(10);
+        $results = $children->latest()->get();
 
         $results->each(function ($child) {
             $child->profile_photo_url = $child->getFirstMediaUrl('profile_photo');

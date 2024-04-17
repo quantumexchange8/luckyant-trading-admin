@@ -121,46 +121,46 @@ getResults()
 const columns = [
     {
         accessorKey: 'created_at',
-        header: 'Date',
+        header: 'date',
         cell: info => formatDateTime(info.getValue()),
     },
     {
         accessorKey: 'user.name',
-        header: 'Subscriber',
+        header: 'subscriber',
         enableSorting: false,
     },
     {
         accessorKey: 'meta_login',
-        header: 'Trading Account',
+        header: 'trading_account',
     },
     {
         accessorKey: 'first_leader.name',
-        header: 'First Leader',
+        header: 'first_leader',
         cell: info => info.getValue() ?? '-',
         enableSorting: false,
     },
     {
         accessorKey: 'master.trading_user.name',
-        header: 'Master',
+        header: 'master',
         enableSorting: false,
     },
     {
         accessorKey: 'master_meta_login',
-        header: 'Master Trading Account',
+        header: 'master_trading_account',
     },
     {
         accessorKey: 'subscription.meta_balance',
-        header: 'Copy Trade Balance',
+        header: 'copy_trade_balance',
         cell: info => '$ ' + formatAmount(info.getValue()),
     },
     {
         accessorKey: 'approval_date',
-        header: 'Approval Date',
+        header: 'approval_date',
         cell: info => formatDateTime(info.getValue()),
     },
     {
         accessorKey: 'status',
-        header: 'Status',
+        header: 'status',
         enableSorting: false,
         cell: ({ row }) => h(StatusBadge, {value: row.original.status}),
     },
@@ -377,58 +377,5 @@ const clearFilter = () => {
                 />
             </div>
         </div>
-<!--        <div class="pt-3 md:flex md:justify-end items-center">-->
-<!--            <div class="flex flex-wrap md:flex-nowrap md:items-center gap-3 mt-3 md:mt-0">-->
-<!--                <div class="w-full col-span-5 md:col-span-2">-->
-<!--                    <InputIconWrapper>-->
-<!--                        <template #icon>-->
-<!--                            <SearchIcon aria-hidden="true" class="w-5 h-5" />-->
-<!--                        </template>-->
-<!--                        <Input withIcon id="search" type="text" class="block w-full" placeholder="Search" v-model="search" />-->
-<!--                    </InputIconWrapper>-->
-<!--                </div>-->
-<!--                <div class="w-full col-span-3 md:col-span-1">-->
-<!--                    <Combobox-->
-<!--                        :load-options="loadUsers"-->
-<!--                        v-model="leader"-->
-<!--                        placeholder="Leader"-->
-<!--                        image-->
-<!--                    />-->
-<!--                </div>-->
-<!--                <div class="w-full col-span-3 md:col-span-1">-->
-<!--                    <vue-tailwind-datepicker-->
-<!--                        placeholder="Select dates"-->
-<!--                        :formatter="formatter"-->
-<!--                        separator=" - "-->
-<!--                        v-model="date"-->
-<!--                        input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-dark-eval-2"-->
-<!--                    />-->
-<!--                </div>-->
-<!--                <div>-->
-<!--                    <Button-->
-<!--                        type="button"-->
-<!--                        variant="secondary"-->
-<!--                        @click="refreshTable"-->
-<!--                        class="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"-->
-<!--                    >-->
-<!--                        Clear-->
-<!--                    </Button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-
-<!--        <div class="p-5 my-8 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-gray-900">-->
-<!--            <SubscriberListingTable-->
-<!--                :refresh="refresh"-->
-<!--                :isLoading="isLoading"-->
-<!--                :search="search"-->
-<!--                :date="date"-->
-<!--                :leader="leader"-->
-<!--                :exportStatus="exportStatus"-->
-<!--                @update:loading="isLoading = $event"-->
-<!--                @update:refresh="refresh = $event"-->
-<!--                @update:export="exportStatus = $event"-->
-<!--            />-->
-<!--        </div>-->
     </AuthenticatedLayout>
 </template>
