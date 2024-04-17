@@ -78,6 +78,16 @@ class SubscriptionController extends Controller
         $cashWallet = $user->wallets()->where('type', 'cash_wallet')->first();
         $master = Master::find($subscription->master_id);
 
+        $checkSubscription = Subscription::where('meta_login', $subscription->meta_login)
+            ->where('status', 'Active')
+            ->first();
+
+        if ($checkSubscription) {
+            return redirect()->back()
+                ->with('title', trans('public.invalid_action'))
+                ->with('warning', trans('public.try_again_later'));
+        }
+
         $connection = (new MetaFiveService())->getConnectionStatus();
         if ($connection != 0) {
             return redirect()->back()
