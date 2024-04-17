@@ -158,12 +158,7 @@ class SubscriptionController extends Controller
             'remarks' => ['required'],
         ]);
 
-        $reject = Subscriber::find($request->id);
         $subscriptionId = Subscription::find($request->subscriptionId);
-
-        $reject->update([
-            'status' => 'Rejected'
-        ]);
 
         $subscriptionId->update([
             'status' => 'Rejected',
