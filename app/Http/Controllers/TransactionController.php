@@ -20,7 +20,10 @@ use App\Exports\PendingDepositExport;
 use App\Services\SelectOptionService;
 use App\Exports\InternalTransferExport;
 use App\Exports\PendingWithdrawalExport;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use App\Notifications\DepositConfirmationNotification;
+use App\Notifications\WithdrawalConfirmationNotification;
 
 class TransactionController extends Controller
 {
@@ -115,6 +118,12 @@ class TransactionController extends Controller
                     $wallet = Wallet::find($transaction->to_wallet_id);
                     $wallet->balance += $transaction->amount;
                     $wallet->save();
+                    
+                    Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
+                } elseif ($transaction->transaction_type == 'Withdrawal') {
+                    $wallet = Wallet::find($transaction->from_wallet_id);
+        
+                    Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
                 }
             }
         } else {
@@ -130,8 +139,13 @@ class TransactionController extends Controller
                     'handle_by' => Auth::user()->id,
                     'new_wallet_amount' => $wallet->balance,
                 ]);
+                
+                Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
+            } elseif ($transaction->transaction_type == 'Withdrawal') {
+                $wallet = Wallet::find($transaction->from_wallet_id);
+    
+                Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
             }
-
         }
 
         return redirect()->back()->with('title', 'Approved successfully')->with('success', 'The transaction request has been approved successfully.');

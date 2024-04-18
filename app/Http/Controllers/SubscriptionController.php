@@ -2,23 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\SubscriberExport;
-use App\Models\CopyTradeTransaction;
-use App\Models\TradingAccount;
-use App\Services\MetaFiveService;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Models\Subscription;
-use App\Models\SubscriptionRenewalRequest;
-use App\Models\Transaction;
-use App\Models\Subscriber;
-use App\Models\Wallet;
-use App\Models\Master;
-use App\Models\User;
-use App\Exports\SubscriptionHistoryExport;
 use Auth;
 use Carbon\Carbon;
+use App\Models\User;
+use Inertia\Inertia;
+use App\Models\Master;
+use App\Models\Wallet;
+use App\Models\Subscriber;
+use App\Models\Transaction;
+use App\Models\Subscription;
+use Illuminate\Http\Request;
+use App\Models\TradingAccount;
+use App\Exports\SubscriberExport;
+use App\Services\MetaFiveService;
+use App\Models\CopyTradeTransaction;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SubscriptionHistoryExport;
+use App\Models\SubscriptionRenewalRequest;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\SubscriptionConfirmationNotification;
 
 class SubscriptionController extends Controller
 {
@@ -145,6 +147,8 @@ class SubscriptionController extends Controller
                 'balance' => $cashWallet->balance - $subscription->subscription_fee
             ]);
         }
+
+        Notification::route('mail', $user->email)->notify(new SubscriptionConfirmationNotification($subscription));
 
         return redirect()->back()
             ->with('title', 'Success approve')

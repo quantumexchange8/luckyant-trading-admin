@@ -137,7 +137,7 @@ const paginationActiveClass = [
 </script>
 
 <template>
-    <AuthenticatedLayout title="Transaction History">
+    <AuthenticatedLayout title="Affiliate Listing">
         <template #header>
             <div class="flex flex-col gap-4">
                 <div>
