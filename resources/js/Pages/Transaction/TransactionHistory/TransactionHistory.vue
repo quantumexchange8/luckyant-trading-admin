@@ -183,7 +183,6 @@ function changeTab(index) {
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
                         v-model="category"
                         :options="categoryList"
                         placeholder="Filter Category"
@@ -192,7 +191,6 @@ function changeTab(index) {
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
                         v-model="methods"
                         :options="paymentMethods"
                         placeholder="Filter Payment Methods"
@@ -201,7 +199,6 @@ function changeTab(index) {
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
                         v-model="fund_type"
                         :options="fundTypes"
                         placeholder="Filter Fund Type"

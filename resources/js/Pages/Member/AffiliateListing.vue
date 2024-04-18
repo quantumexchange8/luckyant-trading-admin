@@ -4,31 +4,52 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import {SearchIcon} from "@heroicons/vue/outline";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import Input from "@/Components/Input.vue";
-import {CloudDownloadIcon} from "@/Components/Icons/outline.jsx";
+import {
+    ArrowsDownIcon,
+    ArrowsUpIcon, ChevronLeftDoubleIcon,
+    ChevronLeftIcon, ChevronRightDoubleIcon,
+    ChevronRightIcon,
+    CloudDownloadIcon, SwitchVertical01Icon
+} from "@/Components/Icons/outline.jsx";
 import Button from "@/Components/Button.vue";
 import {ref, watch} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import debounce from "lodash/debounce.js";
-import Loading from "@/Components/Loading.vue";
 import Badge from "@/Components/Badge.vue";
 import Combobox from "@/Components/Combobox.vue";
-import {TailwindPagination} from "laravel-vue-pagination";
-import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
+import NoData from "@/Components/NoData.vue";
+import {
+    useVueTable,
+    FlexRender,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    getFilteredRowModel,
+} from "@tanstack/vue-table";
+import BaseListbox from "@/Components/BaseListbox.vue";
 
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MM'
 });
 
-const isLoading = ref(false);
-const date = ref('');
+const sorting = ref();
 const search = ref('');
+const date = ref('');
+const pageSize = ref(10);
 const firstLeader = ref(null);
 const leaderDetail = ref(null);
 const refresh = ref(false);
-const affiliateSummaries = ref({data: []})
-const currentPage = ref(1)
+const affiliateSummaries = ref(null)
 const { formatDateTime, formatAmount } = transactionFormat();
+
+const pageSizes = [
+    {value: 5, label: 5 },
+    {value: 10, label: 10 },
+    {value: 20, label: 20 },
+    {value: 50, label: 50 },
+    {value: 100, label: 100 },
+]
 
 function loadUsers(query, setOptions) {
     fetch('/member/getAllLeaders?query=' + query)
@@ -47,7 +68,6 @@ function loadUsers(query, setOptions) {
 }
 
 const getResults = async (page = 1, firstLeader = null, search = '', date = '') => {
-    isLoading.value = true
     try {
         let url = `/member/getAffiliateSummaries?page=${page}`;
 
@@ -69,8 +89,6 @@ const getResults = async (page = 1, firstLeader = null, search = '', date = '') 
 
     } catch (error) {
         console.error(error);
-    } finally {
-        isLoading.value = false
     }
 }
 
@@ -82,23 +100,6 @@ watch(
         }
     }, 300)
 );
-
-const handlePageChange = (newPage) => {
-    if (newPage >= 1) {
-        currentPage.value = newPage;
-        getResults(currentPage.value, firstLeader.value, search.value, date.value);
-    }
-};
-
-// const refreshHistory = () => {
-//     const typeStrings = type.value ? type.value.map(item => item.value) : null;
-//
-//     getResults(1, typeStrings, date.value, tradeType.value);
-//
-//     toast.add({
-//         message: wTrans('public.successfully_refreshed'),
-//     });
-// }
 
 const exportSummary = () => {
     if(leaderDetail.value) {
@@ -127,13 +128,103 @@ const kycVariant = (kycApprovalStatus) => {
     if (kycApprovalStatus === 'Unverified') return 'warning';
 }
 
-const paginationClass = [
-    'bg-transparent border-0 text-gray-600 dark:text-gray-400 dark:enabled:hover:text-white'
+const columns = [
+    {
+        accessorKey: 'name',
+        header: 'name',
+    },
+    {
+        accessorKey: 'email',
+        header: 'email',
+    },
+    {
+        accessorKey: 'profit',
+        header: 'profit_in',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'bonus_in',
+        header: 'bonus_wallet_in',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'bonus_out',
+        header: 'bonus_wallet_out',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'e_wallet_in',
+        header: 'e_wallet_in',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'e_wallet_out',
+        header: 'e_wallet_out',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'total_funding',
+        header: 'total_funding',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'total_withdrawal',
+        header: 'total_withdrawal',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
+    {
+        accessorKey: 'total_demo_fund',
+        header: 'total_demo_fund',
+        cell: info => '$ ' + formatAmount(info.getValue()),
+    },
 ];
 
-const paginationActiveClass = [
-    'border dark:border-gray-600 dark:bg-gray-600 rounded-full text-primary-500 dark:text-primary-300'
-];
+let table = useVueTable({
+    data: affiliateSummaries.value,
+    columns: columns.value,
+    getCoreRowModel: getCoreRowModel(),
+});
+
+watch(affiliateSummaries, (newMembers) => {
+    // Update table data when members value changes
+    table = useVueTable({
+        data: newMembers,
+        columns: columns,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        state: {
+            get sorting() {
+                return sorting.value
+            },
+        },
+        onSortingChange: updaterOrValue => {
+            sorting.value =
+                typeof updaterOrValue === 'function'
+                    ? updaterOrValue(sorting.value)
+                    : updaterOrValue
+        },
+    });
+});
+
+watch(pageSize, (newPageSize) => {
+    table.setPageSize(newPageSize)
+})
+
+const pageIndex = ref(table.getState().pagination.pageIndex + 1);
+
+watch(pageIndex, (newPageIndex) => {
+    table.setPageIndex(newPageIndex - 1)
+})
+
+const clearFilter = () => {
+    search.value = '';
+    date.value = '';
+    firstLeader.value = null;
+    leaderDetail.value = null;
+    affiliateSummaries.value = null;
+}
 </script>
 
 <template>
@@ -184,7 +275,7 @@ const paginationActiveClass = [
                             :formatter="formatter"
                             separator=" - "
                             v-model="date"
-                            input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
+                            input-classes="py-2.5 rounded-lg text-base font-normal shadow-xs border placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-900 dark:text-gray-50 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-800 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 disabled:bg-gray-200 disabled:cursor-not-allowed dark:disabled:bg-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500"
                             :disabled="leaderDetail === null"
                         />
                     </div>
@@ -193,6 +284,8 @@ const paginationActiveClass = [
                     <Button
                         type="button"
                         variant="secondary"
+                        :disabled="leaderDetail === null"
+                        @click="clearFilter"
                     >
                         <span class="text-lg">Clear</span>
                     </Button>
@@ -306,112 +399,142 @@ const paginationActiveClass = [
                 </div>
             </div>
 
-            <div v-else class="text-gray-600 dark:text-gray-400">
-                Search for a leader
-            </div>
-
             <div class="p-5 bg-white overflow-hidden md:overflow-visible rounded-xl shadow-md dark:bg-gray-900 w-full">
-                <div class="relative overflow-x-auto">
-                    <div v-if="isLoading" class="w-full flex justify-center my-8">
-                        <Loading />
+                <div class="flex justify-end items-center gap-2">
+                    <div class="text-sm">
+                        Size
                     </div>
-                    <table v-else class="w-[650px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
-                        <tr>
-                            <th scope="col" class="p-3">
-                                {{ $t('public.affiliate') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.profit_in') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.bonus_wallet_in') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.bonus_wallet_out') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.e_wallet_in') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.e_wallet_out') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.total_funding') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.total_withdrawal') }}
-                            </th>
-                            <th scope="col" class="p-3 text-center">
-                                {{ $t('public.total_demo_fund') }}
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-if="affiliateSummaries.data.length === 0">
-                            <th colspan="10" class="py-4 text-lg text-center">
-                                No data
-                            </th>
-                        </tr>
-                        <tr
-                            v-for="summary in affiliateSummaries.data"
-                            class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800 hover:bg-primary-50 dark:hover:bg-gray-600"
-                        >
-                            <td class="p-3">
-                                <div class="inline-flex gap-2">
-                                    <div>
-                                        <img :src="summary.profile_photo_url ? summary.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
-                                    </div>
-                                    <div class="flex flex-col">
-                                        <span>{{ summary.name }}</span>
-                                        <span>{{ summary.email }}</span>
-                                    </div>
-
-                                </div>
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.profit ? summary.profit : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.bonus_in ? summary.bonus_in : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.bonus_out ? summary.bonus_out : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.e_wallet_in ? summary.e_wallet_in : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.e_wallet_out ? summary.e_wallet_out : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.total_funding ? summary.total_funding : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.total_withdrawal ? summary.total_withdrawal : 0) }}
-                            </td>
-                            <td class="p-3 font-semibold text-center">
-                                $ {{ formatAmount(summary.total_demo_fund ? summary.total_demo_fund : 0) }}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                    <div>
+                        <BaseListbox
+                            :options="pageSizes"
+                            v-model="pageSize"
+                        />
+                    </div>
                 </div>
-                <div class="flex justify-center mt-4" v-if="!isLoading">
-                    <TailwindPagination
-                        :item-classes=paginationClass
-                        :active-classes=paginationActiveClass
-                        :data="affiliateSummaries"
-                        :limit=2
-                        @pagination-change-page="handlePageChange"
-                    >
-                        <template #prev-nav>
-                            <span class="flex gap-2"><ArrowLeftIcon class="w-5 h-5" /> <span class="hidden sm:flex">{{$t('public.previous')}}</span></span>
-                        </template>
-                        <template #next-nav>
-                            <span class="flex gap-2"><span class="hidden sm:flex">{{$t('public.next')}}</span> <ArrowRightIcon class="w-5 h-5" /></span>
-                        </template>
-                    </TailwindPagination>
+                <div
+                    v-if="affiliateSummaries === null"
+                    class="w-full flex flex-col items-center justify-center"
+                >
+                    <div v-if="!leaderDetail" class="text-gray-600 dark:text-gray-400">
+                        Search for a leader
+                    </div>
+                    <NoData />
+                </div>
+                <div v-else>
+                    <div class="relative overflow-x-auto sm:rounded-lg">
+                        <table class="w-[850px] md:w-full text-sm text-left text-gray-500 dark:text-gray-400 mt-5">
+                            <thead class="text-xs font-medium text-gray-400 uppercase dark:bg-transparent dark:text-gray-400 border-b dark:border-gray-800">
+                            <tr v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+                                <th
+                                    v-for="header in headerGroup.headers"
+                                    scope="col"
+                                    class="p-3"
+                                    :class="{
+                                        'cursor-pointer select-none': header.column.getCanSort(),
+                                        'bg-primary-100 dark:bg-primary-900': header.column.getIsSorted()
+                                    }"
+                                    @click="header.column.getToggleSortingHandler()?.($event)"
+                                >
+                                    <div class="flex items-center gap-2">
+                                        <FlexRender
+                                            :render="$t('public.' + header.column.columnDef.header)"
+                                            :props="header.getContext()"
+                                        />
+                                        <div v-if="header.column.getIsSorted()">
+                                            <ArrowsUpIcon
+                                                v-if="header.column.getIsSorted() === 'asc'"
+                                                class="w-4 h-4 text-primary-600 dark:text-white"
+                                            />
+                                            <ArrowsDownIcon
+                                                v-else-if="header.column.getIsSorted() === 'desc'"
+                                                class="w-4 h-4 text-primary-600 dark:text-white"
+                                            />
+                                        </div>
+                                        <div v-else>
+                                            <SwitchVertical01Icon v-if="header.column.getCanSort()" class="w-4 h-4" />
+                                        </div>
+                                    </div>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr
+                                v-for="row in table.getRowModel().rows"
+                                :key="row.id"
+                                class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-800"
+                            >
+                                <td v-for="cell in row.getVisibleCells()" :key="cell.id" class="p-3">
+                                    <FlexRender
+                                        :render="cell.column.columnDef.cell"
+                                        :props="cell.getContext()"
+                                    />
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <div class="py-4 flex flex-col md:flex-row gap-2 md:items-center md:justify-between w-full">
+                            <div class="text-sm">
+                                Page {{ table.getState().pagination.pageIndex + 1 }} of {{ table.getPageCount() }} - {{ table.getRowCount() }} results
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <Button
+                                    variant="gray"
+                                    type="button"
+                                    @click="table.setPageIndex(0)"
+                                    pill
+                                    size="sm"
+                                    v-slot="{iconSizeClasses}"
+                                    :disabled="!table.getCanPreviousPage()"
+                                >
+                                    <ChevronLeftDoubleIcon class="w-4" />
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="gray"
+                                    @click="table.previousPage()"
+                                    :disabled="!table.getCanPreviousPage()"
+                                    pill
+                                    size="sm"
+                                    v-slot="{iconSizeClasses}"
+                                >
+                                    <ChevronLeftIcon class="w-4" />
+                                </Button>
+                                <Input
+                                    id="page"
+                                    type="number"
+                                    min="1"
+                                    :max="table.getPageCount()"
+                                    class="block w-20"
+                                    placeholder="Page"
+                                    :value="table.getState().pagination.pageIndex + 1"
+                                    v-model="pageIndex"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="gray"
+                                    @click="table.nextPage()"
+                                    :disabled="!table.getCanNextPage()"
+                                    pill
+                                    size="sm"
+                                    v-slot="{iconSizeClasses}"
+                                >
+                                    <ChevronRightIcon class="w-4" />
+                                </Button>
+                                <Button
+                                    variant="gray"
+                                    type="button"
+                                    @click="table.setPageIndex(table.getPageCount() - 1)"
+                                    pill
+                                    size="sm"
+                                    v-slot="{iconSizeClasses}"
+                                    :disabled="!table.getCanNextPage()"
+                                >
+                                    <ChevronRightDoubleIcon class="w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

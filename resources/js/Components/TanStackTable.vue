@@ -131,7 +131,7 @@ watch(pageIndex, (newPageNumber) => {
                 >
                     <div class="flex items-center gap-2">
                         <FlexRender
-                            :render="header.column.columnDef.header"
+                            :render="$t('public.' + header.column.columnDef.header)"
                             :props="header.getContext()"
                         />
                         <div v-if="header.column.getIsSorted()">

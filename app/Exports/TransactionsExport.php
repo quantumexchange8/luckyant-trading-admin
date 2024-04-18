@@ -37,7 +37,7 @@ class TransactionsExport implements FromCollection, WithHeadings
             $result[] = array(
                 'name' => $record->user->name,
                 'email' => $record->user->email,
-                'first_leader_email' => $first_leader,
+                'first_leader' => $first_leader,
                 'country' => $country->name,
                 'type' => $record->transaction_type,
                 'fund_type' => $record->fund_type,
