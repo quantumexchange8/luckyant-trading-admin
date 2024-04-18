@@ -222,6 +222,9 @@ class MemberController extends Controller
             $title = 'Member verified!';
             $message = 'The member has been verified successfully.';
 
+            Notification::route('mail', $user->email)
+                ->notify(new KycApprovalNotification($user));
+
         } elseif ($approvalType == 'reject') {
             $user->update([
                 'kyc_approval' => 'Unverified',
@@ -232,9 +235,6 @@ class MemberController extends Controller
             $message = 'An email has been sent to the member to request updated KYC information.';
 
         }
-
-        Notification::route('mail', $user->email)
-            ->notify(new KycApprovalNotification($user));
 
         return redirect()->back()->with('title', $title)->with('toast', $message);
     }
