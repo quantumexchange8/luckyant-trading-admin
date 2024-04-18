@@ -135,7 +135,7 @@ class SubscriptionController extends Controller
             'subscription_id' => $subscription->id,
             'master_id' => $master->id,
             'master_meta_login' => $master->meta_login,
-            'amount' => $trading_account->balance,
+            'amount' => $subscription->meta_balance,
             'real_fund' => abs($trading_account->demo_fund - $trading_account->balance),
             'demo_fund' => $trading_account->demo_fund,
             'type' => 'Deposit',
