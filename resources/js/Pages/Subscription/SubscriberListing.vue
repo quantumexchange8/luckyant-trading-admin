@@ -321,7 +321,6 @@ const clearFilter = () => {
                 <div class="w-full">
                     <BaseListbox
                         id="statusID"
-                        class="rounded-lg text-base text-black w-full dark:text-white dark:bg-gray-800"
                         v-model="subscriberStatus"
                         :options="statusOptions"
                         placeholder="Filter Status"

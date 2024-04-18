@@ -141,7 +141,6 @@ function refreshTable() {
                 <div class="w-full md:w-[240px]">
                     <BaseListbox
                         id="rankID"
-                        class="w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-800"
                         v-model="rank"
                         :options="rankLists"
                         placeholder="Filter rank"
