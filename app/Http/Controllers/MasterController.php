@@ -21,6 +21,8 @@ class MasterController extends Controller
 
     public function getMaster(Request $request, $type)
     {
+        $authUser = Auth::user();
+
         $query = MasterRequest::query()
             ->with(['user:id,name,email', 'trading_account'])
             ->where('status', $type);
@@ -53,6 +55,20 @@ class MasterController extends Controller
             });
         }
 
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
         $results = $query->latest()->paginate(10);
 
         // $results->each(function ($user_deposit) {
@@ -65,6 +81,7 @@ class MasterController extends Controller
 
     public function getMasterHistroy(Request $request)
     {
+        $authUser = Auth::user();
 
         $masterHistory = MasterRequest::query()
             ->with(['user:id,name,email', 'trading_account'])
@@ -95,6 +112,20 @@ class MasterController extends Controller
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
             $masterHistory->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $masterHistory->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $masterHistory->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $masterHistory->whereIn('user_id', []);
         }
 
         $results = $masterHistory->latest()->paginate(10);
@@ -167,7 +198,7 @@ class MasterController extends Controller
 
     public function getAllMaster(Request $request)
     {
-
+        $authUser = Auth::user();
         $master = Master::query()->with(['trading_account', 'user', 'tradingUser']);
 
         if ($request->filled('search')) {
@@ -180,6 +211,20 @@ class MasterController extends Controller
                     $account->where('meta_login', 'like', $search);
                 });
             });
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $master->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $master->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $master->whereIn('user_id', []);
         }
 
         $results = $master->latest()->paginate(10);

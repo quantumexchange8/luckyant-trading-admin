@@ -30,7 +30,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::middleware(['auth', 'role:admin'])->group(function () {
+Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /**
@@ -192,8 +192,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
      * ==============================
      */
     Route::prefix('admin')->group(function () {
-        Route::get('/admin', [AdminController::class, 'admin'])->name('admin.admin');
-        Route::get('/getAdminDetails', [AdminController::class, 'getAdminDetails'])->name('admin.getAdminDetails');
+        Route::get('/admin_listing', [AdminController::class, 'admin'])->name('admin.admin_listing');
+        Route::get('/getAdminUsers', [AdminController::class, 'getAdminUsers'])->name('admin.getAdminUsers');
+
+        Route::post('/assign_user', [AdminController::class, 'assign_user'])->name('admin.assign_user');
+        Route::post('/remove_admin', [AdminController::class, 'remove_admin'])->name('admin.remove_admin');
     });
 });
 

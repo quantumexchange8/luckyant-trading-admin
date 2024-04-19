@@ -36,6 +36,7 @@ class TradingController extends Controller
 
     public function getTradingAccount(Request $request)
     {
+        $authUser = \Auth::user();
         $connection = (new MetaFiveService())->getConnectionStatus();
 
         if ($connection == 0) {
@@ -48,6 +49,20 @@ class TradingController extends Controller
 
         $tradingListing = TradingAccount::query()
             ->with(['user', 'accountType', 'tradingUser']);
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $tradingListing->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $tradingListing->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $tradingListing->whereIn('user_id', []);
+        }
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';

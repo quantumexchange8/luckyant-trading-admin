@@ -7,6 +7,7 @@ use App\Models\PaymentAccount;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\SettingLeverage;
+use Spatie\Permission\Models\Role;
 
 class SelectOptionService
 {
@@ -49,6 +50,16 @@ class SelectOptionService
             return [
                 'label' => $settingLeverage->display,
                 'value' => $settingLeverage->value,
+            ];
+        });
+    }
+
+    public function getRoles(): \Illuminate\Support\Collection
+    {
+        return Role::whereNotIn('name', ['super-admin', 'leader'])->orderBy('id')->get()->map(function ($role) {
+            return [
+                'label' => trans('public.' . $role->name),
+                'value' => $role->id,
             ];
         });
     }

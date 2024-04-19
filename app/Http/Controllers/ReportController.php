@@ -19,6 +19,7 @@ class ReportController extends Controller
 
     public function getTradingRebate(Request $request)
     {
+        $authUser = \Auth::user();
         $columnName = $request->input('columnName'); // Retrieve encoded JSON string
 
         // Decode the JSON
@@ -51,6 +52,20 @@ class ReportController extends Controller
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
             $query->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
         }
 
         if ($request->has('exportStatus')) {

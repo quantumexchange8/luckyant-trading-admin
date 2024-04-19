@@ -41,6 +41,7 @@ class TransactionController extends Controller
 
     public function getPendingTransaction(Request $request, $type)
     {
+        $authUser = Auth::user();
         $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet', 'payment_account'])
             ->where('transaction_type', $type)
             ->where('status', 'Processing');
@@ -77,6 +78,20 @@ class TransactionController extends Controller
             if ($leaderUser) {
                 $query->whereIn('user_id', $leaderUser->getChildrenIds());
             }
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
         }
 
         if ($request->has('exportStatus')) {
@@ -118,11 +133,11 @@ class TransactionController extends Controller
                     $wallet = Wallet::find($transaction->to_wallet_id);
                     $wallet->balance += $transaction->amount;
                     $wallet->save();
-                    
+
                     Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
                 } elseif ($transaction->transaction_type == 'Withdrawal') {
                     $wallet = Wallet::find($transaction->from_wallet_id);
-        
+
                     Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
                 }
             }
@@ -139,11 +154,11 @@ class TransactionController extends Controller
                     'handle_by' => Auth::user()->id,
                     'new_wallet_amount' => $wallet->balance,
                 ]);
-                
+
                 Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
             } elseif ($transaction->transaction_type == 'Withdrawal') {
                 $wallet = Wallet::find($transaction->from_wallet_id);
-    
+
                 Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
             }
         }
@@ -213,6 +228,7 @@ class TransactionController extends Controller
 
     public function getTransactionHistory(Request $request)
     {
+        $authUser = Auth::user();
         $query = Transaction::query()
             ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
             ->whereNotIn('status', ['Processing', 'Pending']);
@@ -281,6 +297,20 @@ class TransactionController extends Controller
             $query->where(function ($q) use ($status) {
                 $q->where('status', $status);
             });
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
         }
 
         if ($request->has('exportStatus')) {

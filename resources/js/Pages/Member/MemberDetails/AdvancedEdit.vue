@@ -18,11 +18,11 @@ const memberInfo = ref(props.member_detail);
 
 const form = useForm({
     user_id: props.member_detail.id,
-    rank: props.member_detail.setting_rank_id,
+    rank: '',
     upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.email } : {},
     password: '',
-    leader_status: props.member_detail.leader_status,
-    is_public: props.member_detail.is_public,
+    leader_status: '',
+    is_public:'',
 })
 
 const showPassword = ref(false)
@@ -47,7 +47,10 @@ function loadUsers(query, setOptions) {
 }
 
 const submit = () => {
-    form.identification_number = memberInfo.value.identification_number;
+    form.rank = memberInfo.value.setting_rank_id;
+    form.upline_id = memberInfo.value.upline ? { value: memberInfo.value.upline.id, label: memberInfo.value.upline.email } : {};
+    form.leader_status = memberInfo.value.leader_status;
+    form.is_public = memberInfo.value.is_public;
     form.patch(route('member.advanceEdit_member'), {
         onSuccess: () => {
             form.reset();
@@ -103,7 +106,7 @@ const groupStatus = [
                 <Label class="text-sm dark:text-white" for="rank" value="Rank" />
                 <div class="md:col-span-3">
                     <BaseListbox
-                        v-model="form.rank"
+                        v-model="memberInfo.setting_rank_id"
                         :options="ranks"
                     />
                     <InputError :message="form.errors.rank" class="mt-1 col-span-4" />
@@ -126,7 +129,7 @@ const groupStatus = [
                 <Label class="text-sm dark:text-white" for="leader_status" value="Leader Status" />
                 <div class="md:col-span-3">
                     <BaseListbox
-                        v-model="form.leader_status"
+                        v-model="memberInfo.leader_status"
                         :options="leaderStatus"
                     />
                 </div>
@@ -136,7 +139,7 @@ const groupStatus = [
                 <Label class="text-sm dark:text-white" for="group_status" value="Group Status" />
                 <div class="md:col-span-3">
                     <BaseListbox
-                        v-model="form.is_public"
+                        v-model="memberInfo.is_public"
                         :options="groupStatus"
                     />
                 </div>

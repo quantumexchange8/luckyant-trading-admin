@@ -33,11 +33,13 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Permission;
 
 class MemberController extends Controller
 {
     public function index()
     {
+        $authUser = Auth::user();
         $rankLists = SettingRank::all()->map(function ($rank) {
             return [
                 'value' => $rank->id,
@@ -45,9 +47,22 @@ class MemberController extends Controller
             ];
         });
 
-        $kycCounts = User::where('role', 'member')
-            ->whereIn('kyc_approval', ['Pending', 'Verified', 'Unverified'])
-            ->selectRaw('kyc_approval, count(*) as count')
+        $kycQuery = User::whereNotIn('role', ['super-admin', 'admin'])
+            ->whereIn('kyc_approval', ['Pending', 'Verified', 'Unverified']);
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $kycQuery->whereIn('id', $authUser->getChildrenIds());
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $kycQuery->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $kycQuery->whereIn('id', []);
+        }
+
+        $kycCounts = $kycQuery->selectRaw('kyc_approval, count(*) as count')
             ->groupBy('kyc_approval')
             ->pluck('count', 'kyc_approval')
             ->toArray();
@@ -137,8 +152,10 @@ class MemberController extends Controller
 
     public function getMemberDetails(Request $request)
     {
+        $authUser = Auth::user();
+
         $members = User::query()
-            ->where('role', '=', 'member')
+            ->whereNotIn('role', ['super-admin', 'admin'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->input('search');
                 $query->where(function ($innerQuery) use ($search) {
@@ -176,10 +193,21 @@ class MemberController extends Controller
                 if ($leaderUser) {
                     $query->whereIn('id', $leaderUser->getChildrenIds());
                 }
-            })
-            // ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList', 'identification_number', 'gender', 'top_leader_id', 'upline_id')
-            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
-            ->latest();
+            });
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $members->whereIn('id', $authUser->getChildrenIds());
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $members->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $members->whereIn('id', []);
+        }
+
+        $members = $members->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])->latest();
 
         if ($request->has('exportStatus')) {
             return Excel::download(new MemberListingExport($members), Carbon::now() . '-report.xlsx');
@@ -493,8 +521,10 @@ class MemberController extends Controller
 
     public function getAllUsers(Request $request)
     {
+        $authUser = Auth::user();
+
         $users = User::query()
-            ->where('role', '=', 'member')
+            ->whereNotIn('role', ['super-admin', 'admin'])
             ->whereNot('id', $request->id)
             ->when($request->filled('query'), function ($query) use ($request) {
                 $search = $request->input('query');
@@ -502,7 +532,23 @@ class MemberController extends Controller
                     $innerQuery->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
-            })
+            });
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $users->whereIn('id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $users->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $users->whereIn('id', []);
+        }
+
+        $users = $users
             ->select('id', 'name', 'email')
             ->get();
 
@@ -515,8 +561,9 @@ class MemberController extends Controller
 
     public function getAllLeaders(Request $request)
     {
+        $authUser = Auth::user();
+
         $users = User::query()
-            ->where('role', '=', 'member')
             ->where('leader_status', 1)
             ->when($request->filled('query'), function ($query) use ($request) {
                 $search = $request->input('query');
@@ -524,7 +571,23 @@ class MemberController extends Controller
                     $innerQuery->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
-            })
+            });
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $users->whereIn('id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $users->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $users->whereIn('id', []);
+        }
+
+        $users = $users
             ->select('id', 'name', 'email')
             ->get();
 
@@ -710,7 +773,6 @@ class MemberController extends Controller
 
         $users = User::where('dial_code', $dial_code)
             ->whereNot('id', $user->id)
-            ->where('role', 'member')
             ->where('status', 'Active')
             ->get();
 

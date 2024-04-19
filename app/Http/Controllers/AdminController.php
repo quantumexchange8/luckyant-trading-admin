@@ -2,51 +2,117 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AssignUserRequest;
+use App\Services\SelectOptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 class AdminController extends Controller
 {
-    //
-
     public function admin()
     {
-        
-        return Inertia::render('Admin/Admin');
+        return Inertia::render('Admin/Admin', [
+            'roleLists' => (new SelectOptionService())->getRoles(),
+        ]);
     }
 
-    public function getAdminDetails(Request $request)
+    public function getAdminUsers(Request $request)
     {
-        $admins = User::query()
-            ->where('role', '=', 'admin')
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = $request->input('search');
-                $query->where(function ($innerQuery) use ($search) {
-                    $innerQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            })
-            // ->when($request->filled('type'), function($query) use ($request) {
-            //     $type = $request->input('type');
-            //     $sort = $request->input('sort');
-               
-            //     $query->orderBy($type, $sort);
-            // })
-            ->select('id', 'name', 'email', 'setting_rank_id', 'kyc_approval', 'country','created_at', 'hierarchyList')
-            ->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $authUser = \Auth::user();
+        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        // Decode the JSON
+        $decodedColumnName = json_decode(urldecode($columnName), true);
 
-        $admins->each(function ($user) {
-            $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
-            $user->front_identity = $user->getFirstMediaUrl('front_identity');
-            $user->back_identity = $user->getFirstMediaUrl('back_identity');
-            $user->kyc_upload_date = $user->getMedia('back_identity')->first()->created_at ?? null;
-            $user->walletBalance = $user->wallets->sum('balance');
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
+        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+
+        $adminQuery = User::query()
+            ->whereIn('role', ['super-admin', 'admin']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $adminQuery->where(function ($innerQuery) use ($search) {
+                $innerQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('date')) {
+            $date = $request->input('date');
+            $dateRange = explode(' - ', $date);
+            $start_date = \Carbon\Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+
+            $adminQuery->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        if ($request->filled('rank')) {
+            $rank_id = $request->input('rank');
+            $adminQuery->where(function ($innerQuery) use ($rank_id) {
+                $innerQuery->where('setting_rank_id', $rank_id);
+            });
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $adminQuery->whereIn('id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $adminQuery->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $adminQuery->whereIn('id', []);
+        }
+
+        $results = $adminQuery
+            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+            ->paginate($request->input('paginate', 10));
+
+        $locale = app()->getLocale();
+
+        $results->each(function ($user) use ($locale) {
+            $rank = $user->rank;
+            $translations = json_decode($rank->name, true);
+            $user->user_rank = $translations[$locale] ?? $rank->name;
         });
 
-        return response()->json($admins);
+        return response()->json([
+            'adminUsers' => $results,
+        ]);
+    }
+
+    public function assign_user(AssignUserRequest $request)
+    {
+        $user = User::find($request->user_id);
+        $role = Role::find($request->role);
+
+        if ($user->hasRole($role->name)) {
+            return redirect()->back()
+                ->with('title', trans('public.is_admin'))
+                ->with('warning', trans('public.already_is_admin'));
+        }
+
+        $user->assignRole($role);
+        $user->role = 'admin';
+        $user->save();
+
+        return redirect()->back()->with('title', trans('public.admin_added'))->with('success', trans('public.success_added_admin'));
+    }
+
+    public function remove_admin(Request $request)
+    {
+        $user = User::find($request->id);
+
+        $user->roles()->detach();
+        $user->role = 'user';
+        $user->save();
+
+        return redirect()->back()->with('title', trans('public.remove_admin'))->with('success', trans('public.remove_admin_success'));
     }
 }

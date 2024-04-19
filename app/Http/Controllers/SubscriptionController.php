@@ -37,6 +37,7 @@ class SubscriptionController extends Controller
 
     public function getPendingSubscriptions(Request $request)
     {
+        $authUser = Auth::user();
         $pendingSubscriptions = Subscription::query()
             ->with(['user:id,name,email', 'master', 'master.tradingUser', 'tradingUser'])
             ->where('status', 'Pending');
@@ -62,6 +63,20 @@ class SubscriptionController extends Controller
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
             $pendingSubscriptions->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $pendingSubscriptions->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $pendingSubscriptions->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $pendingSubscriptions->whereIn('user_id', []);
         }
 
         $results = $pendingSubscriptions->latest()->paginate(10);
@@ -294,6 +309,7 @@ class SubscriptionController extends Controller
 
     public function getActiveSubscriber(Request $request)
     {
+        $authUser = Auth::user();
         $columnName = $request->input('columnName'); // Retrieve encoded JSON string
         // Decode the JSON
         $decodedColumnName = json_decode(urldecode($columnName), true);
@@ -339,6 +355,20 @@ class SubscriptionController extends Controller
             $activeSubscriber->where('status', $status);
         }
 
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $activeSubscriber->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $activeSubscriber->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $activeSubscriber->whereIn('user_id', []);
+        }
+
         if ($request->has('exportStatus')) {
             return Excel::download(new SubscriberExport($activeSubscriber), Carbon::now() . '-subscribers-report.xlsx');
         }
@@ -380,6 +410,7 @@ class SubscriptionController extends Controller
 
     public function getHistorySubscriber(Request $request)
     {
+        $authUser = Auth::user();
         $historySubscriber = Subscription::query()
             ->with(['user', 'master', 'master.user', 'transaction', 'master.tradingUser'])
             ->whereNot('status', 'Pending');
@@ -421,6 +452,20 @@ class SubscriptionController extends Controller
             }
         }
 
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $historySubscriber->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $historySubscriber->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $historySubscriber->whereIn('user_id', []);
+        }
+
         if ($request->has('exportStatus')) {
             return Excel::download(new SubscriptionHistoryExport($historySubscriber), Carbon::now() . '-' . 'Subscription_History-report.xlsx');
         }
@@ -436,6 +481,7 @@ class SubscriptionController extends Controller
 
     public function getPendingSubscriptionRenewal(Request $request)
     {
+        $authUser = Auth::user();
         $pendingRenewal = SubscriptionRenewalRequest::query()
             ->with(['user', 'subscription', 'subscription.master', 'subscription.master.user'])
             ->where('status', 'Pending');
@@ -467,6 +513,20 @@ class SubscriptionController extends Controller
             $pendingRenewal->where(function ($q) use ($filter) {
                 $q->where('status', $filter);
             });
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $pendingRenewal->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $pendingRenewal->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $pendingRenewal->whereIn('user_id', []);
         }
 
         $results = $pendingRenewal->latest()->paginate(10);

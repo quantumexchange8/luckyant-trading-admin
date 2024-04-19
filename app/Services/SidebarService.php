@@ -12,31 +12,84 @@ use App\Models\User;
 class SidebarService {
     public function getPendingTransactionCount(): int
     {
-        return Transaction::query()
+        $authUser = \Auth::user();
+
+        $query = Transaction::query()
             ->where('category', 'wallet')
-            ->where('status', 'Processing')
-            ->count();
+            ->where('status', 'Processing');
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
+        return $query->count();
     }
 
     public function getPendingKycCount(): int
     {
-        return User::where('role', 'member')
+        return User::where('role', 'user')
             ->where('kyc_approval', 'Pending')
             ->count();
     }
 
     public function getPendingMasterCount(): int
     {
-        return MasterRequest::query()
-            ->where('status', 'Pending')
-            ->count();
+        $authUser = \Auth::user();
+
+        $query = MasterRequest::query()
+            ->where('status', 'Pending');
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
+        return $query->count();
     }
 
     public function getPendingSubscriberRequestCount(): int
     {
-        $subscription_renewal = SubscriptionRenewalRequest::where('status', 'Pending')->count();
-        $subscriber = Subscription::where('status', 'Pending')->count();
+        $authUser = \Auth::user();
 
-        return $subscription_renewal + $subscriber;
+        $subscription_renewal = SubscriptionRenewalRequest::where('status', 'Pending');
+        $subscriber = Subscription::where('status', 'Pending');
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $subscription_renewal->whereIn('user_id', $childrenIds);
+            $subscriber->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $subscription_renewal->whereIn('user_id', $childrenIds);
+            $subscriber->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $subscription_renewal->whereIn('user_id', []);
+            $subscriber->whereIn('user_id', []);
+        }
+
+        return $subscription_renewal->count() + $subscriber->count();
     }
 }
