@@ -18,13 +18,13 @@ class SidebarService {
             ->where('category', 'wallet')
             ->where('status', 'Processing');
 
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+        if (!empty($authUser) && $authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
             $query->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
+        } elseif (!empty($authUser) && $authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+        } elseif (!empty($authUser) && !empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
             $query->whereIn('user_id', $childrenIds);
         } else {
@@ -49,13 +49,13 @@ class SidebarService {
         $query = MasterRequest::query()
             ->where('status', 'Pending');
 
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+        if (!empty($authUser) && $authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
             $query->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
+        } elseif (!empty($authUser) && $authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+        } elseif (!empty($authUser) && !empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
             $query->whereIn('user_id', $childrenIds);
         } else {
@@ -73,14 +73,14 @@ class SidebarService {
         $subscription_renewal = SubscriptionRenewalRequest::where('status', 'Pending');
         $subscriber = Subscription::where('status', 'Pending');
 
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+        if (!empty($authUser) && $authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
             $subscription_renewal->whereIn('user_id', $childrenIds);
             $subscriber->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
+        } elseif (!empty($authUser) && $authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+        } elseif (!empty($authUser) && !empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
             $subscription_renewal->whereIn('user_id', $childrenIds);
             $subscriber->whereIn('user_id', $childrenIds);
