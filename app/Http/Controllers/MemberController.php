@@ -407,27 +407,43 @@ class MemberController extends Controller
                     $user->update([
                         'is_public' => $topLead->is_public
                     ]);
+
+                    User::whereIn('id', $user->getChildrenIds())->update([
+                        'is_public' => $user->is_public
+                    ]);
                 }
 
                 $this->transferUpline($user, $upline_id);
+            } else {
+                if ($user->is_public != $request->is_public) {
+                    $user->update([
+                        'is_public' => $request->is_public,
+                    ]);
+
+                    $childrenIds = $user->getChildrenIds();
+
+                    User::whereIn('id', $childrenIds)->update([
+                        'is_public' => $user->is_public
+                    ]);
+                }
+            }
+        } else {
+            if ($user->is_public != $request->is_public) {
+                $user->update([
+                    'is_public' => $request->is_public,
+                ]);
+
+                $childrenIds = $user->getChildrenIds();
+
+                User::whereIn('id', $childrenIds)->update([
+                    'is_public' => $user->is_public
+                ]);
             }
         }
 
         if ($user->leader_status != $request->leader_status) {
             $user->update([
                 'leader_status' => $request->leader_status,
-            ]);
-        }
-
-        if ($user->is_public != $request->is_public) {
-            $user->update([
-                'is_public' => $request->is_public,
-            ]);
-
-            $childrenIds = $user->getChildrenIds();
-
-            User::whereIn('id', $childrenIds)->update([
-                'is_public' => $user->is_public
             ]);
         }
 
