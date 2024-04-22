@@ -339,39 +339,39 @@ const rejectTransaction = async () => {
             </tr>
             </tbody>
         </table>
-        <div class="flex justify-center mt-4" v-if="!depositLoading">
-            <TailwindPagination
-                :item-classes=paginationClass
-                :active-classes=paginationActiveClass
-                :data="withdrawals"
-                :limit=2
-                @pagination-change-page="handlePageChange"
-            />
+    </div>
+    <div class="flex justify-center mt-4" v-if="!depositLoading">
+        <TailwindPagination
+            :item-classes=paginationClass
+            :active-classes=paginationActiveClass
+            :data="withdrawals"
+            :limit=2
+            @pagination-change-page="handlePageChange"
+        />
+    </div>
+    <div class="flex flex-col sm:flex-row sm:justify-between items-center">
+        <div class="text-xl font-semibold">
+            Total Amount: ${{ formatAmount(totalAmount) }}
         </div>
-        <div class="flex justify-between items-center">
-            <div class="text-xl font-semibold">
-                Total Amount: ${{ formatAmount(totalAmount) }}
-            </div>
-            <div class="pt-3 px-2 grid grid-cols-2 gap-4">
-                <Button
-                    type="button"
-                    variant="success"
-                    class="px-6 justify-center"
-                    :disabled="totalAmount === 0"
-                    @click="openTransactionModal('approve')"
-                >
-                    Approve all
-                </Button>
-                <Button
-                    type="button"
-                    variant="danger"
-                    class="px-6 justify-center"
-                    :disabled="totalAmount === 0"
-                    @click="openTransactionModal('reject')"
-                >
-                    Reject all
-                </Button>
-            </div>
+        <div class="pt-3 px-2 grid grid-cols-2 gap-4">
+            <Button
+                type="button"
+                variant="success"
+                class="px-6 justify-center"
+                :disabled="totalAmount === 0"
+                @click="openTransactionModal('approve')"
+            >
+                Approve all
+            </Button>
+            <Button
+                type="button"
+                variant="danger"
+                class="px-6 justify-center"
+                :disabled="totalAmount === 0"
+                @click="openTransactionModal('reject')"
+            >
+                Reject all
+            </Button>
         </div>
     </div>
 
