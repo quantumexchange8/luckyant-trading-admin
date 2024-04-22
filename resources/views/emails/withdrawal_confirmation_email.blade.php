@@ -7,13 +7,13 @@ We are pleased to inform you that your withdrawal request has been successfully 
 
 Below are the details of your withdrawal:
 
-- **Transaction ID**: {{ $transaction->id }}
-- **Withdrawal Amount**: {{ $transaction->amount }}
+- **Transaction ID**: {{ $transaction->transaction_number }}
+- **Withdrawal Amount**: $ {{ $transaction->transaction_amount }}
 - **Date and Time**: {{ $transaction->created_at }}
 
 If you have any questions or need further assistance, please feel free to contact our customer service team. Our staff will be happy to assist you and ensure that your experience is of the highest quality.
 
-Best Regards,  
+Best Regards,
 Lucky Ant Trading Team
 
 @component('mail::subcopy')
@@ -36,13 +36,13 @@ Lucky Ant Trading Team
 
 以下是有关您的提款的详细信息：
 
-- **交易ID**: {{ $transaction->id }}
-- **提款金额**: {{ $transaction->amount }}
+- **交易ID**: {{ $transaction->transaction_number }}
+- **提款金额**: $ {{ $transaction->transaction_amount }}
 - **日期和时间**: {{ $transaction->created_at }}
 
 如果您有任何疑问或需要进一步协助,请随时联系我们的客户服务团队。我们的工作人员将竭诚为您提供帮助,并确保您的体验达到最佳状态。
 
-此致敬礼,  
+此致敬礼,
 蚂蚁科技团队
 
 @component('mail::subcopy')

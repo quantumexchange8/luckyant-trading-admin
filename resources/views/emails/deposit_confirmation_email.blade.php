@@ -7,13 +7,13 @@ We are delighted to inform you that your recent deposit has been successfully pr
 
 Here are the details of your deposit:
 
-- **Transaction ID**: {{ $transaction->id }}
-- **Deposit Amount**: {{ $transaction->amount }}
+- **Transaction ID**: {{ $transaction->transaction_number }}
+- **Deposit Amount**: $ {{ $transaction->transaction_amount }}
 - **Date and Time**: {{ $transaction->created_at }}
 
 If you have any questions regarding your deposit or need assistance with anything else, please feel free to contact our customer support team. We are here to help you. Thank you for choosing Lucky Ant Trading. We appreciate your trust and look forward to serving you.
 
-Best Regards , 
+Best Regards ,
 Lucky Ant Trading Team
 
 @component('mail::subcopy')
@@ -36,8 +36,8 @@ Lucky Ant Trading Team
 
 以下是您存款的详细信息：
 
-- **交易ID**: {{ $transaction->id }}
-- **存款金额**: {{ $transaction->amount }}
+- **交易ID**: {{ $transaction->transaction_number }}
+- **存款金额**: $ {{ $transaction->transaction_amount }}
 - **日期和时间**: {{ $transaction->created_at }}
 
 如果您对存款有任何疑问或需要帮助,请随时联系我们的客户支持团队。我们在这里为您提供帮助。感谢您选择蚂蚁科技。我们感谢您的信任,期待为您服务。
