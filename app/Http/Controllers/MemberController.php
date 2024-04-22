@@ -7,6 +7,7 @@ use App\Exports\MemberListingExport;
 use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
 use App\Models\Country;
+use App\Models\RankingLog;
 use App\Models\SettingRank;
 use App\Models\TradingAccount;
 use App\Models\User;
@@ -353,7 +354,6 @@ class MemberController extends Controller
 
     public function advanceEditMember(Request $request)
     {
-
         $user = User::find($request->user_id);
 
         $currentRank = $request->rank;
@@ -365,13 +365,26 @@ class MemberController extends Controller
         }
 
         if ($currentRank != $user->setting_rank_id) {
+            $previous_rank_id = $user->setting_rank_id;
+
+            $user->setting_rank_id = $currentRank;
             $user->rank_up_status = 'manual';
             $user->save();
-        }
 
-        $user->update([
-            'setting_rank_id' => $request->rank,
-        ]);
+            $rank = SettingRank::find($currentRank);
+
+            RankingLog::create([
+                'user_id' => $user->id,
+                'old_rank' => $previous_rank_id,
+                'new_rank' => $currentRank,
+                'user_package_amount' => 0,
+                'target_package_amount' => $rank->package_requirement,
+                'user_direct_referral_amount' => 0,
+                'target_direct_referral_amount' => $rank->direct_referral,
+                'user_group_sales' => 0,
+                'target_group_sales' => $rank->group_sales,
+            ]);
+        }
 
         if ($request->upline_id != null) {
             $upline_id = $request->upline_id['value'];
@@ -391,6 +404,9 @@ class MemberController extends Controller
                         ]);
                     }
 
+                    $user->update([
+                        'is_public' => $topLead->is_public
+                    ]);
                 }
 
                 $this->transferUpline($user, $upline_id);

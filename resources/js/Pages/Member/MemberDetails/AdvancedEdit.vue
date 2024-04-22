@@ -15,11 +15,12 @@ const props = defineProps({
 })
 
 const memberInfo = ref(props.member_detail);
+const memberUpline = ref(props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.email } : {});
 
 const form = useForm({
     user_id: props.member_detail.id,
     rank: '',
-    upline_id: props.member_detail.upline ? { value: props.member_detail.upline.id, label: props.member_detail.upline.email } : {},
+    upline_id: '',
     password: '',
     leader_status: '',
     is_public:'',
@@ -48,7 +49,7 @@ function loadUsers(query, setOptions) {
 
 const submit = () => {
     form.rank = memberInfo.value.setting_rank_id;
-    form.upline_id = memberInfo.value.upline ? { value: memberInfo.value.upline.id, label: memberInfo.value.upline.email } : {};
+    form.upline_id = memberUpline.value;
     form.leader_status = memberInfo.value.leader_status;
     form.is_public = memberInfo.value.is_public;
     form.patch(route('member.advanceEdit_member'), {
@@ -118,7 +119,7 @@ const groupStatus = [
                 <div class="md:col-span-3">
                     <Combobox
                         :load-options="loadUsers"
-                        v-model="form.upline_id"
+                        v-model="memberUpline"
                         :error="form.errors.upline_id"
                         image
                     />
