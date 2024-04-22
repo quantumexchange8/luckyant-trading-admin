@@ -157,7 +157,11 @@ class TransactionController extends Controller
 
                 Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
             } elseif ($transaction->transaction_type == 'Withdrawal') {
-                $wallet = Wallet::find($transaction->from_wallet_id);
+
+                $transaction->update([
+                    'status' => 'Success',
+                    'handle_by' => Auth::user()->id,
+                ]);
 
                 Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
             }

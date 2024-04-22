@@ -268,7 +268,7 @@ const rejectTransaction = async () => {
                     Transaction ID
                 </th>
                 <th scope="col" class="py-3">
-                    Tether/ Payment Merchant
+                    Payment Method
                 </th>
                 <th scope="col" class="py-3">
                     USDT Address / Bank Acc
@@ -301,7 +301,14 @@ const rejectTransaction = async () => {
                 <td class="py-3">
                     <div class="inline-flex items-center gap-2">
                         <img :src="deposit.user.profile_photo_url ? deposit.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
-                        {{ deposit.user.name }}
+                        <div class="flex flex-col gap-1">
+                            <div>
+                                {{ deposit.user.name }}
+                            </div>
+                            <div>
+                                {{ deposit.user.email }}
+                            </div>
+                        </div>
                     </div>
                 </td>
                 <td class="py-3">
