@@ -60,7 +60,7 @@ class Transaction extends Model implements HasMedia
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id')->withTrashed();
     }
 
     public function payment_account(): \Illuminate\Database\Eloquent\Relations\BelongsTo

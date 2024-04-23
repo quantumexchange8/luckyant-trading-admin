@@ -24,10 +24,11 @@ class PendingDepositExport implements FromCollection, WithHeadings
         $records = $this->query->get();
         $result = array();
         foreach($records as $deposits){
-            
+
             $result[] = array(
                 'name' => $deposits->user->name,
                 'email' => $deposits->user->email,
+                'first_leader' => $deposits->user->getFirstLeader()->name ?? '-',
                 'category' => $deposits->category,
                 'asset' => $deposits->to_wallet->name,
                 'type' => $deposits->transaction_type,
@@ -35,8 +36,6 @@ class PendingDepositExport implements FromCollection, WithHeadings
                 'transaction_id' => $deposits->transaction_number,
                 'txn_hash' => $deposits->txn_hash,
                 'to_wallet_address' => $deposits->to_wallet_address,
-                'from_meta_login' => $deposits->from_meta_login,
-                'to_meta_login' => $deposits->to_meta_login,
                 'payment_method' => $deposits->payment_method,
                 'payment_account_name' => $deposits->setting_payment->payment_account_name ?? '',
                 'account_number' => $deposits->setting_payment->account_no ?? '',
@@ -55,15 +54,14 @@ class PendingDepositExport implements FromCollection, WithHeadings
         return [
             'Name',
             'Email',
+            'First Leader',
             'Category',
-            'asset',
+            'Asset',
             'Transaction Type',
             'Fund Type',
             'Transaction ID',
             'Transaction Hash',
             'To Wallet Address',
-            'From Trading Account',
-            'To Trading Account',
             'Payment Method',
             'Payment Account Name',
             'Account',

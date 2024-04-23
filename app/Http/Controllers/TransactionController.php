@@ -106,7 +106,7 @@ class TransactionController extends Controller
         $results = $query->latest()->paginate(10);
 
         $results->each(function ($transaction) {
-
+            $transaction->user->first_leader = $transaction->user->getFirstLeader()->name ?? '-';
             $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
             $transaction->receipt_url = $transaction->getFirstMediaUrl('receipt');
         });

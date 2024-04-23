@@ -33,7 +33,7 @@ const currentPage = ref(1);
 const refreshDeposit = ref(props.refresh);
 const depositLoading = ref(props.isLoading);
 const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
-const { formatDateTime, formatAmount } = transactionFormat();
+const { formatDateTime, formatAmount, formatType } = transactionFormat();
 const totalAmount = ref(0);
 const isChecked = ref([]);
 const isAllSelected = ref(false);
@@ -256,13 +256,16 @@ const rejectTransaction = async () => {
                     />
                 </th>
                 <th scope="col" class="py-3">
+                    Date
+                </th>
+                <th scope="col" class="py-3">
                     Name
                 </th>
                 <th scope="col" class="py-3">
-                    Asset
+                    First Leader
                 </th>
                 <th scope="col" class="py-3">
-                    Date
+                    Asset
                 </th>
                 <th scope="col" class="py-3">
                     Transaction ID
@@ -275,6 +278,12 @@ const rejectTransaction = async () => {
                 </th>
                 <th scope="col" class="py-3">
                     Amount
+                </th>
+                <th scope="col" class="p-3">
+                    {{ $t('public.payment_charges') }}
+                </th>
+                <th scope="col" class="p-3">
+                    Withdrawal {{ $t('public.amount') }}
                 </th>
                 <th scope="col" class="py-3 text-center">
                     Action
@@ -299,6 +308,9 @@ const rejectTransaction = async () => {
                     />
                 </td>
                 <td class="py-3">
+                    {{ formatDateTime(deposit.created_at) }}
+                </td>
+                <td class="py-3">
                     <div class="inline-flex items-center gap-2">
                         <img :src="deposit.user.profile_photo_url ? deposit.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
                         <div class="flex flex-col gap-1">
@@ -312,12 +324,10 @@ const rejectTransaction = async () => {
                     </div>
                 </td>
                 <td class="py-3">
-                    <div class="inline-flex items-center gap-2">
-                        {{ deposit.from_wallet.name }}
-                    </div>
+                    {{ deposit.user.first_leader }}
                 </td>
                 <td class="py-3">
-                    {{ formatDateTime(deposit.created_at) }}
+                    {{ deposit.from_wallet.name }}
                 </td>
                 <td class="py-3">
                     {{ deposit.transaction_number }}
@@ -330,6 +340,12 @@ const rejectTransaction = async () => {
                 </td>
                 <td class="py-3">
                     ${{ deposit.amount }}
+                </td>
+                <td class="p-3">
+                    $ {{ deposit.transaction_charges }}
+                </td>
+                <td class="p-3 text-red-500">
+                    $ {{ deposit.transaction_amount }}
                 </td>
                 <td class="py-3 text-center">
                     <Action

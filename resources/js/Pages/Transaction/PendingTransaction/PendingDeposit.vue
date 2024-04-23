@@ -256,13 +256,16 @@ const rejectTransaction = async () => {
                     />
                 </th>
                 <th scope="col" class="py-3">
+                    Date
+                </th>
+                <th scope="col" class="py-3">
                     Name
                 </th>
                 <th scope="col" class="py-3">
-                    Asset
+                    First Leader
                 </th>
                 <th scope="col" class="py-3">
-                    Date
+                    Asset
                 </th>
                 <th scope="col" class="py-3">
                     Transaction ID
@@ -296,18 +299,26 @@ const rejectTransaction = async () => {
                     />
                 </td>
                 <td class="py-3">
+                    {{ formatDateTime(deposit.created_at) }}
+                </td>
+                <td class="py-3">
                     <div class="inline-flex items-center gap-2">
                         <img :src="deposit.user.profile_photo_url ? deposit.user.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
-                        {{ deposit.user.name }}
+                        <div class="flex flex-col gap-1">
+                            <div>
+                                {{ deposit.user.name }}
+                            </div>
+                            <div>
+                                {{ deposit.user.email }}
+                            </div>
+                        </div>
                     </div>
                 </td>
                 <td class="py-3">
-                    <div class="inline-flex items-center gap-2">
-                        {{ deposit.to_wallet.name }}
-                    </div>
+                    {{ deposit.user.first_leader }}
                 </td>
                 <td class="py-3">
-                    {{ formatDateTime(deposit.created_at) }}
+                    {{ deposit.to_wallet.name }}
                 </td>
                 <td class="py-3">
                     {{ deposit.transaction_number }}
