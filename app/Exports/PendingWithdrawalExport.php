@@ -23,26 +23,28 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
     {
         $records = $this->query->get();
         $result = array();
-        foreach($records as $deposits){
+        foreach($records as $row){
 
             $result[] = array(
-                'name' => $deposits->user->name,
-                'email' => $deposits->user->email,
-                'first_leader' => $deposits->user->getFirstLeader()->name ?? '-',
-                'category' => $deposits->category,
-                'asset' => $deposits->from_wallet->name,
-                'type' => $deposits->transaction_type,
-                'fund_type' => $deposits->fund_type,
-                'transaction_id' => $deposits->transaction_number,
-                'txn_hash' => $deposits->txn_hash,
-                'to_wallet_address' => $deposits->to_wallet_address,
-                'payment_method' => $deposits->payment_method,
-                'payment_account_name' => $deposits->payment_account->payment_account_name ?? '',
-                'account_number' => $deposits->payment_account->account_no ?? '',
-                'date' => Carbon::parse($deposits->created_at)->format('Y-m-d'),
-                'amount' =>  number_format((float)$deposits->amount, 2, '.', ''),
-                'status' => $deposits->status,
-                'remarks' => $deposits->remarks,
+                'name' => $row->user->name,
+                'email' => $row->user->email,
+                'first_leader' => $row->user->getFirstLeader()->name ?? '-',
+                'category' => $row->category,
+                'asset' => $row->from_wallet->name,
+                'type' => $row->transaction_type,
+                'fund_type' => $row->fund_type,
+                'transaction_id' => $row->transaction_number,
+                'txn_hash' => $row->txn_hash,
+                'to_wallet_address' => $row->to_wallet_address,
+                'payment_method' => $row->payment_method,
+                'payment_account_name' => $row->payment_account->payment_account_name ?? '',
+                'account_number' => $row->payment_account->account_no ?? '',
+                'date' => Carbon::parse($row->created_at)->format('Y-m-d'),
+                'amount' =>  number_format((float)$row->amount, 2, '.', ''),
+                'transaction_charges' =>  number_format((float)$row->transaction_charges, 2, '.', ''),
+                'transaction_amount' =>  number_format((float)$row->transaction_amount, 2, '.', ''),
+                'status' => $row->status,
+                'remarks' => $row->remarks,
             );
         }
 
@@ -67,6 +69,8 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
             'Account',
             'Date',
             'Amount',
+            'Payment Charges',
+            'Withdrawal Amount',
             'Status',
             'Remarks',
         ];
