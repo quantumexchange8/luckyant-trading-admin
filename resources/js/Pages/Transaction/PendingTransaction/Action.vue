@@ -75,7 +75,7 @@ const submitForm = () => {
                 @click="openTransactionModal(transaction.id, 'approve')"
             >
                 <CheckIcon aria-hidden="true" class="w-6 h-6 absolute" />
-                <span class="sr-only">View</span>
+                <span class="sr-only">approve</span>
             </Button>
         </Tooltip>
         <Tooltip content="Reject" placement="bottom">
@@ -87,7 +87,7 @@ const submitForm = () => {
                 @click="openTransactionModal(transaction.id, 'reject')"
             >
                 <XIcon aria-hidden="true" class="w-6 h-6 absolute" />
-                <span class="sr-only">Transfer Upline</span>
+                <span class="sr-only">reject</span>
             </Button>
         </Tooltip>
         <Tooltip content="View" placement="bottom">
@@ -99,7 +99,7 @@ const submitForm = () => {
                 @click="openTransactionModal(transaction.id, 'view')"
             >
                 <MemberDetailIcon aria-hidden="true" class="w-6 h-6 absolute" />
-                <span class="sr-only">Reset</span>
+                <span class="sr-only">view</span>
             </Button>
         </Tooltip>
     </div>
@@ -115,10 +115,21 @@ const submitForm = () => {
                 </div>
             </div>
             <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    class="px-6 justify-center"
+                    @click="closeModal"
+                >
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="submitForm"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
@@ -156,10 +167,21 @@ const submitForm = () => {
                 </div>
             </div>
             <div class="pt-5 px-2 grid grid-cols-2 gap-4 border-t dark:border-gray-700">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    class="px-6 justify-center"
+                    @click="closeModal"
+                >
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="submitForm"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
@@ -219,7 +241,7 @@ const submitForm = () => {
 
                 <div v-if="transaction.payment_method == 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
                     <img v-if="transaction.transaction_type == 'Deposit'"
-                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
+                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
                     alt=""
                     class="pt-5"
                     />
@@ -291,7 +313,7 @@ const submitForm = () => {
 
                 <div v-if="transaction.payment_method == 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
                     <img v-if="transaction.transaction_type == 'Deposit'"
-                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" 
+                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
                     alt=""
                     class="pt-5"
                     />

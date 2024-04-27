@@ -385,10 +385,20 @@ const rejectTransaction = async () => {
                 </div>
             </div>
             <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    class="px-6 justify-center"
+                    @click="closeModal"
+                >
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="approveTransaction">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="approveTransaction"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 

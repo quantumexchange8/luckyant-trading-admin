@@ -124,6 +124,10 @@ class TransactionController extends Controller
 
             foreach ($transactions as $transaction) {
 
+                if ($transaction->status == 'Success') {
+                    continue;
+                }
+
                 $transaction->update([
                     'status' => 'Success',
                     'handle_by' => Auth::user()->id,
@@ -143,17 +147,23 @@ class TransactionController extends Controller
             }
         } else {
             $transaction = Transaction::find($request->id);
+            $wallet = Wallet::find($transaction->to_wallet_id);
+
+            if ($transaction->status == 'Success') {
+                return redirect()->back()
+                    ->with('title', trans('public.invalid_action'))
+                    ->with('warning', trans('public.try_again_later'));
+            }
 
             if ($transaction->transaction_type == 'Deposit') {
-                $wallet = Wallet::find($transaction->to_wallet_id);
-                $wallet->balance += $transaction->amount;
-                $wallet->save();
-
                 $transaction->update([
                     'status' => 'Success',
                     'handle_by' => Auth::user()->id,
                     'new_wallet_amount' => $wallet->balance,
                 ]);
+
+                $wallet->balance += $transaction->amount;
+                $wallet->save();
 
                 Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
             } elseif ($transaction->transaction_type == 'Withdrawal') {
@@ -201,6 +211,12 @@ class TransactionController extends Controller
             }
         } else {
             $transaction = Transaction::find($request->id);
+
+            if ($transaction->status == 'Rejected') {
+                return redirect()->back()
+                    ->with('title', trans('public.invalid_action'))
+                    ->with('warning', trans('public.try_again_later'));
+            }
 
             if ($transaction->transaction_type == 'Deposit') {
                 $wallet = Wallet::find($transaction->to_wallet_id);
