@@ -117,9 +117,9 @@ const { hasRole } = usePermission();
             </template>
 
             <SidebarCollapsibleItem
-                :href="route('subscription.pending_subscriber')"
+                :href="route('subscription.subscribers')"
                 title="Pending Subscribers"
-                :active="route().current('subscription.pending_subscriber')"
+                :active="route().current('subscription.subscribers')"
                 :pending-counts="pendingSubscriberRequestCount"
             />
             <SidebarCollapsibleItem
