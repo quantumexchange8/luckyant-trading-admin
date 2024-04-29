@@ -7,12 +7,14 @@ import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.
 import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
 import {usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
+import { usePermission } from '@/Composables/permissions.js'
 
 const page = usePage();
 const pendingTransactionCount = ref(page.props.pendingTransactionCount);
 const pendingKycCount = ref(page.props.pendingKycCount);
 const pendingMasterCount = ref(page.props.pendingMasterCount);
 const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
+const { hasRole } = usePermission();
 </script>
 
 <template>
@@ -115,9 +117,9 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
             </template>
 
             <SidebarCollapsibleItem
-                :href="route('subscription.subscribers')"
-                title="Pending Request"
-                :active="route().current('subscription.subscribers')"
+                :href="route('subscription.pending_subscriber')"
+                title="Pending Subscribers"
+                :active="route().current('subscription.pending_subscriber')"
                 :pending-counts="pendingSubscriberRequestCount"
             />
             <SidebarCollapsibleItem
@@ -195,6 +197,7 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
         </SidebarCollapsible>
 
         <SidebarCollapsible
+            v-if="hasRole('super-admin')"
             title="Setting"
             :active="route().current('setting.*')"
         >

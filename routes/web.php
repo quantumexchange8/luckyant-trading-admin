@@ -140,7 +140,6 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
 
         Route::get('/subscribersListing', [SubscriptionController::class, 'subscribersListing'])->name('subscription.subscribersListing');
-
     });
 
     /**
@@ -158,7 +157,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      *         Setting
      * ==============================
      */
-    Route::prefix('setting')->group(function () {
+    Route::prefix('setting')->middleware('role:super-admin')->group(function () {
         //payment setting
         Route::get('/payment_setting', [SettingController::class, 'paymentSetting'])->name('setting.payment_setting');
         Route::get('/getCryptoNetworks', [SettingController::class, 'getCryptoNetworks'])->name('setting.getCryptoNetworks');

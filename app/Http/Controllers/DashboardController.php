@@ -18,7 +18,7 @@ class DashboardController extends Controller
                 ->latest()
                 ->first();
 
-        $totalDeposits = Transaction::where('category', 'wallet')->where('transaction_type', 'Deposit');
+        $totalDeposits = Transaction::where('category', 'wallet')->where('transaction_type', 'Deposit')->where('status', 'Success');
         $totalWithdrawals = Transaction::where('category', 'wallet')->where('transaction_type', 'Withdrawal');
         $pendingTransaction = Transaction::where('status', 'Processing');
         $kyc = User::whereNot('role', 'admin')->where('kyc_approval', 'Pending');
