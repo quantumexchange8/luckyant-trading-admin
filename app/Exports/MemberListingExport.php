@@ -31,9 +31,13 @@ class MemberListingExport implements FromCollection, WithHeadings
             $result[] = [
                 'name' => $record->name,
                 'email' => $record->email,
+                'phone' => $record->phone,
                 'created_at' => Carbon::parse($record->created_at)->format('Y-m-d'),
                 'first_leader' => $record->getFirstLeader()->name ?? '',
-                'wallets_sum_balance' => $record->wallets->sum('balance'),
+                'upline_email' => $record->upline->email ?? '',
+                'cash_wallet_balance' => $record->wallets->where('type', 'cash_wallet')->first()->balance ?? 0,
+                'bonus_wallet_balance' => $record->wallets->where('type', 'bonus_wallet')->first()->balance ?? 0,
+                'e_wallet_balance' => $record->wallets->where('type', 'e_wallet')->first()->balance ?? 0,
                 'country' => Country::find($record->country)->name,
                 'rank' => $record->rank->name,
                 'kyc_approval' => $record->kyc_approval,
@@ -48,11 +52,15 @@ class MemberListingExport implements FromCollection, WithHeadings
         return [
             'Name',
             'Email',
+            'Contact Number',
             'Joining Date',
             'First Leader',
-            'Wallet Balance',
+            'Upline Email',
+            'Cash Balance',
+            'Bonus Balance',
+            'Ewallet Balance',
             'Country',
-            'Rank',
+            'Ranking',
             'Status',
         ];
     }
