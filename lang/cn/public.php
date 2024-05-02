@@ -341,4 +341,8 @@ return [
     'transaction_amount' => "交易金额",
     'wallet_adjustment' => "钱包调整",
     'username' => "昵称",
+    "balance" => "净值",
+    "real_fund" => "真实资金",
+    "demo_fund" => "模拟资金",
+    "termination_date" => "终止日期",
 ];

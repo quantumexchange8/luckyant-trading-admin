@@ -6,9 +6,9 @@ Dear **{{ $subscription->user->name }}**,
 We are pleased to confirm that your copy trading request has been successfully executed. Thank you for choosing us as your forex broker. We are committed to providing you with an excellent trading experience.
 
 - **Name**: {{ $subscription->master->tradingUser->name }}
-- **Master Metatrader 5 No**: {{ $subscription->master->meta_login }}
-- **Join Amount**: {{ $subscription->tradingAccount->balance }}
-- **Date and Time**: {{ $subscription->created_at }}
+- **Master Metatrader 5 No**: {{ $subscription->master_meta_login }}
+- **Join Amount**: {{ $subscription->meta_balance }}
+- **Date and Time**: {{ $subscription->approval_date }}
 
 We highly value your trading needs and ensure that all trades are executed promptly and accurately. Our team continues to monitor the market and provide you with the best trading opportunities.
 
@@ -36,9 +36,9 @@ Lucky Ant Trading Team
 我们怀着喜悦的心情向您确认,您的跟单交易已成功执行。感谢您选择我们作为您的外汇经纪商,我们致力于为您提供卓越的交易体验。
 
 - **名称**: {{ $subscription->master->tradingUser->name }}
-- **主账户Metatrader 5编号**: {{ $subscription->master->meta_login }}
-- **加入金额**: {{ $subscription->tradingAccount->balance }}
-- **日期和时间**: {{ $subscription->created_at }}
+- **主账户Metatrader 5编号**: {{ $subscription->master_meta_login }}
+- **加入金额**: {{ $subscription->meta_balance }}
+- **日期和时间**: {{ $subscription->approval_date }}
 
 我们高度重视您的交易需求,并确保所有交易都得到及时且准确的执行。我们的团队将持续监控市场并为您提供最佳的交易机会。
 

@@ -457,4 +457,8 @@ return [
     "already_is_admin" => "The selected user are assigned to the selected role.",
     "admin_added" => "Admin Added",
     "success_added_admin" => "Successfully added admin",
+    "balance" => "Balance",
+    "real_fund" => "Real Fund",
+    "demo_fund" => "Demo Fund",
+    "termination_date" => "Termination Date",
 ];

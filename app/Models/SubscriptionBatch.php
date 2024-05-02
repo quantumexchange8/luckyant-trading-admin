@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Subscriber extends Model
+class SubscriptionBatch extends Model
 {
     use SoftDeletes;
 
@@ -13,17 +13,33 @@ class Subscriber extends Model
         'user_id',
         'trading_account_id',
         'meta_login',
-        'initial_meta_balance',
-        'initial_subscription_fee',
-        'transaction_id',
+        'meta_balance',
+        'real_fund',
+        'demo_fund',
         'master_id',
         'master_meta_login',
-        'roi_period',
-        'subscribe_amount',
+        'type',
+        'subscriber_id',
         'subscription_id',
+        'subscription_number',
+        'subscription_period',
+        'transaction_id',
+        'subscription_fee',
+        'settlement_start_date',
+        'settlement_date',
+        'termination_date',
         'status',
+        'auto_renewal',
         'approval_date',
-        'unsubscribe_date',
+        'remarks',
+        'claimed_profit',
+        'handle_by',
+    ];
+
+    protected $casts = [
+        'termination_date' => 'datetime',
+        'settlement_date' => 'datetime',
+        'approval_date' => 'datetime',
     ];
 
     public function tradingAccount(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -39,11 +55,6 @@ class Subscriber extends Model
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
-    }
-
-    public function subscription(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Subscription::class, 'subscription_id', 'id');
     }
 
     public function transaction(): \Illuminate\Database\Eloquent\Relations\BelongsTo

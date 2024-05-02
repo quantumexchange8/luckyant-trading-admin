@@ -12,7 +12,7 @@ import Input from "@/Components/Input.vue";
 import InputError from "@/Components/InputError.vue";
 
 const props = defineProps({
-    subscription: Object,
+    subscriber: Object,
 })
 
 const transactionModal = ref(false);
@@ -44,9 +44,9 @@ const closeModal = () => {
 }
 
 const form = useForm({
-    subscriptionId: props.subscription.id,
-    userId: props.subscription.user_id,
-    transactionId: props.subscription.transaction_id,
+    subscriber_id: props.subscriber.id,
+    userId: props.subscriber.user_id,
+    transactionId: props.subscriber.transaction_id,
     remarks: '',
 });
 
@@ -75,7 +75,7 @@ const submitForm = () => {
 </script>
 
 <template>
-    <Tooltip v-if="subscription.status !== 'Subscribing'" content="Approve" placement="bottom">
+    <Tooltip v-if="subscriber.status !== 'Subscribing'" content="Approve" placement="bottom">
         <Button
             type="button"
             pill
@@ -87,7 +87,7 @@ const submitForm = () => {
             <span class="sr-only">Approve</span>
         </Button>
     </Tooltip>
-    <Tooltip v-if="subscription.status !== 'Subscribing'" content="Reject" placement="bottom">
+    <Tooltip v-if="subscriber.status !== 'Subscribing'" content="Reject" placement="bottom">
         <Button
             type="button"
             pill
@@ -112,7 +112,7 @@ const submitForm = () => {
         </Button>
     </Tooltip>
 
-    <Tooltip v-if="subscription.status === 'Subscribing'" content="Termination" placement="bottom">
+    <Tooltip v-if="subscriber.status === 'Subscribing'" content="Termination" placement="bottom">
         <Button
             type="button"
             pill
@@ -135,10 +135,21 @@ const submitForm = () => {
                 </div>
             </div>
             <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    class="px-6 justify-center"
+                    @click="closeModal"
+                >
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="submitForm"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
@@ -151,10 +162,20 @@ const submitForm = () => {
                 </div>
             </div>
             <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
+                <Button
+                    type="button"
+                    variant="secondary"
+                    class="px-6 justify-center"
+                    @click="closeModal"
+                >
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click="openTransactionModal('rejectRemarks')">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click="openTransactionModal('rejectRemarks')"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
@@ -175,26 +196,39 @@ const submitForm = () => {
         </div>
 
         <div v-if="modalComponent === 'Reject Remark'">
-            <div class="flex gap-2 mt-3 mb-8">
-                <Label class="text-sm text-black dark:text-white w-1/4 pt-0.5" for="remark" value="Remark" />
-                <div class="flex flex-col w-full">
-                    <Input
-                        id="remark"
-                        type="text"
-                        placeholder="Enter remark (visible to member)"
-                        class="block w-full"
-                        :class="form.errors.remarks ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
-                        v-model="form.remarks"
-                    />
-                    <InputError :message="form.errors.remarks" class="mt-2" />
+            <form>
+                <div class="flex gap-2 mt-3 mb-8">
+                    <Label class="text-sm text-black dark:text-white w-1/4 pt-0.5" for="remark" value="Remark" />
+                    <div class="flex flex-col w-full">
+                        <Input
+                            id="remark"
+                            type="text"
+                            placeholder="Enter remark (visible to member)"
+                            class="block w-full"
+                            :class="form.errors.remarks ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
+                            v-model="form.remarks"
+                        />
+                        <InputError :message="form.errors.remarks" class="mt-2" />
+                    </div>
                 </div>
-            </div>
-            <div class="pt-5 px-2 grid grid-cols-2 gap-4 border-t dark:border-gray-700">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
-                    Cancel
-                </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
-            </div>
+                <div class="pt-5 px-2 grid grid-cols-2 gap-4">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        class="px-6 justify-center"
+                        @click="closeModal"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        class="px-6 justify-center"
+                        @click.prevent="submitForm"
+                        :disabled="form.processing"
+                    >
+                        Confirm
+                    </Button>
+                </div>
+            </form>
         </div>
 
         <div v-if="modalComponent === 'Terminate Remark'">
@@ -223,43 +257,47 @@ const submitForm = () => {
         <div v-if="modalComponent === 'Subscriber Details'">
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscription.created_at)}}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(subscriber.created_at)}}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">User</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.user.name }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.user.name }}</span>
+            </div>
+            <div class="grid grid-cols-3 items-center gap-2">
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.first_leader') }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.first_leader }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.meta_login }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.meta_login }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.master.trading_user.name }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master.trading_user.name }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.master.meta_login }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.master.meta_login }}</span>
             </div>
             <!-- <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscription.subscription.subscription_fee ? subscription.subscription.subscription_fee : '0.00' }}</span>
+                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">subscriber Fee</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ subscriber.subscriber.subscription_fee ? subscriber.subscriber.subscription_fee : '0.00' }}</span>
             </div> -->
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Copy Trade Balance</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(subscription.meta_balance ? subscription.meta_balance : 0) }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(subscriber.initial_meta_balance ? subscriber.initial_meta_balance : 0) }}</span>
             </div>
             <div class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Settlement Period</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.subscription_period }} Days</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.roi_period }} Days</span>
             </div>
-            <div v-if="subscription.approval_date != null" class="grid grid-cols-3 items-center gap-2">
+            <div v-if="subscriber.approval_date != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.approval_date }}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.approval_date }}</span>
             </div>
-            <div v-if="subscription.expired_date != null" class="grid grid-cols-3 items-center gap-2">
+            <div v-if="subscriber.expired_date != null" class="grid grid-cols-3 items-center gap-2">
                 <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ subscription.expired_date ? subscription.expired_date : '-'}}</span>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ subscriber.expired_date ? subscriber.expired_date : '-'}}</span>
             </div>
         </div>
     </Modal>

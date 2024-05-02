@@ -125,8 +125,13 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      * ==============================
      */
     Route::prefix('subscription')->group(function () {
-        Route::get('/subscribers', [SubscriptionController::class, 'subscribers'])->name('subscription.subscribers');
-        Route::get('/getPendingSubscriptions', [SubscriptionController::class, 'getPendingSubscriptions'])->name('subscription.getPendingSubscriptions');
+        Route::get('/pending_subscriber', [SubscriptionController::class, 'pending_subscriber'])->name('subscription.pending_subscriber');
+        Route::get('/getPendingSubscribers', [SubscriptionController::class, 'getPendingSubscribers'])->name('subscription.getPendingSubscribers');
+        Route::get('/getSubscriptionBatchData', [SubscriptionController::class, 'getSubscriptionBatchData'])->name('subscription.getSubscriptionBatchData');
+
+        Route::get('/subscribers', [SubscriptionController::class, 'subscribers'])->name('subscription.subscribers'); // delete after check
+        Route::get('/getPendingSubscriptions', [SubscriptionController::class, 'getPendingSubscriptions'])->name('subscription.getPendingSubscriptions'); // delete after check
+
         Route::get('/getActiveSubscriber', [SubscriptionController::class, 'getActiveSubscriber'])->name('subscription.getActiveSubscriber');
         Route::get('/subscriptionHistory', [SubscriptionController::class, 'subscriptionHistory'])->name('subscription.subscriptionHistory');
         Route::get('/getHistorySubscriber', [SubscriptionController::class, 'getHistorySubscriber'])->name('subscription.getHistorySubscriber');
