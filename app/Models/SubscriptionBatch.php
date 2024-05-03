@@ -66,4 +66,9 @@ class SubscriptionBatch extends Model
     {
         return $this->belongsTo(TradingUser::class, 'master_meta_login', 'meta_login');
     }
+
+    public function subscription_penalty(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SubscriptionPenaltyLog::class, 'subscription_batch_id', 'id');
+    }
 }

@@ -14,6 +14,7 @@ const pendingTransactionCount = ref(page.props.pendingTransactionCount);
 const pendingKycCount = ref(page.props.pendingKycCount);
 const pendingMasterCount = ref(page.props.pendingMasterCount);
 const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
+const pendingRenewalCount = ref(page.props.pendingRenewalCount);
 const { hasRole } = usePermission();
 </script>
 
@@ -142,9 +143,20 @@ const { hasRole } = usePermission();
             </template>
 
             <SidebarCollapsibleItem
+                :href="route('subscription.pending_renewal')"
+                title="Pending Renewal"
+                :active="route().current('subscription.pending_renewal')"
+                :pending-counts="pendingRenewalCount"
+            />
+            <SidebarCollapsibleItem
                 :href="route('subscription.subscription_listing')"
                 title="Subscriptions Listing"
                 :active="route().current('subscription.subscription_listing')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('subscription.termination_fee')"
+                title="Termination Fee"
+                :active="route().current('subscription.termination_fee')"
             />
         </SidebarCollapsible>
 

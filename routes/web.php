@@ -140,9 +140,6 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/approveSubscribe', [SubscriberController::class, 'approveSubscribe'])->name('subscriber.approveSubscribe');
         Route::post('/rejectSubscribe', [SubscriberController::class, 'rejectSubscribe'])->name('subscriber.rejectSubscribe');
         Route::post('/terminateSubscribe', [SubscriberController::class, 'terminateSubscribe'])->name('subscriber.terminateSubscribe');
-        // subscription renewal
-        Route::post('/approveRenewalSubscription', [SubscriberController::class, 'approveRenewalSubscription'])->name('subscriber.approveRenewalSubscription');
-        Route::post('/rejectRenewalSubscription', [SubscriberController::class, 'rejectRenewalSubscription'])->name('subscriber.rejectRenewalSubscription');
 
         Route::get('/subscribersListing', [SubscriberController::class, 'subscribersListing'])->name('subscriber.subscribersListing');
     });
@@ -153,8 +150,16 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      * ==============================
      */
     Route::prefix('subscriptions')->group(function () {
+        Route::get('/pending_renewal', [SubscriptionController::class, 'pending_renewal'])->name('subscription.pending_renewal');
+        Route::get('/getPendingRenewalData', [SubscriptionController::class, 'getPendingRenewalData'])->name('subscription.getPendingRenewalData');
         Route::get('/subscription_listing', [SubscriptionController::class, 'subscription_listing'])->name('subscription.subscription_listing');
         Route::get('/getSubscriptionBatchData', [SubscriptionController::class, 'getSubscriptionBatchData'])->name('subscription.getSubscriptionBatchData');
+        Route::get('/termination_fee', [SubscriptionController::class, 'termination_fee'])->name('subscription.termination_fee');
+        Route::get('/getTerminationFeeData', [SubscriptionController::class, 'getTerminationFeeData'])->name('subscription.getTerminationFeeData');
+
+        // subscription renewal
+        Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
+        Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
     });
 
     /**

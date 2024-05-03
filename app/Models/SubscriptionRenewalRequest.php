@@ -31,9 +31,4 @@ class SubscriptionRenewalRequest extends Model
     {
         return $this->belongsTo(Subscription::class, 'subscription_id', 'id');
     }
-
-    public function master(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Master::class, 'master_id', 'id');
-    }
 }
