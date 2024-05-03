@@ -1,8 +1,7 @@
 <script setup>
 import Loading from "@/Components/Loading.vue";
 import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
-import SubscriptionRenewal from "@/Pages/Subscription/Partials/SubscriptionRenewal.vue";
-import SubscriptionHistory from "@/Pages/Subscription/Partials/SubscriptionHistory.vue";
+import SubscriptionHistory from "@/Pages/Subscriber/Partials/SubscriptionHistory.vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
 
 const props = defineProps({
@@ -46,7 +45,7 @@ const updateSubscriptionType = (subscription_type) => {
             </Tab>
         </TabList>
         <TabPanels>
-            
+
             <TabPanel>
                 <SubscriptionHistory
                     :refresh="refresh"

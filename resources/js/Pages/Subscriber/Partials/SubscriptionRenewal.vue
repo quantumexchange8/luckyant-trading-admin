@@ -5,7 +5,7 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import {alertTriangle} from "@/Components/Icons/outline.jsx";
 import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
-import Action from "@/Pages/Subscription/Partials/RenewalAction.vue";
+import Action from "@/Pages/Subscriber/Partials/RenewalAction.vue";
 import debounce from "lodash/debounce.js";
 import NoData from "@/Components/NoData.vue";
 

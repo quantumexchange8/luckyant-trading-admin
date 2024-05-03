@@ -7,7 +7,7 @@ import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
-import PendingSubscribeTable from "@/Pages/Subscription/Partials/PendingSubscribeTable.vue";
+import PendingSubscribeTable from "@/Pages/Subscriber/Partials/PendingSubscribeTable.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);

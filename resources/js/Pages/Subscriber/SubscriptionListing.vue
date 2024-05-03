@@ -6,7 +6,6 @@ import Button from "@/Components/Button.vue";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import {SearchIcon} from "@heroicons/vue/outline";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import SubscriberListingTable from "@/Pages/Subscription/Partials/SubscriberListingTable.vue";
 import Combobox from "@/Components/Combobox.vue";
 import {CloudDownloadIcon, Tag01Icon, UsersCheckIcon, CurrencyDollarCircleIcon} from "@/Components/Icons/outline.jsx";
 import BaseListbox from "@/Components/BaseListbox.vue";

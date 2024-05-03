@@ -2,7 +2,7 @@
 import Loading from "@/Components/Loading.vue";
 import {ref} from "vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
-import AllSubscriber from "@/Pages/Subscription/Partials/AllSubscriber.vue"
+import AllSubscriber from "@/Pages/Subscriber/Partials/AllSubscriber.vue"
 
 const props = defineProps({
     refresh: Boolean,
