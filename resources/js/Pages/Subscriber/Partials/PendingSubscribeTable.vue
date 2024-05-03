@@ -2,8 +2,8 @@
 import Loading from "@/Components/Loading.vue";
 import {ref} from "vue";
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
-import PendingSubscriber from "@/Pages/Subscription/Partials/PendingSubscribers.vue"
-import SubscriptionRenewal from "@/Pages/Subscription/Partials/SubscriptionRenewal.vue";
+import PendingSubscriber from "@/Pages/Subscriber/Partials/PendingSubscribers.vue"
+import SubscriptionRenewal from "@/Pages/Subscriber/Partials/SubscriptionRenewal.vue";
 
 const props = defineProps({
     refresh: Boolean,
