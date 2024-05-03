@@ -4,6 +4,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\MasterController;
@@ -121,30 +122,39 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
 
     /**
      * ==============================
-     *         Subscription
+     *         Subscriber
      * ==============================
      */
-    Route::prefix('subscription')->group(function () {
-        Route::get('/pending_subscriber', [SubscriptionController::class, 'pending_subscriber'])->name('subscription.pending_subscriber');
-        Route::get('/getPendingSubscribers', [SubscriptionController::class, 'getPendingSubscribers'])->name('subscription.getPendingSubscribers');
-        Route::get('/getSubscriptionBatchData', [SubscriptionController::class, 'getSubscriptionBatchData'])->name('subscription.getSubscriptionBatchData');
+    Route::prefix('subscriber')->group(function () {
+        Route::get('/pending_subscriber', [SubscriberController::class, 'pending_subscriber'])->name('subscriber.pending_subscriber');
+        Route::get('/getPendingSubscribers', [SubscriberController::class, 'getPendingSubscribers'])->name('subscriber.getPendingSubscribers');
 
-        Route::get('/subscribers', [SubscriptionController::class, 'subscribers'])->name('subscription.subscribers'); // delete after check
-        Route::get('/getPendingSubscriptions', [SubscriptionController::class, 'getPendingSubscriptions'])->name('subscription.getPendingSubscriptions'); // delete after check
+        Route::get('/subscribers', [SubscriberController::class, 'subscribers'])->name('subscriber.subscribers'); // delete after check
+        Route::get('/getPendingSubscriptions', [SubscriberController::class, 'getPendingSubscriptions'])->name('subscriber.getPendingSubscriptions'); // delete after check
 
-        Route::get('/getActiveSubscriber', [SubscriptionController::class, 'getActiveSubscriber'])->name('subscription.getActiveSubscriber');
-        Route::get('/subscriptionHistory', [SubscriptionController::class, 'subscriptionHistory'])->name('subscription.subscriptionHistory');
-        Route::get('/getHistorySubscriber', [SubscriptionController::class, 'getHistorySubscriber'])->name('subscription.getHistorySubscriber');
-        Route::get('/getPendingSubscriptionRenewal', [SubscriptionController::class, 'getPendingSubscriptionRenewal'])->name('subscription.getPendingSubscriptionRenewal');
+        Route::get('/getActiveSubscriber', [SubscriberController::class, 'getActiveSubscriber'])->name('subscriber.getActiveSubscriber');
+        Route::get('/subscriptionHistory', [SubscriberController::class, 'subscriptionHistory'])->name('subscriber.subscriptionHistory');
+        Route::get('/getHistorySubscriber', [SubscriberController::class, 'getHistorySubscriber'])->name('subscriber.getHistorySubscriber');
+        Route::get('/getPendingSubscriptionRenewal', [SubscriberController::class, 'getPendingSubscriptionRenewal'])->name('subscriber.getPendingSubscriptionRenewal');
         // subscriber request
-        Route::post('/approveSubscribe', [SubscriptionController::class, 'approveSubscribe'])->name('subscription.approveSubscribe');
-        Route::post('/rejectSubscribe', [SubscriptionController::class, 'rejectSubscribe'])->name('subscription.rejectSubscribe');
-        Route::post('/terminateSubscribe', [SubscriptionController::class, 'terminateSubscribe'])->name('subscription.terminateSubscribe');
+        Route::post('/approveSubscribe', [SubscriberController::class, 'approveSubscribe'])->name('subscriber.approveSubscribe');
+        Route::post('/rejectSubscribe', [SubscriberController::class, 'rejectSubscribe'])->name('subscriber.rejectSubscribe');
+        Route::post('/terminateSubscribe', [SubscriberController::class, 'terminateSubscribe'])->name('subscriber.terminateSubscribe');
         // subscription renewal
-        Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
-        Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
+        Route::post('/approveRenewalSubscription', [SubscriberController::class, 'approveRenewalSubscription'])->name('subscriber.approveRenewalSubscription');
+        Route::post('/rejectRenewalSubscription', [SubscriberController::class, 'rejectRenewalSubscription'])->name('subscriber.rejectRenewalSubscription');
 
-        Route::get('/subscribersListing', [SubscriptionController::class, 'subscribersListing'])->name('subscription.subscribersListing');
+        Route::get('/subscribersListing', [SubscriberController::class, 'subscribersListing'])->name('subscriber.subscribersListing');
+    });
+
+    /**
+     * ==============================
+     *         Subscriptions
+     * ==============================
+     */
+    Route::prefix('subscriptions')->group(function () {
+        Route::get('/subscription_listing', [SubscriptionController::class, 'subscription_listing'])->name('subscription.subscription_listing');
+        Route::get('/getSubscriptionBatchData', [SubscriptionController::class, 'getSubscriptionBatchData'])->name('subscription.getSubscriptionBatchData');
     });
 
     /**

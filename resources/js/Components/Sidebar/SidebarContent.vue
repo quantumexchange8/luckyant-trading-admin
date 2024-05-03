@@ -1,7 +1,7 @@
 <script setup>
 import PerfectScrollbar from '@/Components/PerfectScrollbar.vue'
 import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
-import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon, File06Icon, UserUp01Icon } from '@/Components/Icons/outline'
+import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon, File06Icon, UserUp01Icon, FileCheck02Icon } from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
 import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
@@ -106,7 +106,7 @@ const { hasRole } = usePermission();
 
         <SidebarCollapsible
             title="Subscribers"
-            :active="route().current('subscription.*')"
+            :active="route().current('subscriber.*')"
             :pending-counts="pendingSubscriberRequestCount"
         >
             <template #icon>
@@ -117,20 +117,34 @@ const { hasRole } = usePermission();
             </template>
 
             <SidebarCollapsibleItem
-                :href="route('subscription.pending_subscriber')"
+                :href="route('subscriber.pending_subscriber')"
                 title="Pending Subscribers"
-                :active="route().current('subscription.pending_subscriber')"
+                :active="route().current('subscriber.pending_subscriber')"
                 :pending-counts="pendingSubscriberRequestCount"
             />
             <SidebarCollapsibleItem
-                :href="route('subscription.subscribersListing')"
+                :href="route('subscriber.subscribersListing')"
                 title="Subscribers Listing"
-                :active="route().current('subscription.subscribersListing')"
+                :active="route().current('subscriber.subscribersListing')"
             />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
+            title="Subscriptions"
+            :active="route().current('subscription.*')"
+            :pending-counts="pendingSubscriberRequestCount"
+        >
+            <template #icon>
+                <FileCheck02Icon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
             <SidebarCollapsibleItem
-                :href="route('subscription.subscriptionHistory')"
-                title="Subscriptions History"
-                :active="route().current('subscription.subscriptionHistory')"
+                :href="route('subscription.subscription_listing')"
+                title="Subscriptions Listing"
+                :active="route().current('subscription.subscription_listing')"
             />
         </SidebarCollapsible>
 

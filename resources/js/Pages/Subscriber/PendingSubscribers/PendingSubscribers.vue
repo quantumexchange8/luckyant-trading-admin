@@ -15,7 +15,7 @@ import {usePage} from "@inertiajs/vue3";
 import {transactionFormat} from "@/Composables/index.js";
 import debounce from "lodash/debounce.js";
 import StatusBadge from "@/Components/StatusBadge.vue";
-import Action from "@/Pages/Subscription/Partials/Action.vue";
+import Action from "@/Pages/Subscriber/Partials/Action.vue";
 
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -73,7 +73,7 @@ watch(
 const getResults = async (page = 1, paginate = 10, filterSearch = search.value, filterLeader = leader.value, filterDate = date.value, columnName = sorting.value) => {
     // isLoading.value = true
     try {
-        let url = `/subscription/getPendingSubscribers?page=${page}`;
+        let url = `/subscriber/getPendingSubscribers?page=${page}`;
 
         if (paginate) {
             url += `&paginate=${paginate}`;
@@ -153,7 +153,7 @@ const columns = [
 ];
 
 const exportSubscribers = () => {
-    let url = `/subscription/getPendingSubscribers?exportStatus=yes`;
+    let url = `/subscriber/getPendingSubscribers?exportStatus=yes`;
 
     if (search.value) {
         url += `&search=${search.value}`;

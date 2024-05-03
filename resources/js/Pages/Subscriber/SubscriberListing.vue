@@ -6,7 +6,6 @@ import Button from "@/Components/Button.vue";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import {SearchIcon} from "@heroicons/vue/outline";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import SubscriberListingTable from "@/Pages/Subscription/Partials/SubscriberListingTable.vue";
 import Combobox from "@/Components/Combobox.vue";
 import {CloudDownloadIcon, Users01Icon, UsersCheckIcon, CurrencyDollarCircleIcon} from "@/Components/Icons/outline.jsx";
 import BaseListbox from "@/Components/BaseListbox.vue";
@@ -76,7 +75,7 @@ watch(
 const getResults = async (page = 1, paginate = 10, filterSearch = search.value, filterLeader = leader.value, filterDate = date.value, filterSubscriberStatus = subscriberStatus.value, columnName = sorting.value) => {
     // isLoading.value = true
     try {
-        let url = `/subscription/getActiveSubscriber?page=${page}`;
+        let url = `/subscriber/getActiveSubscriber?page=${page}`;
 
         if (paginate) {
             url += `&paginate=${paginate}`;
@@ -167,7 +166,7 @@ const columns = [
 ];
 
 const exportSubscribers = () => {
-    let url = `/subscription/getActiveSubscriber?exportStatus=yes`;
+    let url = `/subscriber/getActiveSubscriber?exportStatus=yes`;
 
     if (search.value) {
         url += `&search=${search.value}`;
