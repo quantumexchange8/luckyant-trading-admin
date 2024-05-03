@@ -153,11 +153,11 @@ const { hasRole } = usePermission();
                 title="Subscriptions Listing"
                 :active="route().current('subscription.subscription_listing')"
             />
-            <SidebarCollapsibleItem
-                :href="route('subscription.termination_fee')"
-                title="Termination Fee"
-                :active="route().current('subscription.termination_fee')"
-            />
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscription.termination_fee')"-->
+<!--                title="Termination Fee"-->
+<!--                :active="route().current('subscription.termination_fee')"-->
+<!--            />-->
         </SidebarCollapsible>
 
         <SidebarCollapsible
