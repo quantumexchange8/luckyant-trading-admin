@@ -273,9 +273,8 @@ class SubscriptionController extends Controller
         $column = $decodedColumnName ? $decodedColumnName['id'] : 'approval_date';
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
-        $subscription = SubscriptionBatch::query()
-            ->with(['user', 'master', 'transaction', 'master.tradingUser', 'subscription_penalty'])
-            ->where('status', 'Terminated');
+        $subscription = SubscriptionPenaltyLog::query()
+            ->with(['user', 'subscription_batch']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';

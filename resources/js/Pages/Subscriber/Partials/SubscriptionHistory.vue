@@ -5,7 +5,6 @@ import {ArrowLeftIcon, ArrowRightIcon} from "@heroicons/vue/outline";
 import {alertTriangle} from "@/Components/Icons/outline.jsx";
 import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
-import Action from "@/Pages/Subscription/Partials/Action.vue";
 import debounce from "lodash/debounce.js";
 import Badge from "@/Components/Badge.vue";
 import Modal from "@/Components/Modal.vue";
@@ -272,7 +271,7 @@ const closeModal = () => {
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Period</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.subscription_period }} Days</span> 
+            <span class="col-span-2 text-black dark:text-white py-2">{{ subscriptionDetail.subscription_period }} Days</span>
         </div>
         <!-- <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Subscription Fee</span>

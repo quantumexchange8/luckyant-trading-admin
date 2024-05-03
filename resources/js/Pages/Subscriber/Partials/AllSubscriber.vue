@@ -8,7 +8,7 @@ import {transactionFormat} from "@/Composables/index.js";
 import Badge from "@/Components/Badge.vue";
 import Modal from "@/Components/Modal.vue";
 import debounce from "lodash/debounce.js";
-import Action from "@/Pages/Subscription/Partials/Action.vue";
+import Action from "@/Pages/Subscriber/Partials/Action.vue";
 
 const props = defineProps({
     refresh: Boolean,
@@ -49,7 +49,7 @@ const getResults = async (page = 1, search = '', date = '', leader = '') => {
         if (leader) {
             url += `&leader=${leader.value}`;
         }
-        
+
         const response = await axios.get(url);
         subscribers.value = response.data;
 
@@ -117,7 +117,7 @@ const closeModal = () => {
                     <th scope="col" class="p-3">
                         Date
                     </th>
-                    
+
                     <th scope="col" class="p-3">
                         User
                     </th>
@@ -153,7 +153,7 @@ const closeModal = () => {
                 <tr
                     v-for="subscriber in subscribers.data"
                     class="bg-white dark:bg-transparent text-xs text-gray-900 dark:text-white border-b dark:border-gray-800"
-                    
+
                 >
                     <td class="p-3">
                         {{ formatDateTime(subscriber.created_at) }}
