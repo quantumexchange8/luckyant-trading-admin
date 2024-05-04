@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\PendingRenewalExport;
 use App\Exports\SubscriptionExport;
+use App\Exports\TerminationFeeExport;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
@@ -270,15 +271,15 @@ class SubscriptionController extends Controller
         // Decode the JSON
         $decodedColumnName = json_decode(urldecode($columnName), true);
 
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'approval_date';
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'termination_date';
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
-        $subscription = SubscriptionPenaltyLog::query()
-            ->with(['user', 'subscription_batch']);
+        $penalty = SubscriptionPenaltyLog::query()
+            ->with(['user', 'master', 'master.tradingUser', 'master.masterManagementFee', 'subscription_batch']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
-            $subscription->where(function ($q) use ($search) {
+            $penalty->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
                         ->orWhere('email', 'like', $search);
@@ -296,54 +297,58 @@ class SubscriptionController extends Controller
             $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
-            $subscription->whereBetween('approval_date', [$start_date, $end_date]);
+            $penalty->whereBetween('termination_date', [$start_date, $end_date]);
         }
 
         if ($request->filled('leader')) {
             $leader = $request->input('leader');
             $leaderUser = User::find($leader);
             if ($leaderUser) {
-                $subscription->whereIn('user_id', $leaderUser->getChildrenIds());
+                $penalty->whereIn('user_id', $leaderUser->getChildrenIds());
             }
         }
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
-            $subscription->whereIn('user_id', $childrenIds);
+            $penalty->whereIn('user_id', $childrenIds);
         } elseif ($authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
         } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $subscription->whereIn('user_id', $childrenIds);
+            $penalty->whereIn('user_id', $childrenIds);
         } else {
             // No applicable conditions, set whereIn to empty array
-            $subscription->whereIn('user_id', []);
+            $penalty->whereIn('user_id', []);
         }
 
         if ($request->has('exportStatus')) {
-            return Excel::download(new SubscriptionExport($subscription), Carbon::now() . '-subscription-report.xlsx');
+            return Excel::download(new TerminationFeeExport($penalty), Carbon::now() . '-termination-fee-report.xlsx');
         }
 
-        $totalSubscriptionQuery = clone $subscription;
-        $totalCopyTradeBalanceQuery = clone $subscription;
+        $totalTerminationQuery = clone $penalty;
 
-        $results = $subscription
-            ->orderBy($column == null ? 'approval_date' : $column, $sortOrder)
+        $results = $penalty
+            ->orderBy($column == null ? 'termination_date' : $column, $sortOrder)
             ->paginate($request->input('paginate', 10));
 
-        $totalSubscriptions = $totalSubscriptionQuery->count();
-        $totalCopyTradeBalance = $totalCopyTradeBalanceQuery->sum('meta_balance');
+        $totalTerminations = $totalTerminationQuery->count();
+        $totalCharges = $totalTerminationQuery->sum('penalty_amount');
 
         $results->each(function ($batch) {
             $batch->first_leader = $batch->user->getFirstLeader() ?? null;
-            $batch->return_amount = $batch->subscription_penalty ? $batch->meta_balance - $batch->subscription_penalty->penalty_amount : $batch->meta_balance;
+            $approvalDate = \Illuminate\Support\Carbon::parse($batch->approval_date);
+            $today = Carbon::today();
+            $join_days = $approvalDate->diffInDays($batch->termination_date != '' ? $batch->termination_date : $today);
+
+            $batch->join_days = $join_days;
+            $batch->management_period = $batch->master->masterManagementFee->sum('penalty_days');
         });
 
         return response()->json([
             'subscribers' => $results,
-            'totalSubscriptions' => $totalSubscriptions,
-            'totalCopyTradeBalance' => $totalCopyTradeBalance,
+            'totalTerminations' => $totalTerminations,
+            'totalCharges' => $totalCharges,
         ]);
     }
 }

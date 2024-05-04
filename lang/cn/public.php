@@ -345,4 +345,6 @@ return [
     "real_fund" => "真实资金",
     "demo_fund" => "模拟资金",
     "termination_date" => "终止日期",
+    "returns" => "返回",
+    "return_amount" => "返回金额",
 ];

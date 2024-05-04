@@ -50,4 +50,9 @@ class Master extends Model
     {
         return $this->belongsTo(TradingUser::class, 'meta_login', 'meta_login');
     }
+
+    public function masterManagementFee(): \Illuminate\Database\Eloquent\Relations\hasMany
+    {
+        return $this->hasMany(MasterManagementFee::class, 'master_id', 'id');
+    }
 }

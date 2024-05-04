@@ -461,4 +461,6 @@ return [
     "real_fund" => "Real Fund",
     "demo_fund" => "Demo Fund",
     "termination_date" => "Termination Date",
+    "returns" => "Returns",
+    "return_amount" => "Return Amount",
 ];

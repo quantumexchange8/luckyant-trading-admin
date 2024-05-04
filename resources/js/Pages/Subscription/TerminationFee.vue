@@ -12,23 +12,21 @@ import BaseListbox from "@/Components/BaseListbox.vue";
 import {usePage} from "@inertiajs/vue3";
 import {transactionFormat} from "@/Composables/index.js";
 import debounce from "lodash/debounce.js";
-import Badge from "@/Components/Badge.vue";
 import NoData from "@/Components/NoData.vue";
 import TanStackTable from "@/Components/TanStackTable.vue";
-import StatusBadge from "@/Components/StatusBadge.vue";
+import Action from "@/Pages/Subscription/Partials/Action.vue";
 
 const subscribers = ref({data: []});
 const sorting = ref();
 const search = ref('');
 const leader = ref();
 const date = ref('');
-const subscriberStatus = ref('');
 const pageSize = ref(10);
 const action = ref('');
 const currentPage = ref(1);
 const currentLocale = ref(usePage().props.locale);
-const totalSubscriptions = ref(null);
-const totalCopyTradeBalance = ref(null);
+const totalTerminations = ref(null);
+const totalCharges = ref(null);
 
 const { formatDateTime, formatAmount } = transactionFormat();
 const formatter = ref({
@@ -62,18 +60,18 @@ watch([currentPage, action], ([currentPageValue, newAction]) => {
 watch(
     [sorting, pageSize],
     ([sortingValue, pageSizeValue]) => {
-        getResults(1, pageSizeValue, search.value, leader.value, date.value, subscriberStatus.value.value, sortingValue);
+        getResults(1, pageSizeValue, search.value, leader.value, date.value, sortingValue);
     }
 );
 
 watch(
-    [search, leader, date, subscriberStatus],
-    debounce(([searchValue, leaderValue, dateValue, subscriberStatusValue]) => {
-        getResults(1, pageSize.value, searchValue, leaderValue, dateValue, subscriberStatusValue, sorting.value);
+    [search, leader, date],
+    debounce(([searchValue, leaderValue, dateValue]) => {
+        getResults(1, pageSize.value, searchValue, leaderValue, dateValue, sorting.value);
     }, 300)
 );
 
-const getResults = async (page = 1, paginate = 10, filterSearch = search.value, filterLeader = leader.value, filterDate = date.value, filterSubscriberStatus = subscriberStatus.value, columnName = sorting.value) => {
+const getResults = async (page = 1, paginate = 10, filterSearch = search.value, filterLeader = leader.value, filterDate = date.value, columnName = sorting.value) => {
     // isLoading.value = true
     try {
         let url = `/subscriptions/getTerminationFeeData?page=${page}`;
@@ -94,10 +92,6 @@ const getResults = async (page = 1, paginate = 10, filterSearch = search.value, 
             url += `&date=${filterDate}`;
         }
 
-        if (filterSubscriberStatus) {
-            url += `&status=${filterSubscriberStatus}`;
-        }
-
         if (columnName) {
             // Convert the object to JSON and encode it to send as a query parameter
             const encodedColumnName = encodeURIComponent(JSON.stringify(columnName));
@@ -106,8 +100,8 @@ const getResults = async (page = 1, paginate = 10, filterSearch = search.value, 
 
         const response = await axios.get(url);
         subscribers.value = response.data.subscribers;
-        totalSubscriptions.value = response.data.totalSubscriptions;
-        totalCopyTradeBalance.value = response.data.totalCopyTradeBalance;
+        totalTerminations.value = response.data.totalTerminations;
+        totalCharges.value = response.data.totalCharges;
     } catch (error) {
         console.error(error);
     } finally {
@@ -120,7 +114,7 @@ getResults()
 const columns = [
     {
         accessorKey: 'termination_date',
-        header: 'approval_date',
+        header: 'termination_date',
         cell: info => formatDateTime(info.getValue()),
     },
     {
@@ -148,13 +142,13 @@ const columns = [
         header: 'account_no',
     },
     {
-        accessorKey: 'meta_balance',
+        accessorKey: 'subscription_batch_amount',
         header: 'amount',
         cell: info => '$ ' + formatAmount(info.getValue()),
     },
     {
-        accessorKey: 'subscription_penalty.penalty_amount',
-        header: 'charges',
+        accessorKey: 'penalty_amount',
+        header: 'management_fee',
         cell: info => '$ ' + formatAmount(info.getValue() ?? 0),
     },
     {
@@ -163,9 +157,10 @@ const columns = [
         cell: info => '$ ' + formatAmount(info.getValue()),
     },
     {
-        accessorKey: 'termination_date',
-        header: 'termination_date',
-        cell: info => info.getValue() ? formatDateTime(info.getValue()) : '-',
+        accessorKey: 'action',
+        header: 'action',
+        cell: ({ row }) => h(Action, {penalty: row.original}),
+        enableSorting: false,
     },
 ];
 
@@ -182,10 +177,6 @@ const exportSubscribers = () => {
 
     if (date.value) {
         url += `&date=${date.value}`;
-    }
-
-    if (subscriberStatus.value) {
-        url += `&status=${subscriberStatus.value}`;
     }
 
     window.location.href = url;
@@ -211,7 +202,6 @@ const clearFilter = () => {
     search.value = '';
     date.value = '';
     leader.value = null;
-    subscriberStatus.value = '';
 }
 </script>
 
@@ -237,8 +227,8 @@ const clearFilter = () => {
                         Total Terminations
                     </div>
                     <div class="text-2xl font-bold">
-                        <span v-if="totalSubscriptions !== null">
-                            {{ totalSubscriptions }}
+                        <span v-if="totalTerminations !== null">
+                            {{ totalTerminations }}
                         </span>
                         <span v-else>
                           Loading...
@@ -255,8 +245,8 @@ const clearFilter = () => {
                         Total Charges Amount
                     </div>
                     <div class="text-2xl font-bold">
-                        <span v-if="totalCopyTradeBalance !== null">
-                          $ {{ formatAmount(totalCopyTradeBalance ? totalCopyTradeBalance : 0) }}
+                        <span v-if="totalCharges !== null">
+                          $ {{ formatAmount(totalCharges ? totalCharges : 0) }}
                         </span>
                         <span v-else>
                           Loading...
@@ -270,7 +260,7 @@ const clearFilter = () => {
         </div>
 
         <div class="flex flex-col gap-5 items-start self-stretch my-8">
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                 <div class="w-full">
                     <InputIconWrapper class="w-full">
                         <template #icon>
@@ -301,14 +291,6 @@ const clearFilter = () => {
                         separator=" - "
                         v-model="date"
                         input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
-                    />
-                </div>
-                <div class="w-full">
-                    <BaseListbox
-                        id="statusID"
-                        v-model="subscriberStatus"
-                        :options="statusOptions"
-                        placeholder="Filter Status"
                     />
                 </div>
             </div>
