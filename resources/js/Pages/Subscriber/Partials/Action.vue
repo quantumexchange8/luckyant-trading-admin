@@ -53,11 +53,11 @@ const form = useForm({
 const submitForm = () => {
     let submitRoute;
     if (modalComponent.value === 'Approve subscription') {
-        submitRoute = route('subscription.approveSubscribe');
+        submitRoute = route('subscriber.approveSubscribe');
     } else if (modalComponent.value === 'Reject Remark') {
-        submitRoute = route('subscription.rejectSubscribe');
+        submitRoute = route('subscriber.rejectSubscribe');
     } else if (modalComponent.value === 'Terminate Remark') {
-        submitRoute = route('subscription.terminateSubscribe');
+        submitRoute = route('subscriber.terminateSubscribe');
     }
 
     if (submitRoute) {
