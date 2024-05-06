@@ -250,7 +250,7 @@ class TransactionController extends Controller
     {
         $authUser = Auth::user();
         $query = Transaction::query()
-            ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,name,type', 'from_wallet:id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account'])
+            ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,user_id,name,type', 'from_wallet:id,user_id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account', 'to_wallet.user:id,name,email', 'from_wallet.user:id,name,email'])
             ->whereNotIn('status', ['Processing', 'Pending']);
 
         if ($request->filled('search')) {

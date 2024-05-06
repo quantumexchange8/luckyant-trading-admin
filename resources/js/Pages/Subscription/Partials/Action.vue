@@ -40,85 +40,83 @@ const closeModal = () => {
     </Tooltip>
 
     <Modal :show="penaltyDetailModal" :title="$t('public.view_details')" @close="closeModal" max-width="lg">
-        <div class="p-5 bg-gray-100 dark:bg-gray-600 rounded-lg">
-            <div class="flex flex-col items-start gap-3 self-stretch">
-                <div class="flex items-center justify-between gap-2 self-stretch">
-                    <div class="text-lg font-semibold dark:text-white">
-                        <div v-if="currentLocale === 'en'">
-                            {{ penalty.master.trading_user.name }} - {{ penalty.master_meta_login }}
-                        </div>
-                        <div v-if="currentLocale === 'cn'">
-                            {{ penalty.master.trading_user.company ? penalty.master.trading_user.company : penalty.master.trading_user.name }} - {{ penalty.master_meta_login }}
-                        </div>
+        <div class="flex flex-col items-start gap-3 self-stretch">
+            <div class="flex items-center justify-between gap-2 self-stretch">
+                <div class="text-lg font-semibold dark:text-white">
+                    <div v-if="currentLocale === 'en'">
+                        {{ penalty.master.trading_user.name }} - {{ penalty.master_meta_login }}
                     </div>
-                    <StatusBadge
-                        value="Terminated"
-                        width="w-20"
-                    />
-                </div>
-                <div class="flex items-center justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.account_number')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
-                        {{ penalty.meta_login }}
+                    <div v-if="currentLocale === 'cn'">
+                        {{ penalty.master.trading_user.company ? penalty.master.trading_user.company : penalty.master.trading_user.name }} - {{ penalty.master_meta_login }}
                     </div>
                 </div>
-                <div class="flex items-center justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.subscription_number')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
-                        {{ penalty.subscription_number }}
-                    </div>
+                <StatusBadge
+                    value="Terminated"
+                    width="w-20"
+                />
+            </div>
+            <div class="flex items-center justify-between gap-2 self-stretch">
+                <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.account_number')}}
                 </div>
-                <div class="flex items-center justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.join_date')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
-                        {{ formatDateTime(penalty.approval_date, false) }}
-                    </div>
+                <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
+                    {{ penalty.meta_login }}
                 </div>
-                <div class="flex items-start justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.termination_date')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-error-500 font-bold">
-                        {{ formatDateTime(penalty ? penalty.termination_date : '-', false) }}
-                    </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 self-stretch">
+                <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.subscription_number')}}
                 </div>
-                <div class="flex items-center justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.join_day')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
-                        {{ penalty.join_days }} {{ $t('public.days') }} / {{ penalty.management_period }} {{ $t('public.days') }}
-                    </div>
+                <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
+                    {{ penalty.subscription_number }}
                 </div>
-                <div class="flex items-start justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.amount')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-primary-500 dark:text-primary-400 font-bold">
-                        $ {{ formatAmount(penalty.subscription_batch_amount) }}
-                    </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 self-stretch">
+                <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.join_date')}}
                 </div>
-                <div class="flex items-start justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.management_fee')}} (<span :class="{'text-error-500': penalty.penalty_percent > 0}">{{ formatAmount(penalty.penalty_percent, 0) }}%</span>)
-                    </div>
-                    <div class="text-sm sm:text-base text-error-500 font-bold">
-                        $ {{ formatAmount(penalty ? penalty.penalty_amount : 0) }}
-                    </div>
+                <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
+                    {{ formatDateTime(penalty.approval_date, false) }}
                 </div>
-                <div class="flex items-start justify-between gap-2 self-stretch">
-                    <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
-                        {{$t('public.return_amount')}}
-                    </div>
-                    <div class="text-sm sm:text-base text-success-500 font-bold">
-                        $ {{ formatAmount(penalty.return_amount) }}
-                    </div>
+            </div>
+            <div class="flex items-start justify-between gap-2 self-stretch">
+                <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.termination_date')}}
+                </div>
+                <div class="text-sm sm:text-base text-error-500 font-bold">
+                    {{ formatDateTime(penalty ? penalty.termination_date : '-', false) }}
+                </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 self-stretch">
+                <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.join_day')}}
+                </div>
+                <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
+                    {{ penalty.join_days }} {{ $t('public.days') }} / {{ penalty.management_period }} {{ $t('public.days') }}
+                </div>
+            </div>
+            <div class="flex items-start justify-between gap-2 self-stretch">
+                <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.amount')}}
+                </div>
+                <div class="text-sm sm:text-base text-primary-500 dark:text-primary-400 font-bold">
+                    $ {{ formatAmount(penalty.subscription_batch_amount) }}
+                </div>
+            </div>
+            <div class="flex items-start justify-between gap-2 self-stretch">
+                <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.management_fee')}} (<span :class="{'text-error-500': penalty.penalty_percent > 0}">{{ formatAmount(penalty.penalty_percent, 0) }}%</span>)
+                </div>
+                <div class="text-sm sm:text-base text-error-500 font-bold">
+                    $ {{ formatAmount(penalty ? penalty.penalty_amount : 0) }}
+                </div>
+            </div>
+            <div class="flex items-start justify-between gap-2 self-stretch">
+                <div class="font-semibold text-sm text-gray-500 dark:text-gray-400">
+                    {{$t('public.return_amount')}}
+                </div>
+                <div class="text-sm sm:text-base text-success-500 font-bold">
+                    $ {{ formatAmount(penalty.return_amount) }}
                 </div>
             </div>
         </div>

@@ -294,7 +294,15 @@ const closeModal = () => {
                         </div>
                     </div>
                 </td>
-                <td class="p-3">
+                <td v-if="transaction.transaction_type === 'Transfer'" class="p-3 flex flex-col gap-1">
+                    <div>
+                        {{ transaction.to_wallet ? transaction.to_wallet.user.name : '-' }}
+                    </div>
+                    <div>
+                        {{ transaction.to_wallet ? transaction.to_wallet.user.email : '-' }}
+                    </div>
+                </td>
+                <td v-else class="p-3">
                     <div v-if="transaction.category === 'wallet' && transaction.transaction_type === 'Withdrawal'" class="flex flex-col gap-1">
                         <div>
                             {{ transaction.payment_account ? transaction.payment_account.payment_account_name : '-' }} <span v-if="transaction.payment_account && transaction.payment_account.payment_platform === 'Bank'">({{ transaction.payment_account ? transaction.payment_account.payment_platform_name : '' }})</span>
@@ -364,9 +372,19 @@ const closeModal = () => {
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.from') }}</span>
             <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.from_wallet ? $t('public.' + transactionDetail.from_wallet.type) : (transactionDetail.from_meta_login ? $t('public.account_no') + ' - ' + transactionDetail.from_meta_login.meta_login : '-') }}</span>
         </div>
-        <div class="grid grid-cols-3 items-center gap-2">
+        <div class="grid grid-cols-3 items-start gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.to') }}</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.to_wallet ? $t('public.' + transactionDetail.to_wallet.type) : (transactionDetail.to_meta_login ? $t('public.account_no') + ' - ' + transactionDetail.to_meta_login.meta_login : '-') }}</span>
+            <div v-if="transactionDetail.transaction_type === 'Transfer'">
+                <div>
+                    {{ transactionDetail.to_wallet ? transactionDetail.to_wallet.user.name : '-' }} ({{ $t('public.' + transactionDetail.to_wallet.type) }})
+                </div>
+                <div>
+                    {{ transactionDetail.to_wallet ? transactionDetail.to_wallet.user.email : '-' }}
+                </div>
+            </div>
+            <div v-else>
+                <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.to_wallet ? $t('public.' + transactionDetail.to_wallet.type) : (transactionDetail.to_meta_login ? $t('public.account_no') + ' - ' + transactionDetail.to_meta_login.meta_login : '-') }}</span>
+            </div>
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.payment_methods') }}</span>

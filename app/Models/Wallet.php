@@ -18,4 +18,9 @@ class Wallet extends Model
         'balance',
         'wallet_address',
     ];
+
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

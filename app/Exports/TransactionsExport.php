@@ -27,8 +27,14 @@ class TransactionsExport implements FromCollection, WithHeadings
         $result = array();
         foreach($records as $record){
             $country = Country::find($record->user->country);
-            $from = $record->from_wallet ? $record->from_wallet->name : ($record->from_meta_login ?? $record->to_meta_login ?? '-');
-            $to = $record->to_wallet ? $record->to_wallet->name : ($record->to_meta_login ?? $record->from_meta_login ?? '-');
+
+            if ($record->transaction_type == 'Transfer') {
+                $from = $record->from_wallet ? $record->from_wallet->user->name : '-';
+                $to = $record->to_wallet ? $record->to_wallet->user->name : '-';
+            } else {
+                $from = $record->from_wallet ? $record->from_wallet->name : ($record->from_meta_login ?? $record->to_meta_login ?? '-');
+                $to = $record->to_wallet ? $record->to_wallet->name : ($record->to_meta_login ?? $record->from_meta_login ?? '-');
+            }
             $profit = WalletLog::where('user_id', $record->user_id)->where('category', 'profit')->sum('amount');
             $bonus = WalletLog::where('user_id', $record->user_id)->where('category', 'bonus')->sum('amount');
 
