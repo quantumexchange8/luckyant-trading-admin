@@ -244,6 +244,9 @@ class SubscriberController extends Controller
             'approval_date' => now(),
         ]);
 
+        $subscriber->subscription_id = $subscription->id;
+        $subscriber->save();
+
         CopyTradeTransaction::create([
             'user_id' => $user->id,
             'trading_account_id' => $trading_account->id,
