@@ -69,7 +69,7 @@ class SidebarService {
     public function getPendingSubscriberRequestCount(): int
     {
         $authUser = \Auth::user();
-        $subscriber = Subscription::where('status', 'Pending');
+        $subscriber = Subscriber::where('status', 'Pending');
 
         if (!empty($authUser) && $authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
