@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Master;
 use Auth;
 use App\Exports\PendingSubscriberExport;
 use App\Exports\SubscriberExport;
@@ -260,6 +261,8 @@ class SubscriberController extends Controller
             'status' => 'Success',
         ]);
 
+        $master = Master::with('masterManagementFee')->find($subscriber->master_id);
+
         $subscription_batch = SubscriptionBatch::create([
             'user_id' => $user->id,
             'trading_account_id' => $trading_account->id,
@@ -277,7 +280,7 @@ class SubscriberController extends Controller
             'transaction_id' => $subscriber->transaction_id,
             'subscription_fee' => $subscriber->initial_subscription_fee,
             'settlement_start_date' => now(),
-            'settlement_date' => now()->addDays($subscriber->roi_period)->endOfDay(),
+            'settlement_date' => now()->addDays($master->masterManagementFee->sum('penalty_days'))->endOfDay(),
             'status' => 'Active',
             'approval_date' => now(),
             'handle_by' => Auth::user()->id,
