@@ -194,6 +194,9 @@ const closeModal = () => {
                             </div>
                         </div>
                     </th>
+                    <th scope="col" colspan="2" class="px-3 py-2.5">
+                        Username
+                    </th>
                     <th scope="col" colspan="2" class="px-3 py-2.5 text-center w-56">
                         <div class="flex gap-2 justify-center">
                             <div>
@@ -253,7 +256,7 @@ const closeModal = () => {
                     v-for="member in members.data"
                     class="bg-white dark:bg-transparent text-xs font-normal text-gray-900 dark:text-white border-b dark:border-gray-800"
                 >
-                    <td class="pl-3 py-2.5" colspan="4">
+                    <td class="px-3 py-2.5" colspan="4">
                         <div class="inline-flex items-center gap-2 mr-3">
                             <img :src="member.profile_photo_url ? member.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
                             <div class="flex flex-col">
@@ -265,6 +268,9 @@ const closeModal = () => {
                                 </div>
                             </div>
                         </div>
+                    </td>
+                    <td class="px-3 py-2.5" colspan="2">
+                        {{ member.username }}
                     </td>
                     <td class="px-3 py-2.5 text-center" colspan="2">
                         {{ formatDateTime(member.created_at, false) }}
