@@ -118,7 +118,7 @@ class MemberController extends Controller
             'setting_rank_id' => $request->ranking,
             'password' => Hash::make($request->password),
             'identification_number' => $request->identity_number,
-            'role' => 'member',
+            'role' => 'user',
             'kyc_approval' => 'Unverified',
         ]);
 
