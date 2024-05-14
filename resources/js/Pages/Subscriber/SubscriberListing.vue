@@ -119,8 +119,8 @@ getResults()
 
 const columns = [
     {
-        accessorKey: 'created_at',
-        header: 'date',
+        accessorKey: 'approval_date',
+        header: 'approval_date',
         cell: info => formatDateTime(info.getValue()),
     },
     {
@@ -153,9 +153,9 @@ const columns = [
         cell: info => '$ ' + formatAmount(info.getValue()),
     },
     {
-        accessorKey: 'approval_date',
-        header: 'approval_date',
-        cell: info => formatDateTime(info.getValue()),
+        accessorKey: 'unsubscribe_date',
+        header: 'unsubscribe_date',
+        cell: info => info.getValue() ? formatDateTime(info.getValue()) : '-',
     },
     {
         accessorKey: 'status',

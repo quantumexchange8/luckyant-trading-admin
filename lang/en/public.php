@@ -463,4 +463,5 @@ return [
     "termination_date" => "Termination Date",
     "returns" => "Returns",
     "return_amount" => "Return Amount",
+    'unsubscribe_date' => "Unsubscribe Date",
 ];

@@ -347,4 +347,5 @@ return [
     "termination_date" => "终止日期",
     "returns" => "返回",
     "return_amount" => "返回金额",
+    'unsubscribe_date' => "取消订阅日期",
 ];
