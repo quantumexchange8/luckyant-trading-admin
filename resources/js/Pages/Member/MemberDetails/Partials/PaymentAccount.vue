@@ -69,12 +69,12 @@ const submit = () => {
                 <Label
                 v-if="props.paymentDetails.payment_platform == 'Bank'"
                     for="bank_name"
-                    :value="$t('public.Bank Name')"
+                    :value="$t('public.bank_name')"
                 />
                 <Label
                 v-else
                     for="bank_name"
-                    :value="$t('public.Tether')"
+                    :value="$t('public.tether')"
                 />
                 <Input
                     id="bank_name"
@@ -90,12 +90,12 @@ const submit = () => {
                 <Label
                     v-if="props.paymentDetails.payment_platform == 'Bank'"
                     for="bank_account_name"
-                    :value="$t('public.Bank Account Name')"
+                    :value="$t('public.bank_account_name')"
                 />
                 <Label
                     v-else
                     for="bank_name"
-                    :value="$t('public.Crypto Wallet Name')"
+                    :value="$t('public.crypto_wallet_name')"
                 />
                 <Input
                     id="bank_account_name"
@@ -111,12 +111,12 @@ const submit = () => {
                 <Label
                     v-if="props.paymentDetails.payment_platform == 'Bank'"
                     for="account_no"
-                    :value="$t('public.Account Number')"
+                    :value="$t('public.account_number')"
                 />
                 <Label
                     v-else
                     for="account_no"
-                    :value="$t('public.Wallet Address')"
+                    :value="$t('public.wallet_address')"
                 />
                 <Input
                     id="account_no"
@@ -131,7 +131,7 @@ const submit = () => {
             <div v-if="paymentDetails.payment_platform == 'Bank'" class="space-y2">
                 <Label
                     for="bank_swift_code"
-                    :value="$t('public.Bank Swift Code')"
+                    :value="$t('public.bank_swift_code')"
                 />
                 <Input
                     id="bank_swift_code"
@@ -146,7 +146,7 @@ const submit = () => {
             <div v-if="paymentDetails.payment_platform == 'Bank'" class="space-y2">
                 <Label
                     for="currency"
-                    :value="$t('public.Currency')"
+                    :value="$t('public.currency')"
                 />
                 <BaseListbox
                     :options="currencies"
@@ -158,7 +158,7 @@ const submit = () => {
             <div class="w-full space-y2">
                 <Label
                     for="status"
-                    :value="$t('public.Status')"
+                    :value="$t('public.status')"
                 />
                 <div class="w-full">
                     <RadioGroup v-model="selected" class="flex gap-1 md:gap-4 flex-col md:flex-row">

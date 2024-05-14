@@ -3,18 +3,21 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable implements HasMedia
 {
-    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, InteractsWithMedia, HasRoles, SoftDeletes, LogsActivity;
 
     /**
      * The attributes that are mass assignable.
@@ -134,5 +137,61 @@ class User extends Authenticatable implements HasMedia
 
         $this->referral_code = $randomString;
         $this->save();
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        $user = $this->fresh();
+
+        return LogOptions::defaults()
+            ->useLogName('user')
+            ->logOnly([
+                'id',
+                'name',
+                'username',
+                'email_verified_at',
+                'email',
+                'password',
+                'security_pin',
+                'dial_code',
+                'phone',
+                'chinese_name',
+                'dob',
+                'address_1',
+                'address_2',
+                'postcode',
+                'city',
+                'state',
+                'country',
+                'nationality',
+                'register_ip',
+                'last_login_ip',
+                'cash_wallet_id',
+                'cash_wallet',
+                'kyc_approval',
+                'kyc_approval_date',
+                'kyc_approval_description',
+                'identification_number',
+                'gender',
+                'top_leader_id',
+                'upline_id',
+                'hierarchyList',
+                'leader_status',
+                'referral_code',
+                'role',
+                'setting_rank_id',
+                'rank_up_status',
+                'status',
+                'is_public',
+                'remark',
+                'remember_token',
+                'password_changed_at',
+            ])
+            ->setDescriptionForEvent(function (string $eventName) use ($user) {
+                $actorName = Auth::user() ? Auth::user()->name : 'System';
+                return "{$actorName} has {$eventName} user with ID: {$user->id}";
+            })
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }

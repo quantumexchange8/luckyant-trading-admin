@@ -333,7 +333,7 @@ const submit = () => {
                     @click="submit"
                     :disabled="form.processing"
                 >
-                    {{ $t('public.Save') }}
+                    {{ $t('public.save') }}
                 </Button>
             </div>
         </form>

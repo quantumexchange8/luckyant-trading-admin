@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AssignUserRequest;
-use App\Services\SelectOptionService;
+use App\Models\User;
+use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Inertia\Inertia;
-use App\Models\User;
 use Spatie\Permission\Models\Role;
+use App\Services\SelectOptionService;
+use Spatie\Activitylog\Models\Activity;
+use App\Http\Requests\AssignUserRequest;
 
 class AdminController extends Controller
 {
@@ -91,6 +92,7 @@ class AdminController extends Controller
     {
         $user = User::find($request->user_id);
         $role = Role::find($request->role);
+        $oldRole = $user->role;
 
         if ($user->hasRole($role->name)) {
             return redirect()->back()
@@ -102,6 +104,21 @@ class AdminController extends Controller
         $user->role = 'admin';
         $user->save();
 
+        $newRole = \DB::table('model_has_roles')->where('model_id', $user->id)->get();
+        
+        Activity::create([
+            'log_name' => 'role',
+            'description' => $user->name . ' has been assigned the role of admin.',
+            'subject_type' => Role::class,
+            'subject_id' => $user->id,
+            'causer_type' => get_class(\Auth::user()),
+            'causer_id' => \Auth::id(),
+            'properties' => [
+                'attributes' => ['role' => $newRole],
+            ],
+            'event' => 'created',
+        ]);
+                
         return redirect()->back()->with('title', trans('public.admin_added'))->with('success', trans('public.success_added_admin'));
     }
 
@@ -109,9 +126,24 @@ class AdminController extends Controller
     {
         $user = User::find($request->id);
 
+        $old = \DB::table('model_has_roles')->where('model_id', $user->id)->get();
         $user->roles()->detach();
         $user->role = 'user';
         $user->save();
+
+
+        Activity::create([
+            'log_name' => 'role',
+            'description' => $user->name . ' has been removed the role of admin.',
+            'subject_type' => Role::class,
+            'subject_id' => $user->id,
+            'causer_type' => get_class(\Auth::user()),
+            'causer_id' => \Auth::id(),
+            'properties' => [
+                'old' => [ $old ],
+            ],
+            'event' => 'deleted',
+        ]);
 
         return redirect()->back()->with('title', trans('public.remove_admin'))->with('success', trans('public.remove_admin_success'));
     }

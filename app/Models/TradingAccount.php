@@ -11,7 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class TradingAccount extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
 
     protected $guarded = [];
 
@@ -37,20 +37,49 @@ class TradingAccount extends Model
         'margin_maintenance' => 'decimal:2',
     ];
 
-//    public function getActivitylogOptions(): LogOptions
-//    {
-//        $trading_account = $this->fresh();
-//
-//        return LogOptions::defaults()
-//            ->useLogName('trading_account')
-//            ->logOnly(['user_id', 'meta_login', 'currency_digits', 'balance', 'credit', 'margin_leverage', 'equity', 'account_type'])
-//            ->setDescriptionForEvent(function (string $eventName) use ($trading_account) {
-//                $actorName = Auth::user() ? Auth::user()->first_name : 'User Meta Acc No - ' . $trading_account->meta_login;
-//                return "{$actorName} has {$eventName} trading account of {$trading_account->meta_login}.";
-//            })
-//            ->logOnlyDirty()
-//            ->dontSubmitEmptyLogs();
-//    }
+    public function getActivitylogOptions(): LogOptions
+    {
+        $tradingAccount = $this->fresh();
+
+        return LogOptions::defaults()
+            ->useLogName('trading_account')
+            ->logOnly([
+                'id',
+                'user_id',
+                'meta_login',
+                'account_type',
+                'currency_digits',
+                'balance',
+                'demo_fund',
+                'credit',
+                'margin',
+                'margin_free',
+                'margin_level',
+                'margin_leverage',
+                'profit',
+                'storage',
+                'commission',
+                'floating',
+                'equity',
+                'so_activation',
+                'so_time',
+                'so_level',
+                'so_equity',
+                'so_margin',
+                'assets',
+                'liabilities',
+                'blocked_commission',
+                'blocked_profit',
+                'margin_initial',
+                'margin_maintenance',
+            ])
+            ->setDescriptionForEvent(function (string $eventName) use ($tradingAccount) {
+                $actorName = Auth::user() ? Auth::user()->name : 'System';
+                return "{$actorName} has {$eventName} trading account with ID: {$tradingAccount->id}";
+            })
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

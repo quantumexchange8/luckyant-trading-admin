@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Subscriber extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'user_id',
@@ -55,5 +58,37 @@ class Subscriber extends Model
     public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(TradingUser::class, 'master_meta_login', 'meta_login');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        $subscriber = $this->fresh();
+
+        return LogOptions::defaults()
+            ->useLogName('subscriber')
+            ->logOnly([
+                'id',        
+                'user_id',
+                'trading_account_id',
+                'meta_login',
+                'initial_meta_balance',
+                'initial_subscription_fee',
+                'transaction_id',
+                'master_id',
+                'master_meta_login',
+                'roi_period',
+                'subscribe_amount',
+                'subscription_id',
+                'status',
+                'auto_renewal',
+                'approval_date',
+                'unsubscribe_date',
+            ])
+            ->setDescriptionForEvent(function (string $eventName) use ($subscriber) {
+                $actorName = Auth::user() ? Auth::user()->name : 'System';
+                return "{$actorName} has {$eventName} subscriber with ID: {$subscriber->id}";
+            })
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 }
