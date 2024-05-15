@@ -142,6 +142,13 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/terminateSubscribe', [SubscriberController::class, 'terminateSubscribe'])->name('subscriber.terminateSubscribe');
 
         Route::get('/subscribersListing', [SubscriberController::class, 'subscribersListing'])->name('subscriber.subscribersListing');
+
+        //switch master request
+        Route::get('/switch_master', [SubscriberController::class, 'switch_master'])->name('subscriber.switch_master');
+        Route::get('/getSwitchMasterData', [SubscriberController::class, 'getSwitchMasterData'])->name('subscriber.getSwitchMasterData');
+        Route::post('/approveSwitchMaster', [SubscriberController::class, 'approveSwitchMaster'])->name('subscriber.approveSwitchMaster');
+        Route::post('/rejectSwitchMaster', [SubscriberController::class, 'rejectSwitchMaster'])->name('subscriber.rejectSwitchMaster');
+
     });
 
     /**

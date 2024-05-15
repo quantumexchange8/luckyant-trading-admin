@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
             'pendingMasterCount' => $sidebarService->getPendingMasterCount(),
             'pendingSubscriberRequestCount' => $sidebarService->getPendingSubscriberRequestCount(),
             'pendingRenewalCount' => $sidebarService->getPendingRenewalCount(),
+            'pendingSwitchMasterCount' => $sidebarService->getPendingSwitchMasterCount(),
             'locale' => session('locale') ? session('locale') : app()->getLocale(),
         ];
     }

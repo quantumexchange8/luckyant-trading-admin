@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Master;
+use App\Models\SwitchMaster;
 use Auth;
 use App\Exports\PendingSubscriberExport;
 use App\Exports\SubscriberExport;
@@ -22,6 +23,7 @@ use App\Services\RunningNumberService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -688,5 +690,244 @@ class SubscriberController extends Controller
             'totalSubscriptions' => $totalSubscriptions,
             'totalCopyTradeBalance' => $totalCopyTradeBalance,
         ]);
+    }
+
+    public function switch_master()
+    {
+        return Inertia::render('Subscriber/SwitchMaster/SwitchMaster');
+    }
+
+    public function getSwitchMasterData(Request $request)
+    {
+        $authUser = Auth::user();
+        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        // Decode the JSON
+        $decodedColumnName = json_decode(urldecode($columnName), true);
+
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
+        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+
+        $switchMasters = SwitchMaster::query()
+            ->with(['user', 'old_master', 'new_master', 'old_master.tradingUser:id,name,meta_login', 'new_master.tradingUser:id,name,meta_login', 'subscriber']);
+
+        if ($request->filled('date')) {
+            $date = $request->input('date');
+            $dateRange = explode(' - ', $date);
+            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+
+            $switchMasters->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        $totalApprovedRequestQuery = clone $switchMasters;
+        $totalRejectedRequestQuery = clone $switchMasters;
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->input('search') . '%';
+            $switchMasters->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
+                    $user->where('name', 'like', $search)
+                        ->orWhere('email', 'like', $search);
+                })
+                    ->orWhereHas('old_master', function ($master) use ($search) {
+                        $master->where('meta_login', 'like', $search);
+                    })
+                    ->orWhereHas('new_master', function ($master) use ($search) {
+                        $master->where('meta_login', 'like', $search);
+                    })
+                    ->orWhere('meta_login', 'like', $search);
+            });
+        }
+
+        if ($request->filled('leader')) {
+            $leader = $request->input('leader');
+            $leaderUser = User::find($leader);
+            if ($leaderUser) {
+                $switchMasters->whereIn('user_id', $leaderUser->getChildrenIds());
+            }
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $switchMasters->where('status', $status);
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $switchMasters->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $switchMasters->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $switchMasters->whereIn('user_id', []);
+        }
+
+//        if ($request->has('exportStatus')) {
+//            return Excel::download(new SubscriptionExport($subscription), Carbon::now() . '-subscription-report.xlsx');
+//        }
+
+        $results = $switchMasters
+            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+            ->paginate($request->input('paginate', 10));
+
+        $results->each(function ($switchMaster) {
+            $approvalDate = \Illuminate\Support\Carbon::parse($switchMaster->subscriber->approval_date);
+            $today = Carbon::today();
+            $join_days = $approvalDate->diffInDays($switchMaster->subscriber->status == 'Unsubscribed' ? $switchMaster->subscriber->unsubscribe_date : $today);
+
+            $switchMaster->first_leader = $switchMaster->user->getFirstLeader() ?? null;
+            $switchMaster->join_days = $join_days;
+        });
+
+        return response()->json([
+            'switchMasters' => $results,
+            'totalRequest' => $totalApprovedRequestQuery->count(),
+            'totalApprovedRequest' => $totalApprovedRequestQuery->where('status', 'Success')->count(),
+            'totalRejectedRequest' => $totalRejectedRequestQuery->where('status', 'Rejected')->count(),
+        ]);
+    }
+
+    public function approveSwitchMaster(Request $request)
+    {
+        $switchMaster = SwitchMaster::find($request->switch_master_id);
+
+        if ($switchMaster->status != 'Pending') {
+            return redirect()->back()
+                ->with('title', trans('public.invalid_action'))
+                ->with('warning', trans('public.try_again_later'));
+        }
+
+        $switchMaster->update([
+            'approval_date' => now(),
+            'status' => 'Success',
+            'handle_by' => Auth::id(),
+        ]);
+
+        $old_subscriber = Subscriber::find($switchMaster->old_subscriber_id);
+
+        if (!empty($old_subscriber)) {
+            // Update old subscriber status
+            $old_subscriber->status = 'Switched';
+            $old_subscriber->auto_renewal = 0;
+            $old_subscriber->unsubscribe_date = now();
+            $old_subscriber->save();
+
+            // Replicate the Subscriber, this will copy all attributes and relations
+            $new_subscriber = $old_subscriber->replicate();
+            $new_subscriber->master_id = $switchMaster->new_master_id;
+            $new_subscriber->master_meta_login = $switchMaster->new_master_meta_login;
+            $new_subscriber->status = 'Subscribing';
+            $old_subscriber->auto_renewal = 1;
+            $old_subscriber->unsubscribe_date = null;
+
+            // Calculate the new approval date
+            $created_at_plus_24hr = Carbon::parse($switchMaster->created_at)->addHours(24);
+            $current_time = Carbon::now();
+            $new_approval_date = $current_time;
+
+            if (Carbon::parse($switchMaster->approval_date)->lessThan($created_at_plus_24hr)) {
+                $new_approval_date = $created_at_plus_24hr;
+            }
+
+            $new_subscriber->approval_date = $new_approval_date;
+            $new_subscriber->save();
+
+            // Find old subscription
+            $old_subscription = Subscription::find($old_subscriber->subscription_id);
+
+            if (!empty($old_subscription)) {
+                // Update old subscription status
+                $old_subscription->status = 'Switched';
+                $old_subscription->auto_renewal = 0;
+                $old_subscription->termination_date = now();
+                $old_subscription->save();
+
+                // Create new subscription row
+                $new_subscription = $old_subscription->replicate();
+                $new_subscription->master_id = $switchMaster->new_master_id;
+                $new_subscription->approval_date = $new_approval_date;
+                $new_subscription->next_pay_date = $new_approval_date->copy()->addDays($old_subscription->subscription_period)->endOfDay()->toDateString();
+                $new_subscription->expired_date = $new_approval_date->copy()->addDays($old_subscription->subscription_period)->endOfDay();
+                $new_subscription->status = 'Active';
+                $old_subscription->auto_renewal = 1;
+                $old_subscription->termination_date = null;
+                $new_subscription->subscription_number = RunningNumberService::getID('subscription');
+                $new_subscription->handle_by = Auth::id();
+                $new_subscription->save();
+
+                // Update new subscriber with new subscription id
+                $new_subscriber->subscription_id = $new_subscription->id;
+                $new_subscriber->save();
+
+                // Find related batches and update their status
+                $batches = SubscriptionBatch::where('meta_login', $old_subscription->meta_login)
+                    ->where('status', 'Active')
+                    ->get();
+
+                foreach ($batches as $batch) {
+                    $batch->status = 'Switched';
+                    $batch->auto_renewal = 0;
+                    $batch->termination_date = now();
+                    $batch->save();
+                }
+
+                // Create a new subscription batch
+                SubscriptionBatch::create([
+                    'user_id' => $new_subscription->user_id,
+                    'trading_account_id' => $new_subscription->trading_account_id,
+                    'meta_login' => $new_subscription->meta_login,
+                    'meta_balance' => $new_subscription->meta_balance,
+                    'real_fund' => $batches->sum('real_fund'),
+                    'demo_fund' => $batches->sum('demo_fund'),
+                    'master_id' => $switchMaster->new_master_id,
+                    'master_meta_login' => $switchMaster->new_master_meta_login,
+                    'type' => 'CopyTrade',
+                    'subscriber_id' => $new_subscriber->id,
+                    'subscription_id' => $new_subscription->id,
+                    'subscription_number' => $new_subscription->subscription_number,
+                    'subscription_period' => $new_subscription->subscription_period,
+                    'transaction_id' => $new_subscription->transaction_id,
+                    'subscription_fee' => $new_subscription->subscription_fee,
+                    'settlement_start_date' => $new_subscription->approval_date,
+                    'settlement_date' => $new_subscription->approval_date->copy()->addDays($switchMaster->new_master->masterManagementFee->sum('penalty_days'))->endOfDay(),
+                    'status' => 'Active',
+                    'approval_date' => $new_subscription->approval_date,
+                    'handle_by' => Auth::user()->id,
+                ]);
+            }
+        }
+
+        return redirect()->back()
+            ->with('title', 'Success approve')
+            ->with('success', 'Successfully approved switch master.');
+    }
+
+    public function rejectSwitchMaster(Request $request)
+    {
+        $switchMaster = SwitchMaster::find($request->switch_master_id);
+        $validator = Validator::make($request->all(), [
+            'remarks' => ['required']
+        ])->setAttributeNames([
+            'remarks' => 'Remarks'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        } else {
+            $switchMaster->update([
+                'status' => 'Rejected',
+                'remarks' => $request->remarks,
+                'approval_date' => now(),
+                'handle_by' => Auth::id()
+            ]);
+
+            return redirect()->back()
+                ->with('title', 'Success reject')
+                ->with('success', 'Successfully rejected switch master.');
+        }
     }
 }

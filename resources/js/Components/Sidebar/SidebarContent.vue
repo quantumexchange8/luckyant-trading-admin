@@ -15,6 +15,7 @@ const pendingKycCount = ref(page.props.pendingKycCount);
 const pendingMasterCount = ref(page.props.pendingMasterCount);
 const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
 const pendingRenewalCount = ref(page.props.pendingRenewalCount);
+const pendingSwitchMasterCount = ref(page.props.pendingSwitchMasterCount);
 const { hasRole } = usePermission();
 </script>
 
@@ -127,6 +128,12 @@ const { hasRole } = usePermission();
                 :href="route('subscriber.subscribersListing')"
                 title="Subscribers Listing"
                 :active="route().current('subscriber.subscribersListing')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('subscriber.switch_master')"
+                title="Switch Master"
+                :active="route().current('subscriber.switch_master')"
+                :pending-counts="pendingSwitchMasterCount"
             />
         </SidebarCollapsible>
 

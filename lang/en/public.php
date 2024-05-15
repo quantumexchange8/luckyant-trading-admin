@@ -464,4 +464,6 @@ return [
     "returns" => "Returns",
     "return_amount" => "Return Amount",
     'unsubscribe_date' => "Unsubscribe Date",
+    "current_master" => "Current Master",
+    "new_master" => "New Master",
 ];

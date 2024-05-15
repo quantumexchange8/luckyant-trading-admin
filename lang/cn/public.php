@@ -348,4 +348,6 @@ return [
     "returns" => "返回",
     "return_amount" => "返回金额",
     'unsubscribe_date' => "取消订阅日期",
+    "current_master" => "当前主账户",
+    "new_master" => "新主账户",
 ];
