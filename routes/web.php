@@ -33,6 +33,8 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/getTopGroups', [DashboardController::class, 'getTopGroups'])->name('getTopGroups');
+    Route::get('/getTotalDepositByDays', [DashboardController::class, 'getTotalDepositByDays'])->name('getTotalDepositByDays');
 
     /**
      * ==============================

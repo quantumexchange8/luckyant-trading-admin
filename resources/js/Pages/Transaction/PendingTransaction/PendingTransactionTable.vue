@@ -1,6 +1,6 @@
 <script setup>
 import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import PendingDeposit from "@/Pages/Transaction/PendingTransaction/PendingDeposit.vue";
 import PendingWithdrawal from "@/Pages/Transaction/PendingTransaction/PendingWithdrawal.vue";
 
@@ -18,10 +18,26 @@ const type = ref('Deposit');
 const updateTransactionType = (transaction_type) => {
     type.value = transaction_type
 };
+
+onMounted(() => {
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop) => searchParams.get(prop),
+    });
+    if (params.status === 'deposit'){
+        selectedTab.value = 0;
+    } else if (params.status === 'withdrawal') {
+        selectedTab.value = 1;
+    }
+});
+
+const selectedTab = ref(0);
+function changeTab(index) {
+    selectedTab.value = index;
+}
 </script>
 
 <template>
-    <TabGroup>
+    <TabGroup :selectedIndex="selectedTab" @change="changeTab">
         <TabList class="max-w-xs flex py-1">
             <Tab
                 as="template"

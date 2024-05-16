@@ -50,6 +50,13 @@ const kycStatuses = [
 
 onMounted(() => {
     updateKycCounts();
+
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop) => searchParams.get(prop),
+    });
+    if (params.status === 'pending'){
+        selectedTab.value = 1;
+    }
 });
 
 const updateKycCounts = () => {

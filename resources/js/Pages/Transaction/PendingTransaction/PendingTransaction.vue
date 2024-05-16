@@ -8,14 +8,12 @@ import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
-import BaseListbox from "@/Components/BaseListbox.vue";
 import Combobox from "@/Components/Combobox.vue";
 
 const refresh = ref(false);
 const isLoading = ref(false);
 const search = ref('');
 const date = ref('');
-const filter = ref('');
 const exportStatus = ref(false);
 const formatter = ref({
     date: 'YYYY-MM-DD',
