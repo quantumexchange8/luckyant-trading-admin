@@ -37,15 +37,15 @@ class TradingController extends Controller
     public function getTradingAccount(Request $request)
     {
         $authUser = \Auth::user();
-        $connection = (new MetaFiveService())->getConnectionStatus();
+        // $connection = (new MetaFiveService())->getConnectionStatus();
 
-        if ($connection == 0) {
-            try {
-                (new MetaFiveService())->getUserInfo(TradingAccount::all());
-            } catch (\Exception $e) {
-                \Log::error('Error fetching trading accounts: '. $e->getMessage());
-            }
-        }
+        // if ($connection == 0) {
+        //     try {
+        //         (new MetaFiveService())->getUserInfo(TradingAccount::all());
+        //     } catch (\Exception $e) {
+        //         \Log::error('Error fetching trading accounts: '. $e->getMessage());
+        //     }
+        // }
 
         $tradingListing = TradingAccount::query()
             ->with(['user', 'accountType', 'tradingUser']);

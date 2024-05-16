@@ -68,7 +68,7 @@ const closeModal = () => {
 
 <template>
     <form>
-        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md rounded-xl bg-gray-200 w-full">
+        <div class="h-24 flex justify-between items-center px-5 mb-8 shadow-md rounded-xl bg-gray-200 dark:bg-gray-700 w-full">
             <div class="space-y-2 w-full">
                 <div class="flex justify-between text-base font-semibold text-gray-600 dark:text-white">
                     <div>
