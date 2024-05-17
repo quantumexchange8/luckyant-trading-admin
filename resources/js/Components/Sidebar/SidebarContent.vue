@@ -209,6 +209,11 @@ const { hasRole } = usePermission();
                 title="Trading Rebate"
                 :active="route().current('report.trading_rebate')"
             />
+            <SidebarCollapsibleItem
+                :href="route('report.performance_incentive')"
+                title="Performance Incentive"
+                :active="route().current('report.performance_incentive')"
+            />
         </SidebarCollapsible>
 
         <SidebarCollapsible

@@ -466,4 +466,5 @@ return [
     'unsubscribe_date' => "Unsubscribe Date",
     "current_master" => "Current Master",
     "new_master" => "New Master",
+    "incentive_percent" => "Incentive Percentage",
 ];

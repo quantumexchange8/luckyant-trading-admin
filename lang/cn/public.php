@@ -350,4 +350,5 @@ return [
     'unsubscribe_date' => "取消订阅日期",
     "current_master" => "当前主账户",
     "new_master" => "新主账户",
+    "incentive_percent" => "绩效百分比",
 ];

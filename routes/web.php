@@ -179,6 +179,8 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
     Route::prefix('report')->group(function () {
         Route::get('/trading_rebate', [ReportController::class, 'trading_rebate'])->name('report.trading_rebate');
         Route::get('/getTradingRebate', [ReportController::class, 'getTradingRebate'])->name('report.getTradingRebate');
+        Route::get('/performance_incentive', [ReportController::class, 'performance_incentive'])->name('report.performance_incentive');
+        Route::get('/getPerformanceIncentive', [ReportController::class, 'getPerformanceIncentive'])->name('report.getPerformanceIncentive');
     });
 
     /**
