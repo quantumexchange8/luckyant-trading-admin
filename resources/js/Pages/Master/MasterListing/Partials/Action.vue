@@ -7,9 +7,12 @@ import {ref} from "vue";
 import Modal from "@/Components/Modal.vue";
 
 const props = defineProps({
-    masters: Object,
+    meta_login: Number,
 })
 
+const handleRedirectTo = () => {
+    window.location.href = route('master.viewMasterConfiguration', {meta_login: props.meta_login});
+}
 </script>
 
 <template>
@@ -19,7 +22,7 @@ const props = defineProps({
                 type="button"
                 class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
                 variant="gray"
-                :href="'/master/master_configuration/' + masters.id"
+                @click="handleRedirectTo"
                 pill
             >
                 <Configuration aria-hidden="true" class="w-3 h-3 absolute" />

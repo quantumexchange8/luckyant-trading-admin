@@ -118,7 +118,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         // Master Listing
         Route::get('/getMasterListing', [MasterController::class, 'getMasterListing'])->name('master.getMasterListing');
         Route::get('/getAllMaster', [MasterController::class, 'getAllMaster'])->name('master.getAllMaster');
-        Route::get('/master_configuration/{id}', [MasterController::class, 'viewMasterConfiguration'])->name('master.viewMasterConfiguration');
+        Route::get('/master_configuration/{meta_login}', [MasterController::class, 'viewMasterConfiguration'])->name('master.viewMasterConfiguration');
         Route::post('/updateMasterConfiguration', [MasterController::class, 'updateMasterConfiguration'])->name('master.updateMasterConfiguration');
     });
 

@@ -169,7 +169,7 @@ const columns = [
         accessorKey: 'action',
         header: 'action',
         enableSorting: false,
-        cell: ({row}) => h(Action, {masters: row.original}),
+        cell: ({row}) => h(Action, {meta_login: row.original.meta_login}),
     },
 ];
 

@@ -317,11 +317,9 @@ class MasterController extends Controller
         return response()->json($results);
     }
 
-    public function viewMasterConfiguration($id)
+    public function viewMasterConfiguration($meta_login)
     {
-
-        $masterConfigurations = Master::find($id);
-
+        $masterConfigurations = Master::where('meta_login', $meta_login)->first();
 
         return Inertia::render('Master/Configuration/MasterConfiguration', [
             'masterConfigurations' => $masterConfigurations,
