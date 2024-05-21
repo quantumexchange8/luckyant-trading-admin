@@ -13,11 +13,11 @@ import {RadioGroup, RadioGroupLabel, RadioGroupOption} from "@headlessui/vue";
 const transactionTypes = [
     {
         name: 'Deposit',
-        value: 'Deposit',
+        value: 'BalanceIn',
     },
     {
         name: 'Withdrawal',
-        value: 'Withdrawal',
+        value: 'BalanceOut',
     },
 ]
 const selectedTransactionType = ref(transactionTypes[0]);
