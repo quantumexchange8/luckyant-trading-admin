@@ -107,7 +107,7 @@ class DashboardController extends Controller
             ->where('status', '=', 'Success')
             ->where('category', '=', 'trading_account')
             ->where('fund_type', 'RealFund')
-            ->whereIn('transaction_type', ['Deposit']);
+            ->whereIn('transaction_type', ['BalanceIn']);
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
@@ -147,7 +147,7 @@ class DashboardController extends Controller
             ->get();
 
         // Get unique type to create datasets
-        $uniqueTransactionType = $chartResults->whereIn('transaction_type', ['Deposit'])->pluck('transaction_type')->unique();
+        $uniqueTransactionType = $chartResults->whereIn('transaction_type', ['BalanceIn'])->pluck('transaction_type')->unique();
         $year = $request->year ?? Carbon::now()->year;
         $month = $request->month ?? Carbon::now()->month;
 
@@ -157,7 +157,7 @@ class DashboardController extends Controller
             'datasets' => [],
         ];
 
-        $backgroundColors = ['Deposit' => '#12B76A', 'Withdrawal' => '#FF2D55'];
+        $backgroundColors = ['BalanceIn' => '#12B76A', 'Withdrawal' => '#FF2D55'];
 
         // Loop through each unique type and create a dataset
         foreach ($uniqueTransactionType as $transactionType) {
