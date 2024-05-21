@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Country;
-use App\Models\User;
+use App\Models\SubscriptionBatch;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -27,6 +27,17 @@ class MemberListingExport implements FromCollection, WithHeadings
 
         foreach ($records as $record) {
             // Check if $record is an array and has the necessary properties
+            $total_fund = SubscriptionBatch::where('user_id', $record->id)
+                ->where('status', 'Active')
+                ->sum('meta_balance');
+
+            $real_fund = SubscriptionBatch::where('user_id', $record->id)
+                ->where('status', 'Active')
+                ->sum('real_fund');
+
+            $demo_fund = SubscriptionBatch::where('user_id', $record->id)
+                ->where('status', 'Active')
+                ->sum('demo_fund');
 
             $result[] = [
                 'name' => $record->name,
@@ -41,6 +52,9 @@ class MemberListingExport implements FromCollection, WithHeadings
                 'country' => Country::find($record->country)->name,
                 'rank' => $record->rank->name,
                 'kyc_approval' => $record->kyc_approval,
+                'total_deposit' => $total_fund,
+                'real_fund' => $real_fund,
+                'demo_fund' => $demo_fund,
             ];
         }
 
@@ -62,6 +76,9 @@ class MemberListingExport implements FromCollection, WithHeadings
             'Country',
             'Ranking',
             'Status',
+            'Total Deposit',
+            'Real Fund',
+            'Demo Fund',
         ];
     }
 }
