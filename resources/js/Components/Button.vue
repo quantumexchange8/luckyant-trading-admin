@@ -72,7 +72,7 @@ const variantClasses = (variant) => ({
         variant === 'black',
     'bg-gray-400 hover:bg-gray-500 text-white dark:bg-gray-600 dark:hover:bg-gray-700 disabled:bg-gray-100 disabled:text-gray-300 dark:disabled:bg-gray-700 dark:disabled:text-gray-600':
         variant === 'gray',
-    'bg-transparent text-gray-700 hover:text-gray-400 dark:text-gray-300 dark:hover:text-white focus:ring-transparent':
+    'bg-transparent text-gray-700 hover:text-gray-400 dark:text-gray-300 dark:hover:text-white focus:ring-transparent dark:focus:ring-offset-transparent':
         variant === 'transparent',
     'bg-gray-300 dark:bg-white text-gray-800 dark:hover:bg-gray-200 focus:ring-gray-200': variant === 'white',
     'bg-[#ffffff33] bg-opacity-20 hover:bg-[#ffffff33] hover:opacity-80 text-white dark:bg-[#ffffff33] dark:bg-opacity-20 dark:hover:bg-[#ffffff33] dark:hover:opacity-60 disabled:bg-[#ffffff33] disabled:text-gray-300 dark:disabled:bg-[#ffffff33] dark:disabled:text-gray-600':

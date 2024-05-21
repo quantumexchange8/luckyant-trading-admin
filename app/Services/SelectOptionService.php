@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Country;
 use App\Models\PaymentAccount;
+use App\Models\SettingSettlementPeriod;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Models\SettingLeverage;
@@ -60,6 +61,16 @@ class SelectOptionService
             return [
                 'label' => trans('public.' . $role->name),
                 'value' => $role->id,
+            ];
+        });
+    }
+
+    public function getSettlementPeriods(): \Illuminate\Support\Collection
+    {
+        return SettingSettlementPeriod::where('status', 'Active')->get()->map(function ($period) {
+            return [
+                'label' => trans('public.' . $period->label),
+                'value' => $period->value,
             ];
         });
     }

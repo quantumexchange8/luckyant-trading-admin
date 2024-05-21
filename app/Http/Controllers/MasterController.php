@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Exports\MasterExport;
 use App\Models\Master;
+use App\Models\MasterManagementFee;
+use App\Models\Subscriber;
+use App\Models\Subscription;
 use App\Models\TradingAccount;
+use App\Services\SelectOptionService;
 use Illuminate\Http\Request;
 use App\Models\MasterRequest;
 use App\Models\User;
 use App\Http\Requests\MasterConfigurationRequest;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Auth;
 use Maatwebsite\Excel\Facades\Excel;
@@ -319,17 +324,32 @@ class MasterController extends Controller
 
     public function viewMasterConfiguration($meta_login)
     {
-        $masterConfigurations = Master::where('meta_login', $meta_login)->first();
+        $masterConfigurations = Master::with(['tradingUser:id,meta_login,name,company', 'user', 'masterManagementFee'])
+            ->where('meta_login', $meta_login)
+            ->first();
+
+        $totalFundSize = Subscription::where('master_id', $masterConfigurations->id)
+            ->where('status', 'Active')
+            ->sum('meta_balance');
+
+        $subscriberQuery = Subscriber::where('status', 'Subscribing');
+        $totalSubscribers = $subscriberQuery->count();
+        $totalSubscribersBasedOnMaster = $subscriberQuery->where('master_meta_login', $meta_login)
+            ->count();
+
+        $masterConfigurations->user->profile_photo_url = $masterConfigurations->user->getFirstMediaUrl('profile_photo');
+        $masterConfigurations->total_fund_size = $totalFundSize;
+        $masterConfigurations->subscribe_percentage = ($totalSubscribersBasedOnMaster / $totalSubscribers) * 100;
 
         return Inertia::render('Master/Configuration/MasterConfiguration', [
             'masterConfigurations' => $masterConfigurations,
             'subscriberCount' => $masterConfigurations->subscribers->count(),
+            'settlementPeriodSel' => (new SelectOptionService())->getSettlementPeriods(),
         ]);
     }
 
     public function updateMasterConfiguration(MasterConfigurationRequest $request)
     {
-
         $master = Master::find($request->master_id);
 
         $master->update([
@@ -362,5 +382,50 @@ class MasterController extends Controller
         return redirect()->back()
             ->with('title', 'Success configure setting')
             ->with('success', 'Successfully configure requirements to follow Master Account for LOGIN: ' . $master->meta_login);
+    }
+
+    public function updateMasterManagementFee(Request $request)
+    {
+        $managementDays = $request->management_days;
+        $managementFees = $request->management_fees;
+
+        $errors = [];
+
+        // Validate management days
+        foreach ($managementDays as $index => $day) {
+            if (empty($day)) {
+                $errors["management_fees.{$index}"] = trans('validation.required', ['attribute' => 'Management Period']);
+            }
+        }
+
+        // Validate management fees
+        foreach ($managementFees as $index => $fee) {
+            if (empty($fee)) {
+                $errors["management_fees.{$index}"] = trans('validation.required', ['attribute' => 'Fee Percentage']);
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $master = Master::with('masterManagementFee')->find($request->master_id);
+
+        foreach ($master->masterManagementFee as $item) {
+            $item->delete();
+        }
+
+        foreach ($managementFees as $index => $fee) {
+            MasterManagementFee::create([
+                'master_id' => $master->id,
+                'meta_login' => $master->meta_login,
+                'penalty_percentage' => $fee,
+                'penalty_days' => $managementDays[$index] // Set the corresponding days
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('title', 'Success update')
+            ->with('success', 'Successfully updated the management fees');
     }
 }
