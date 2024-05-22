@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Announcement;
 use App\Models\Subscriber;
 use App\Models\Subscription;
+use App\Models\SubscriptionBatch;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
@@ -62,23 +63,28 @@ class DashboardController extends Controller
 
     public function getTopGroups()
     {
-        $authUser = \Auth::user();
-
         $leaders = User::where('leader_status', 1)->get();
         $group_sales = [];
 
         foreach ($leaders as $leader) {
             $children_ids = $leader->getChildrenIds();
 
-            $total_meta_balance = Subscription::query()
+            $totals = SubscriptionBatch::query()
                 ->where('status', 'Active')
                 ->whereIn('user_id', $children_ids)
-                ->sum('meta_balance');
+                ->selectRaw('SUM(meta_balance) as total_meta_balance, SUM(real_fund) as total_real_fund, SUM(demo_fund) as total_demo_fund')
+                ->first();
+
+            $total_meta_balance = $totals->total_meta_balance;
+            $total_real_fund = $totals->total_real_fund;
+            $total_demo_fund = $totals->total_demo_fund;
 
             $group_sales[] = [
                 'name' => $leader->name,
                 'email' => $leader->email,
                 'total_meta_balance' => $total_meta_balance,
+                'total_real_fund' => $total_real_fund,
+                'total_demo_fund' => $total_demo_fund,
                 'total_children' => count($children_ids)
             ];
         }
@@ -164,7 +170,7 @@ class DashboardController extends Controller
             $transactionData = $chartResults->where('transaction_type', $transactionType);
 
             $dataset = [
-                'label' => $transactionData->first()->transaction_type,
+                'label' => 'Balance In',
                 'data' => array_map(function ($day) use ($transactionData) {
                     return $transactionData->firstWhere('day', $day)->amount ?? 0;
                 }, $chartData['labels']),
