@@ -793,7 +793,7 @@ class SubscriberController extends Controller
 
     public function approveSwitchMaster(Request $request)
     {
-        $switchMaster = SwitchMaster::find($request->switch_master_id);
+        $switchMaster = SwitchMaster::with('new_master')->find($request->switch_master_id);
 
         if ($switchMaster->status != 'Pending') {
             return redirect()->back()
@@ -820,9 +820,10 @@ class SubscriberController extends Controller
             $new_subscriber = $old_subscriber->replicate();
             $new_subscriber->master_id = $switchMaster->new_master_id;
             $new_subscriber->master_meta_login = $switchMaster->new_master_meta_login;
+            $new_subscriber->roi_period = $switchMaster->new_master->roi_period;
             $new_subscriber->status = 'Subscribing';
-            $old_subscriber->auto_renewal = 1;
-            $old_subscriber->unsubscribe_date = null;
+            $new_subscriber->auto_renewal = 1;
+            $new_subscriber->unsubscribe_date = null;
 
             // Calculate the new approval date
             $created_at_plus_24hr = Carbon::parse($switchMaster->created_at)->addHours(24);
@@ -849,12 +850,13 @@ class SubscriberController extends Controller
                 // Create new subscription row
                 $new_subscription = $old_subscription->replicate();
                 $new_subscription->master_id = $switchMaster->new_master_id;
+                $new_subscription->subscription_period = $switchMaster->new_master->roi_period;
                 $new_subscription->approval_date = $new_approval_date;
-                $new_subscription->next_pay_date = $new_approval_date->copy()->addDays($old_subscription->subscription_period)->endOfDay()->toDateString();
-                $new_subscription->expired_date = $new_approval_date->copy()->addDays($old_subscription->subscription_period)->endOfDay();
+                $new_subscription->next_pay_date = $new_approval_date->copy()->addDays($switchMaster->new_master->roi_period)->endOfDay()->toDateString();
+                $new_subscription->expired_date = $new_approval_date->copy()->addDays($switchMaster->new_master->roi_period)->endOfDay();
                 $new_subscription->status = 'Active';
-                $old_subscription->auto_renewal = 1;
-                $old_subscription->termination_date = null;
+                $new_subscription->auto_renewal = 1;
+                $new_subscription->termination_date = null;
                 $new_subscription->subscription_number = RunningNumberService::getID('subscription');
                 $new_subscription->handle_by = Auth::id();
                 $new_subscription->save();
