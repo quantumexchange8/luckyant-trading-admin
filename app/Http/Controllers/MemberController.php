@@ -68,7 +68,7 @@ class MemberController extends Controller
             ->pluck('count', 'kyc_approval')
             ->toArray();
 
-        return Inertia::render('Member/MemberListing', [
+        return Inertia::render('Member/MemberListing/MemberListings', [
             'rankLists' => $rankLists,
             'kycCounts' => $kycCounts,
             'countries' => (new SelectOptionService())->getCountries(),
