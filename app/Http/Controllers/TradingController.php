@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BalanceAdjustmentRequest;
 use App\Models\CopyTradeTransaction;
+use App\Models\Subscriber;
 use App\Models\Subscription;
+use App\Models\SubscriptionBatch;
 use App\Models\TradingUser;
 use App\Models\Transaction;
 use App\Services\dealAction;
@@ -176,12 +178,6 @@ class TradingController extends Controller
         $transaction_type = $request->transaction_type;
         $fund_type = $request->fund_type;
 
-        $subscriptions = Subscription::with('master:id,meta_login')
-            ->where('user_id', $user->id)
-            ->where('meta_login', $meta_login)
-            ->whereIn('status', ['Pending', 'Active'])
-            ->get();
-
         $connection = (new MetaFiveService())->getConnectionStatus();
         $metaService = new MetaFiveService();
 
@@ -199,7 +195,7 @@ class TradingController extends Controller
             \Log::error('Error fetching trading accounts: '. $e->getMessage());
         }
 
-        if ($transaction_type == 'Withdrawal') {
+        if ($transaction_type == 'BalanceOut') {
             // Check if balance is sufficient
             if (!empty($tradingAccount->subscriber) &&
                 !empty($tradingAccount->unsubscribe_date) &&
@@ -223,7 +219,7 @@ class TradingController extends Controller
         $deal = [];
 
         try {
-            $deal = (new MetaFiveService())->createDeal($meta_login, $amount, $request->description, $transaction_type == 'Deposit' ? dealAction::DEPOSIT : dealAction::WITHDRAW);
+            $deal = (new MetaFiveService())->createDeal($meta_login, $amount, $request->description, $transaction_type == 'BalanceIn' ? dealAction::DEPOSIT : dealAction::WITHDRAW);
         } catch (\Exception $e) {
             \Log::error('Error fetching trading accounts: '. $e->getMessage());
         }
@@ -247,7 +243,7 @@ class TradingController extends Controller
             $tradingUser = TradingUser::where('meta_login', $meta_login)->first();
             $tradingAccount = TradingAccount::where('meta_login', $meta_login)->first();
 
-            if ($transaction_type == 'Deposit') {
+            if ($transaction_type == 'BalanceIn') {
                 $tradingUser->demo_fund += $amount;
                 $tradingAccount->demo_fund += $amount;
             } else {
@@ -258,25 +254,65 @@ class TradingController extends Controller
             $tradingAccount->save();
         }
 
-        if (!empty($subscriptions)) {
-            foreach ($subscriptions as $subscription) {
+        $subscriber = Subscriber::with(['master:id,meta_login', 'tradingAccount'])
+            ->where('user_id', $user->id)
+            ->where('meta_login', $meta_login)
+            ->whereIn('status', ['Pending', 'Subscribing'])
+            ->first();
+
+        if ($subscriber && $subscriber->status == 'Pending') {
+            $subscriber->initial_meta_balance += $amount;
+            $subscriber->save();
+        } elseif ($subscriber && $subscriber->status == 'Subscribing') {
+            $subscriber->subscribe_amount += $amount;
+            $subscriber->save();
+
+            $subscription = Subscription::with(['master:id,meta_login', 'tradingAccount'])
+                ->where('user_id', $user->id)
+                ->where('meta_login', $meta_login)
+                ->where('master_id', $subscriber->master_id)
+                ->where('status', 'Active')
+                ->first();
+
+            if ($subscription) {
                 $subscription->meta_balance += $amount;
                 $subscription->save();
-                if ($subscription->status == 'Active') {
-                    CopyTradeTransaction::create([
-                        'user_id' => $user->id,
-                        'trading_account_id' => $tradingAccount->id,
-                        'meta_login' => $tradingAccount->meta_login,
-                        'subscription_id' => $subscription->id,
-                        'master_id' => $subscription->master->id,
-                        'master_meta_login' => $subscription->master->meta_login,
-                        'amount' => $tradingAccount->balance,
-                        'real_fund' => abs($tradingAccount->demo_fund - $tradingAccount->balance),
-                        'demo_fund' => $tradingAccount->demo_fund,
-                        'type' => 'Deposit',
-                        'status' => 'Success',
-                    ]);
-                }
+
+                CopyTradeTransaction::create([
+                    'user_id' => $user->id,
+                    'trading_account_id' => $tradingAccount->id,
+                    'meta_login' => $tradingAccount->meta_login,
+                    'subscription_id' => $subscription->id,
+                    'master_id' => $subscription->master->id,
+                    'master_meta_login' => $subscription->master->meta_login,
+                    'amount' => $tradingAccount->balance,
+                    'real_fund' => abs($tradingAccount->demo_fund - $tradingAccount->balance),
+                    'demo_fund' => $tradingAccount->demo_fund,
+                    'type' => 'Deposit',
+                    'status' => 'Success',
+                ]);
+
+                SubscriptionBatch::create([
+                    'user_id' => $user->id,
+                    'trading_account_id' => $subscriber->trading_account_id,
+                    'meta_login' => $meta_login,
+                    'meta_balance' => $amount,
+                    'real_fund' => $fund_type == 'RealFund' ? $amount : 0,
+                    'demo_fund' => $fund_type == 'DemoFund' ? $amount : 0,
+                    'master_id' => $subscriber->master_id,
+                    'master_meta_login' => $subscriber->master_meta_login,
+                    'type' => 'CopyTrade',
+                    'subscriber_id' => $subscriber->id,
+                    'subscription_id' => $subscription->id,
+                    'subscription_number' => $subscription->subscription_number,
+                    'subscription_period' => $subscriber->roi_period,
+                    'transaction_id' => $subscriber->transaction_id,
+                    'subscription_fee' => $subscriber->initial_subscription_fee,
+                    'settlement_start_date' => now(),
+                    'settlement_date' => now()->addDays($subscriber->roi_period)->endOfDay(),
+                    'status' => 'Active',
+                    'approval_date' => now() < $subscription->approval_date ? now()->addDay() : now(),
+                ]);
             }
         }
 
