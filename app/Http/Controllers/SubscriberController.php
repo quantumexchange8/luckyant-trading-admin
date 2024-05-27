@@ -379,7 +379,7 @@ class SubscriberController extends Controller
         // Decode the JSON
         $decodedColumnName = json_decode(urldecode($columnName), true);
 
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'approval_date';
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
         $activeSubscriber = Subscriber::query()
@@ -404,7 +404,7 @@ class SubscriberController extends Controller
             $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
-            $activeSubscriber->whereBetween('created_at', [$start_date, $end_date]);
+            $activeSubscriber->whereBetween('approval_date', [$start_date, $end_date]);
         }
 
         if ($request->filled('leader')) {
@@ -447,7 +447,7 @@ class SubscriberController extends Controller
                 ->paginate($request->input('paginate', 10));
         } else {
             $results = $activeSubscriber
-                ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+                ->orderBy($column == null ? 'approval_date' : $column, $sortOrder)
                 ->paginate($request->input('paginate', 10));
         }
 
