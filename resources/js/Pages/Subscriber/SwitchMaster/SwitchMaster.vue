@@ -208,7 +208,7 @@ const clearFilter = () => {
 
         <div class="w-full">
             <TabGroup>
-                <TabList class="flex space-x-1 max-w-md rounded-xl bg-gray-200 p-1">
+                <TabList class="flex space-x-1 max-w-md rounded-xl bg-gray-200 dark:bg-gray-900 p-1">
                     <Tab
                         v-for="type in switchTypes"
                         as="template"
@@ -217,9 +217,9 @@ const clearFilter = () => {
                         <button
                             :class="[
                                 'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                                'ring-white/60 ring-offset-2 ring-offset-primary-400 focus:outline-none focus:ring-2',
+                                'ring-white/60 ring-offset-2 ring-offset-primary-400 dark:ring-offset-gray-400 focus:outline-none focus:ring-2',
                                 selected
-                                ? 'bg-white text-primary-800 shadow'
+                                ? 'bg-white dark:bg-gray-700 text-primary-800 dark:text-white shadow'
                                 : 'text-gray-600 hover:bg-white/[0.12] hover:text-primary-500',
                             ]"
                             @click="handleType(type.value)"

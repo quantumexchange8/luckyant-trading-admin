@@ -119,7 +119,7 @@ const submit = () => {
     <Modal :show="approvalModal" :title="modalComponent" @close="closeModal" max-width="4xl">
         <div v-if="modalComponent === 'Approve request' && status === 'Pending'">
             <div class="grid grid-cols-11">
-                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-600 rounded-lg p-5">
+                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-800 rounded-lg p-5">
                     <div class="flex flex-col items-start gap-3 self-stretch">
                         <div class="flex items-center justify-center w-full">
                             <div class="flex flex-col items-start gap-3 self-stretch w-full">
@@ -188,7 +188,7 @@ const submit = () => {
                         <ChevronRightDoubleIcon class="text-gray-400 rotate-90 sm:rotate-0" />
                     </div>
                 </div>
-                <div class="col-span-11 sm:col-span-5 bg-gray-100 rounded-lg p-5">
+                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-800 rounded-lg p-5">
                     <div class="flex flex-col items-start gap-3 self-stretch">
                         <div class="flex items-center justify-center w-full">
                             <div class="flex flex-col items-start gap-3 self-stretch w-full">
@@ -285,7 +285,7 @@ const submit = () => {
 
         <div v-if="modalComponent === 'Reject request' && status === 'Pending'">
             <div class="grid grid-cols-11">
-                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-600 rounded-lg p-5">
+                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-800 rounded-lg p-5">
                     <div class="flex flex-col items-start gap-3 self-stretch">
                         <div class="flex items-center justify-center w-full">
                             <div class="flex flex-col items-start gap-3 self-stretch w-full">
@@ -354,7 +354,7 @@ const submit = () => {
                         <ChevronRightDoubleIcon class="text-gray-400 rotate-90 sm:rotate-0" />
                     </div>
                 </div>
-                <div class="col-span-11 sm:col-span-5 bg-gray-100 rounded-lg p-5">
+                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-800 rounded-lg p-5">
                     <div class="flex flex-col items-start gap-3 self-stretch">
                         <div class="flex items-center justify-center w-full">
                             <div class="flex flex-col items-start gap-3 self-stretch w-full">
@@ -487,7 +487,7 @@ const submit = () => {
         <div v-if="modalComponent === 'View Details' && status !== 'Pending'">
             <StatusBadge :value="switchMaster.status" />
             <div class="grid grid-cols-11 mt-4">
-                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-600 rounded-lg p-5">
+                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-800 rounded-lg p-5">
                     <div class="flex flex-col items-start gap-3 self-stretch">
                         <div class="flex items-center justify-center w-full">
                             <div class="flex flex-col items-start gap-3 self-stretch w-full">
@@ -556,7 +556,7 @@ const submit = () => {
                         <ChevronRightDoubleIcon class="text-gray-400 rotate-90 sm:rotate-0" />
                     </div>
                 </div>
-                <div class="col-span-11 sm:col-span-5 bg-gray-100 rounded-lg p-5">
+                <div class="col-span-11 sm:col-span-5 bg-gray-100 dark:bg-gray-800 rounded-lg p-5">
                     <div class="flex flex-col items-start gap-3 self-stretch">
                         <div class="flex items-center justify-center w-full">
                             <div class="flex flex-col items-start gap-3 self-stretch w-full">
@@ -628,6 +628,12 @@ const submit = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+            <div
+                v-if="switchMaster.status === 'Rejected'"
+                class="mt-5 text-gray-800 dark:text-white font-semibold"
+            >
+                Remarks: {{ switchMaster.remarks }}
             </div>
         </div>
     </Modal>

@@ -807,25 +807,12 @@ class SubscriberController extends Controller
             'handle_by' => Auth::id(),
         ]);
 
-        $old_subscriber = Subscriber::find($switchMaster->old_subscriber_id);
+        $pending_switched_subscriber = Subscriber::where('meta_login', $switchMaster->meta_login)
+            ->where('master_id', $switchMaster->new_master_id)
+            ->where('status', 'Pending')
+            ->first();
 
-        if (!empty($old_subscriber)) {
-            // Update old subscriber status
-            $old_subscriber->status = 'Switched';
-            $old_subscriber->auto_renewal = 0;
-            $old_subscriber->unsubscribe_date = now();
-            $old_subscriber->save();
-
-            // Replicate the Subscriber, this will copy all attributes and relations
-            $new_subscriber = $old_subscriber->replicate();
-            $new_subscriber->master_id = $switchMaster->new_master_id;
-            $new_subscriber->master_meta_login = $switchMaster->new_master_meta_login;
-            $new_subscriber->roi_period = $switchMaster->new_master->roi_period;
-            $new_subscriber->status = 'Subscribing';
-            $new_subscriber->auto_renewal = 1;
-            $new_subscriber->unsubscribe_date = null;
-
-            // Calculate the new approval date
+        if (!empty($pending_switched_subscriber)) {
             $created_at_plus_24hr = Carbon::parse($switchMaster->created_at)->addHours(24);
             $current_time = Carbon::now();
             $new_approval_date = $current_time;
@@ -834,72 +821,38 @@ class SubscriberController extends Controller
                 $new_approval_date = $created_at_plus_24hr;
             }
 
-            $new_subscriber->approval_date = $new_approval_date;
-            $new_subscriber->save();
+            // Update pending subscriber status
+            $pending_switched_subscriber->update([
+                'status' => 'Subscribing',
+                'approval_date' => $new_approval_date
+            ]);
 
             // Find old subscription
-            $old_subscription = Subscription::find($old_subscriber->subscription_id);
+            $pending_subscriptions = Subscription::find($pending_switched_subscriber->subscription_id);
 
-            if (!empty($old_subscription)) {
-                // Update old subscription status
-                $old_subscription->status = 'Switched';
-                $old_subscription->auto_renewal = 0;
-                $old_subscription->termination_date = now();
-                $old_subscription->save();
-
-                // Create new subscription row
-                $new_subscription = $old_subscription->replicate();
-                $new_subscription->master_id = $switchMaster->new_master_id;
-                $new_subscription->subscription_period = $switchMaster->new_master->roi_period;
-                $new_subscription->approval_date = $new_approval_date;
-                $new_subscription->next_pay_date = $new_approval_date->copy()->addDays($switchMaster->new_master->roi_period)->endOfDay()->toDateString();
-                $new_subscription->expired_date = $new_approval_date->copy()->addDays($switchMaster->new_master->roi_period)->endOfDay();
-                $new_subscription->status = 'Active';
-                $new_subscription->auto_renewal = 1;
-                $new_subscription->termination_date = null;
-                $new_subscription->subscription_number = RunningNumberService::getID('subscription');
-                $new_subscription->handle_by = Auth::id();
-                $new_subscription->save();
-
-                // Update new subscriber with new subscription id
-                $new_subscriber->subscription_id = $new_subscription->id;
-                $new_subscriber->save();
+            if (!empty($pending_subscriptions)) {
+                $pending_subscriptions->update([
+                    'status' => 'Active',
+                    'approval_date' => $new_approval_date,
+                    'next_pay_date' => $new_approval_date->copy()->addDays($switchMaster->new_master->roi_period)->endOfDay()->toDateString(),
+                    'expired_date' => $new_approval_date->copy()->addDays($switchMaster->new_master->roi_period)->endOfDay(),
+                    'handle_by' => Auth::id(),
+                ]);
 
                 // Find related batches and update their status
-                $batches = SubscriptionBatch::where('meta_login', $old_subscription->meta_login)
-                    ->where('status', 'Active')
+                $batches = SubscriptionBatch::where('meta_login', $pending_subscriptions->meta_login)
+                    ->where('status', 'Pending')
                     ->get();
 
                 foreach ($batches as $batch) {
-                    $batch->status = 'Switched';
-                    $batch->auto_renewal = 0;
-                    $batch->termination_date = now();
-                    $batch->save();
+                    $batch->update([
+                        'settlement_start_date' => $pending_subscriptions->approval_date,
+                        'settlement_date' => $pending_subscriptions->approval_date->copy()->addDays($switchMaster->new_master->masterManagementFee->sum('penalty_days'))->endOfDay(),
+                        'status' => 'Active',
+                        'approval_date' => $pending_subscriptions->approval_date,
+                        'handle_by' => Auth::id(),
+                    ]);
                 }
-
-                // Create a new subscription batch
-                SubscriptionBatch::create([
-                    'user_id' => $new_subscription->user_id,
-                    'trading_account_id' => $new_subscription->trading_account_id,
-                    'meta_login' => $new_subscription->meta_login,
-                    'meta_balance' => $new_subscription->meta_balance,
-                    'real_fund' => $batches->sum('real_fund'),
-                    'demo_fund' => $batches->sum('demo_fund'),
-                    'master_id' => $switchMaster->new_master_id,
-                    'master_meta_login' => $switchMaster->new_master_meta_login,
-                    'type' => 'CopyTrade',
-                    'subscriber_id' => $new_subscriber->id,
-                    'subscription_id' => $new_subscription->id,
-                    'subscription_number' => $new_subscription->subscription_number,
-                    'subscription_period' => $new_subscription->subscription_period,
-                    'transaction_id' => $new_subscription->transaction_id,
-                    'subscription_fee' => $new_subscription->subscription_fee,
-                    'settlement_start_date' => $new_subscription->approval_date,
-                    'settlement_date' => $new_subscription->approval_date->copy()->addDays($switchMaster->new_master->masterManagementFee->sum('penalty_days'))->endOfDay(),
-                    'status' => 'Active',
-                    'approval_date' => $new_subscription->approval_date,
-                    'handle_by' => Auth::user()->id,
-                ]);
             }
         }
 
@@ -926,6 +879,85 @@ class SubscriberController extends Controller
                 'approval_date' => now(),
                 'handle_by' => Auth::id()
             ]);
+
+            $pending_switched_subscriber = Subscriber::where('meta_login', $switchMaster->meta_login)
+                ->where('master_id', $switchMaster->new_master_id)
+                ->where('status', 'Pending')
+                ->first();
+
+            if (!empty($pending_switched_subscriber)) {
+                $created_at_plus_24hr = Carbon::parse($switchMaster->created_at)->addHours(24);
+                $current_time = Carbon::now();
+                $new_approval_date = $current_time;
+
+                if (Carbon::parse($switchMaster->approval_date)->lessThan($created_at_plus_24hr)) {
+                    $new_approval_date = $created_at_plus_24hr;
+                }
+
+                // Update pending subscriber status
+                $pending_switched_subscriber->update([
+                    'status' => 'Rejected',
+                    'approval_date' => $new_approval_date,
+                    'auto_renewal' => 0,
+                ]);
+
+                // Update old subscriber
+                $old_subscriber = Subscriber::find($switchMaster->old_subscriber_id);
+                $old_subscriber->status = 'Subscribing';
+                $old_subscriber->auto_renewal = 1;
+                $old_subscriber->unsubscribe_date = null;
+                $old_subscriber->save();
+
+                // Find old subscription
+                $pending_subscriptions = Subscription::find($pending_switched_subscriber->subscription_id);
+
+                if (!empty($pending_subscriptions)) {
+                    $pending_subscriptions->update([
+                        'status' => 'Rejected',
+                        'approval_date' => $new_approval_date,
+                        'next_pay_date' => null,
+                        'expired_date' => null,
+                        'auto_renewal' => 0,
+                        'handle_by' => Auth::id(),
+                        'remarks' => $switchMaster->remarks,
+                    ]);
+
+                    // Update old subscriptions
+                    $old_subscription = Subscription::find($old_subscriber->subscription_id);
+                    $old_subscription->status = 'Active';
+                    $old_subscription->auto_renewal = 1;
+                    $old_subscription->termination_date = null;
+                    $old_subscription->save();
+
+                    // Find related batches and update their status
+                    $pending_batches = SubscriptionBatch::where('meta_login', $pending_subscriptions->meta_login)
+                        ->where('status', 'Pending')
+                        ->get();
+
+                    foreach ($pending_batches as $pending_batch) {
+                        $pending_batch->update([
+                            'status' => 'Rejected',
+                            'approval_date' => $pending_subscriptions->approval_date,
+                            'auto_renewal' => 0,
+                            'handle_by' => Auth::id(),
+                            'remarks' => $switchMaster->remarks,
+                        ]);
+                    }
+
+                    // Update old subscription batches
+                    $old_subscription_batches = $old_subscriber->subscription_batches;
+
+                    foreach ($old_subscription_batches as $old_batch) {
+                        $old_batch->update([
+                            'status' => 'Active',
+                            'auto_renewal' => 1,
+                            'termination_date'=> null,
+                            'approval_date' => $pending_subscriptions->approval_date,
+                            'handle_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
 
             return redirect()->back()
                 ->with('title', 'Success reject')

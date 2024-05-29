@@ -60,6 +60,11 @@ class Subscriber extends Model
         return $this->belongsTo(TradingUser::class, 'master_meta_login', 'meta_login');
     }
 
+    public function subscription_batches(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SubscriptionBatch::class, 'subscriber_id', 'id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         $subscriber = $this->fresh();
@@ -67,7 +72,7 @@ class Subscriber extends Model
         return LogOptions::defaults()
             ->useLogName('subscriber')
             ->logOnly([
-                'id',        
+                'id',
                 'user_id',
                 'trading_account_id',
                 'meta_login',
