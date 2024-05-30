@@ -56,7 +56,10 @@ class SubscriberController extends Controller
 
         $pendingSubscriber = Subscriber::query()
             ->with(['user', 'master', 'master.user', 'transaction', 'subscription', 'master.tradingUser'])
-            ->where('status', 'Pending');
+            ->where('status', 'Pending')
+            ->whereDoesntHave('subscription', function ($query) {
+                $query->where('status', 'Pending');
+            });
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
@@ -109,15 +112,9 @@ class SubscriberController extends Controller
         $totalSubscriberQuery = clone $pendingSubscriber;
         $totalCopyTradeBalanceQuery = clone $pendingSubscriber;
 
-        if ($column == 'subscription_meta_balance') {
-            $results = $pendingSubscriber->join('subscriptions', 'subscribers.subscription_id', '=', 'subscriptions.id')
-                ->orderBy('subscriptions.meta_balance', $sortOrder)
-                ->paginate($request->input('paginate', 10));
-        } else {
-            $results = $pendingSubscriber
-                ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
-                ->paginate($request->input('paginate', 10));
-        }
+        $results = $pendingSubscriber
+            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+            ->paginate($request->input('paginate', 10));
 
         $totalSubscriber = $totalSubscriberQuery->count();
         $totalCopyTradeBalance = $totalCopyTradeBalanceQuery
