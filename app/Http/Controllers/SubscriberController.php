@@ -920,7 +920,7 @@ class SubscriberController extends Controller
                     ]);
 
                     // Update old subscriptions
-                    $old_subscription = Subscription::find($old_subscriber->subscription_id);
+                    $old_subscription = Subscription::where('id', $old_subscriber->subscription_id)->where('status', 'Switched')->first();
                     $old_subscription->status = 'Active';
                     $old_subscription->auto_renewal = 1;
                     $old_subscription->termination_date = null;
@@ -942,7 +942,9 @@ class SubscriberController extends Controller
                     }
 
                     // Update old subscription batches
-                    $old_subscription_batches = $old_subscriber->subscription_batches;
+                    $old_subscription_batches = SubscriptionBatch::where('subscriber_id', $old_subscriber->id)
+                        ->where('status', 'Switched')
+                        ->get();
 
                     foreach ($old_subscription_batches as $old_batch) {
                         $old_batch->update([
