@@ -34,7 +34,7 @@ class SubscriberExport implements FromCollection, WithHeadings, ShouldQueue
                 'first_leader' => $first_leader,
                 'master' => $record->master->tradingUser->name ?? 'LuckyAnt Trading',
                 'master_trading_account' => $record->master_meta_login,
-                'copy_trade_balance' => $record->subscription->meta_balance,
+                'copy_trade_balance' => $record->subscription->meta_balance ?? null,
                 'approval_date' =>  Carbon::parse($record->approval_date)->format('Y-m-d'),
                 'status' => $record->status,
             );
