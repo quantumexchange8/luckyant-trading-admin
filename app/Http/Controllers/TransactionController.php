@@ -29,7 +29,7 @@ class TransactionController extends Controller
 {
     public function pendingTransaction()
     {
-        return Inertia::render('Transaction/PendingTransaction/PendingTransaction');
+        return Inertia::render('Transaction/TransactionPending/TransactionPending');
     }
 
     public function transactionHistory()
@@ -42,26 +42,15 @@ class TransactionController extends Controller
     public function getPendingTransaction(Request $request, $type)
     {
         $authUser = Auth::user();
-        $query = Transaction::query()->with(['user', 'from_wallet', 'to_wallet', 'payment_account'])
-            ->where('transaction_type', $type)
-            ->where('status', 'Processing');
+        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        // Decode the JSON
+        $decodedColumnName = json_decode(urldecode($columnName), true);
 
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search);
-                })
-                ->orWhereHas('to_wallet', function ($to_wallet) use ($search) {
-                    $to_wallet->where('name', 'like', $search);
-                })
-                ->orWhereHas('from_wallet', function ($from_wallet) use ($search) {
-                    $from_wallet->where('name', 'like', $search);
-                })
-                ->orWhere('transaction_number', 'like', $search)
-                    ->orWhere('amount', 'like', $search);
-            });
-        }
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
+        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+
+        $query = Transaction::query()->with(['user:id,name,email,upline_id,hierarchyList,leader_status,role', 'from_wallet', 'to_wallet', 'payment_account'])
+            ->where('status', 'Processing');
 
         if ($request->filled('date')) {
             $date = $request->input('date');
@@ -70,6 +59,29 @@ class TransactionController extends Controller
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
             $query->whereBetween('created_at', [$start_date, $end_date]);
+        }
+
+        $totalPendingDepositsQuery = clone $query;
+        $totalPendingWithdrawalsQuery = clone $query;
+
+        $query = $query->where('transaction_type', $type);
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->input('search') . '%';
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($user) use ($search) {
+                    $user->where('name', 'like', $search)
+                        ->orWhere('email', 'like', $search);
+                })
+                    ->orWhereHas('to_wallet', function ($to_wallet) use ($search) {
+                        $to_wallet->where('name', 'like', $search);
+                    })
+                    ->orWhereHas('from_wallet', function ($from_wallet) use ($search) {
+                        $from_wallet->where('name', 'like', $search);
+                    })
+                    ->orWhere('transaction_number', 'like', $search)
+                    ->orWhere('amount', 'like', $search);
+            });
         }
 
         if ($request->filled('leader')) {
@@ -103,7 +115,9 @@ class TransactionController extends Controller
             }
         }
 
-        $results = $query->latest()->paginate(10);
+        $results = $query
+            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+            ->paginate($request->input('paginate', 10));
 
         $results->each(function ($transaction) {
             $transaction->user->first_leader = $transaction->user->getFirstLeader()->name ?? '-';
@@ -112,7 +126,11 @@ class TransactionController extends Controller
         });
 
 
-        return response()->json([$type => $results]);
+        return response()->json([
+            $type => $results,
+            'totalPendingDeposits' => $totalPendingDepositsQuery->where('transaction_type', 'Deposit')->sum('transaction_amount'),
+            'totalPendingWithdrawals' => $totalPendingWithdrawalsQuery->where('transaction_type', 'Withdrawal')->sum('transaction_amount'),
+        ]);
     }
 
     public function approveTransaction(Request $request)

@@ -467,4 +467,9 @@ return [
     "current_master" => "Current Master",
     "new_master" => "New Master",
     "incentive_percent" => "Incentive Percentage",
+    "transaction_id" => "Transaction ID",
+    "payment_method" => "Payment Method",
+    "usdt_address_bank_acc" => "USDT Address / Bank Acc",
+    "asset" => "Asset",
+    "tether_payment_merchant" => "Tether / Payment Merchant",
 ];

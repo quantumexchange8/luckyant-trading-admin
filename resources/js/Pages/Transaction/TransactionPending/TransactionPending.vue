@@ -1,47 +1,34 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/Authenticated.vue";
-import { ref } from 'vue'
-import { TabGroup, TabList, Tab, TabPanels, TabPanel } from '@headlessui/vue'
-import PendingSwitchMaster from "@/Pages/Subscriber/SwitchMaster/PendingSwitchMaster.vue";
-import BaseListbox from "@/Components/BaseListbox.vue";
-import {CloudDownloadIcon, UsersXIcon, RefreshCw05Icon, UsersCheckIcon} from "@/Components/Icons/outline.jsx";
-import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import Input from "@/Components/Input.vue";
-import {SearchIcon} from "@heroicons/vue/outline";
-import Button from "@/Components/Button.vue";
-import Combobox from "@/Components/Combobox.vue";
-import VueTailwindDatepicker from "vue-tailwind-datepicker";
+import {CloudDownloadIcon, CurrencyDollarCircleIcon} from "@/Components/Icons/outline.jsx";
+import {onMounted, ref} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
-import SwitchMasterHistory from "@/Pages/Subscriber/SwitchMaster/SwitchMasterHistory.vue";
+import Button from "@/Components/Button.vue";
+import Input from "@/Components/Input.vue";
+import Combobox from "@/Components/Combobox.vue";
+import {SearchIcon} from "@heroicons/vue/outline";
+import VueTailwindDatepicker from "vue-tailwind-datepicker";
+import InputIconWrapper from "@/Components/InputIconWrapper.vue";
+import {Tab, TabGroup, TabList, TabPanel, TabPanels} from "@headlessui/vue";
+import PendingDeposit from "@/Pages/Transaction/TransactionPending/PendingDeposit/PendingDeposit.vue";
+import PendingWithdrawal from "@/Pages/Transaction/TransactionPending/PendingWithdrawal/PendingWithdrawal.vue";
 
-const switchTypes = ref([
-    {value: 'Pending', label: 'Pending'},
-    {value: '', label: 'History'}
+const transactionTypes = ref([
+    {value: 'Deposit', label: 'Deposit'},
+    {value: 'Withdrawal', label: 'Withdrawal'}
 ])
 
+const totalPendingDeposits = ref(null);
+const totalPendingWithdrawals = ref(null);
+const { formatAmount } = transactionFormat();
 const search = ref('');
-const leader = ref();
+const leader = ref(null);
 const date = ref('');
-const subscriberStatus = ref('');
-const status = ref('Pending');
-const totalRequest = ref(null);
-const totalApprovedRequest = ref(null);
-const totalRejectedRequest = ref(null);
-const { formatDateTime, formatAmount } = transactionFormat();
+const exportStatus = ref('')
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MM'
 });
-
-const handleType = (value) => {
-    status.value = value
-}
-
-const statusOptions = [
-    {value: '', label: 'All' },
-    {value: 'Success', label: 'Success' },
-    {value: 'Rejected', label: 'Rejected' },
-]
 
 function loadUsers(query, setOptions) {
     fetch('/member/getAllLeaders?query=' + query)
@@ -63,52 +50,60 @@ const clearFilter = () => {
     search.value = '';
     date.value = '';
     leader.value = null;
-    subscriberStatus.value = '';
+}
+
+const type = ref('Deposit');
+const selectedTab = ref(0);
+function changeTab(index) {
+    selectedTab.value = index;
+}
+
+const updateTransactionType = (transaction_type) => {
+    type.value = transaction_type
+};
+
+onMounted(() => {
+    const params = new Proxy(new URLSearchParams(window.location.search), {
+        get: (searchParams, prop) => searchParams.get(prop),
+    });
+    if (params.status === 'deposit'){
+        selectedTab.value = 0;
+        type.value = 'Deposit';
+    } else if (params.status === 'withdrawal') {
+        selectedTab.value = 1;
+        type.value = 'Withdrawal';
+    }
+});
+
+const exportTransaction = () => {
+    exportStatus.value = 'yes'
 }
 </script>
 
 <template>
-    <AuthenticatedLayout title="Switch Master">
+    <AuthenticatedLayout title="Pending Transactions">
         <template #header>
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 class="text-2xl font-semibold leading-tight">
-                        Switch Master
+                        Pending Transactions
                     </h2>
-                    <!-- <p class="text-base font-normal dark:text-gray-400">
-                        Manage all pending subscribers.
-                    </p> -->
+                    <p class="text-base font-normal dark:text-gray-400">
+                        Manage all pending transactions.
+                    </p>
                 </div>
             </div>
         </template>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 w-full gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 w-full gap-4">
             <div class="flex justify-between items-center p-6 overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-900">
                 <div class="flex flex-col gap-4">
                     <div>
-                        Total Requests
+                        Total Pending Deposits
                     </div>
                     <div class="text-2xl font-bold">
-                        <span v-if="totalRequest !== null">
-                            {{ totalRequest }}
-                        </span>
-                        <span v-else>
-                          Loading...
-                        </span>
-                    </div>
-                </div>
-                <div class="rounded-full flex items-center justify-center w-14 h-14 bg-primary-200">
-                    <RefreshCw05Icon class="text-primary-500 w-8 h-8" />
-                </div>
-            </div>
-            <div class="flex justify-between items-center p-6 overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-900">
-                <div class="flex flex-col gap-4">
-                    <div>
-                        Total Approved Requests
-                    </div>
-                    <div class="text-2xl font-bold">
-                        <span v-if="totalApprovedRequest !== null">
-                            {{ totalApprovedRequest }}
+                        <span v-if="totalPendingDeposits !== null">
+                          $ {{ formatAmount(totalPendingDeposits ? totalPendingDeposits : 0) }}
                         </span>
                         <span v-else>
                           Loading...
@@ -116,25 +111,25 @@ const clearFilter = () => {
                     </div>
                 </div>
                 <div class="rounded-full flex items-center justify-center w-14 h-14 bg-success-200">
-                    <UsersCheckIcon class="text-success-500 w-8 h-8" />
+                    <CurrencyDollarCircleIcon class="text-success-500 w-8 h-8" />
                 </div>
             </div>
             <div class="flex justify-between items-center p-6 overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-900">
                 <div class="flex flex-col gap-4">
                     <div>
-                        Total Rejected Requests
+                        Total Pending Withdrawals
                     </div>
                     <div class="text-2xl font-bold">
-                        <span v-if="totalRejectedRequest !== null">
-                            {{ totalRejectedRequest }}
+                        <span v-if="totalPendingWithdrawals !== null">
+                          $ {{ formatAmount(totalPendingWithdrawals ? totalPendingWithdrawals : 0) }}
                         </span>
                         <span v-else>
                           Loading...
                         </span>
                     </div>
                 </div>
-                <div class="rounded-full flex items-center justify-center w-14 h-14 bg-error-200">
-                    <UsersXIcon class="text-error-500 w-8 h-8" />
+                <div class="rounded-full flex items-center justify-center w-14 h-14 bg-purple-200">
+                    <CurrencyDollarCircleIcon class="text-purple-500 w-8 h-8" />
                 </div>
             </div>
         </div>
@@ -156,7 +151,7 @@ const clearFilter = () => {
                         />
                     </InputIconWrapper>
                 </div>
-                <div class="w-full col-span-3 md:col-span-1">
+                <div class="w-full">
                     <Combobox
                         :load-options="loadUsers"
                         v-model="leader"
@@ -164,7 +159,7 @@ const clearFilter = () => {
                         image
                     />
                 </div>
-                <div class="w-full col-span-3 md:col-span-1">
+                <div class="w-full">
                     <vue-tailwind-datepicker
                         placeholder="Select dates"
                         :formatter="formatter"
@@ -173,43 +168,32 @@ const clearFilter = () => {
                         input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"
                     />
                 </div>
-                <div
-                    v-if="status !== 'Pending'"
-                    class="w-full"
-                >
-                    <BaseListbox
-                        id="statusID"
-                        v-model="subscriberStatus"
-                        :options="statusOptions"
-                        placeholder="Filter Status"
-                    />
+                <div class="w-full flex justify-end gap-4 items-center">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        @click="clearFilter"
+                    >
+                        <span class="text-lg">Clear</span>
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="gray"
+                        class="flex gap-1 justify-center"
+                        @click="exportTransaction"
+                    >
+                        <CloudDownloadIcon class="w-5 h-5" />
+                        Export
+                    </Button>
                 </div>
-            </div>
-            <div class="flex justify-end gap-4 items-center w-full">
-                <Button
-                    type="button"
-                    variant="secondary"
-                    @click="clearFilter"
-                >
-                    <span class="text-lg">Clear</span>
-                </Button>
-                <Button
-                    type="button"
-                    variant="gray"
-                    class="flex gap-1 justify-center"
-                    v-slot="{ iconSizeClasses }"
-                >
-                    <CloudDownloadIcon class="w-5 h-5" />
-                    Export
-                </Button>
             </div>
         </div>
 
         <div class="w-full">
-            <TabGroup>
+            <TabGroup :selectedIndex="selectedTab" @change="changeTab">
                 <TabList class="flex space-x-1 max-w-md rounded-xl bg-gray-200 dark:bg-gray-900 p-1">
                     <Tab
-                        v-for="type in switchTypes"
+                        v-for="type in transactionTypes"
                         as="template"
                         v-slot="{ selected }"
                     >
@@ -221,7 +205,7 @@ const clearFilter = () => {
                                 ? 'bg-white dark:bg-gray-700 text-primary-800 dark:text-white shadow'
                                 : 'text-gray-600 hover:bg-white/[0.12] hover:text-primary-500',
                             ]"
-                            @click="handleType(type.value)"
+                            @click="updateTransactionType(type.value)"
                         >
                             {{ type.label }}
                         </button>
@@ -230,29 +214,31 @@ const clearFilter = () => {
 
                 <TabPanels class="mt-2">
                     <TabPanel
-                        v-for="switchType in switchTypes"
+                        v-for="transactionType in transactionTypes"
                     >
-                        <template v-if="switchType.value === 'Pending'">
-                            <PendingSwitchMaster
+                        <template v-if="transactionType.value === 'Deposit'">
+                            <PendingDeposit
                                 :search="search"
                                 :leader="leader"
                                 :date="date"
-                                :status="status"
-                                @update:totalRequest="totalRequest = $event"
-                                @update:totalApprovedRequest="totalApprovedRequest = $event"
-                                @update:totalRejectedRequest="totalRejectedRequest = $event"
+                                :type="type"
+                                :exportStatus="exportStatus"
+                                @update:totalPendingDeposits="totalPendingDeposits = $event"
+                                @update:totalPendingWithdrawals="totalPendingWithdrawals = $event"
+                                @update:exportStatus="exportStatus = $event"
                             />
                         </template>
 
                         <template v-else>
-                            <SwitchMasterHistory
+                            <PendingWithdrawal
                                 :search="search"
                                 :leader="leader"
                                 :date="date"
-                                :status="status"
-                                @update:totalRequest="totalRequest = $event"
-                                @update:totalApprovedRequest="totalApprovedRequest = $event"
-                                @update:totalRejectedRequest="totalRejectedRequest = $event"
+                                :type="type"
+                                :exportStatus="exportStatus"
+                                @update:totalPendingDeposits="totalPendingDeposits = $event"
+                                @update:totalPendingWithdrawals="totalPendingWithdrawals = $event"
+                                @update:exportStatus="exportStatus = $event"
                             />
                         </template>
                     </TabPanel>
