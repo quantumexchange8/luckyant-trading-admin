@@ -16,6 +16,7 @@ import {
 } from '@headlessui/vue'
 import AvatarInput from "@/Pages/Member/MemberDetails/Partials/AvatarInput.vue";
 import CountryLists from "../../../../../public/data/countries.json";
+import Modal from "@/Components/Modal.vue";
 
 const props = defineProps({
     member_detail: Object,
@@ -84,6 +85,29 @@ const submit = () => {
 
 const openInNewTab = (url) => {
     window.open(url, '_blank');
+}
+
+const frontIdentityModal = ref(false);
+const frontIdentityUrl = ref('');
+
+const openFrontIdentityModal = (mediaContent) => {
+    frontIdentityModal.value = true;
+    frontIdentityUrl.value = mediaContent.original_url;
+}
+
+const closeFrontIdentityModal = () => {
+    frontIdentityModal.value = false
+}
+const backIdentityModal = ref(false);
+const backIdentityUrl = ref('');
+
+const openBackIdentityModal = (mediaContent) => {
+    backIdentityModal.value = true;
+    backIdentityUrl.value = mediaContent.original_url;
+}
+
+const closeBackIdentityModal = () => {
+    backIdentityModal.value = false
 }
 
 </script>
@@ -304,6 +328,34 @@ const openInNewTab = (url) => {
                     </div>
                 </div>
 
+                <div v-if="memberInfo.front_identity.length > 0" class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="front_identity" value="Proof of Identity (Front)" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="front_identity"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-primary-500 dark:text-primary-500 dark:bg-gray-600 px-3 py-0 hover:text-primary-600 dark:hover:text-primary-400 hover:cursor-pointer"
+                            v-model="memberInfo.front_identity[0].file_name"
+                            @click="openFrontIdentityModal(memberInfo.front_identity[0])"
+                            readonly
+                        />
+                    </div>
+                </div>
+
+                <div v-if="memberInfo.back_identity.length > 0" class="space-y-2">
+                    <Label class="text-sm dark:text-white" for="back_identity" value="Proof of Identity (Back)" />
+                    <div class="md:col-span-3">
+                        <Input
+                            id="back_identity"
+                            type="text"
+                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-primary-500 dark:text-primary-500 dark:bg-gray-600 px-3 py-0 hover:text-primary-600 dark:hover:text-primary-400 hover:cursor-pointer"
+                            v-model="memberInfo.back_identity[0].file_name"
+                            @click="openBackIdentityModal(memberInfo.back_identity[0])"
+                            readonly
+                        />
+                    </div>
+                </div>
+
             </div>
             <div class="flex justify-end items-end mt-5">
                 <Button
@@ -316,8 +368,16 @@ const openInNewTab = (url) => {
             </div>
         </form>
     </div>
+
+    <Modal :show="frontIdentityModal" title="Proof of Identity (Front)" @close="closeFrontIdentityModal">
+        <div class="p-2 rounded-lg w-full flex justify-center">
+            <img :src="frontIdentityUrl" class="max-h-64 rounded-lg" alt="">
+        </div>
+    </Modal>
+
+    <Modal :show="backIdentityModal" title="Proof of Identity (Back)" @close="closeBackIdentityModal">
+        <div class="p-2 rounded-lg w-full flex justify-center">
+            <img :src="backIdentityUrl" class="max-h-64 rounded-lg" alt="">
+        </div>
+    </Modal>
 </template>
-
-<style scoped>
-
-</style>

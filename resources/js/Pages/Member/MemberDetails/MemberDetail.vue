@@ -62,7 +62,6 @@ const closeModal = () => {
                 <EditMember
                     :member_detail="member_detail"
                     :countries="countries"
-                    :ranks="ranks"
                     :nationalities="nationalities"
                 />
             </div>

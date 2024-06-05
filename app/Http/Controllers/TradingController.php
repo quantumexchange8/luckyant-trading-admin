@@ -71,7 +71,8 @@ class TradingController extends Controller
             $tradingListing->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
-                        ->orWhere('email', 'like', $search);
+                        ->orWhere('email', 'like', $search)
+                        ->orWhere('username', 'like', $search);
                 })
                 ->orWhereHas('tradingUser', function ($tradingUser) use ($search) {
                     $tradingUser->where('name', 'like', $search);

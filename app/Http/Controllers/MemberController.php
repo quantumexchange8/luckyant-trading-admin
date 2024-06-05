@@ -301,6 +301,8 @@ class MemberController extends Controller
         $wallets = Wallet::where('user_id', $user->id)->get();
 
         $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
+        $user->front_identity = $user->getMedia('front_identity');
+        $user->back_identity = $user->getMedia('back_identity');
 
         $formattedCurrencies = Country::whereIn('id', [132, 233, 102, 101, 45, 240])->get()->map(function ($country) {
             return [
