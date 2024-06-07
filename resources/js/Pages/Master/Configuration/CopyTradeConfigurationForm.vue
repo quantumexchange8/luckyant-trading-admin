@@ -28,8 +28,8 @@ const form = useForm({
     roi_period: props.masterConfigurations.roi_period,
     total_subscriber: props.masterConfigurations.total_subscribers,
     max_drawdown: props.masterConfigurations.max_drawdown,
-    management_fee: props.masterConfigurations.management_fee,
-    is_public: ''
+    is_public: '',
+    type: '',
 })
 
 const plans = [
@@ -47,6 +47,22 @@ const getSelectedPlan = (status) => {
     return plans.find(plan => plan.value === status);
 }
 const selected = ref(getSelectedPlan(props.masterConfigurations.signal_status));
+
+const masterTypes = [
+    {
+        name: 'Copy Trade',
+        value: 'CopyTrade',
+    },
+    {
+        name: 'PAMM',
+        value: 'PAMM',
+    },
+]
+
+const getSelectedMasterTypes = (master_type) => {
+    return masterTypes.find(plan => plan.value === master_type);
+}
+const selectedMasterTypes = ref(getSelectedMasterTypes(props.masterConfigurations.type));
 
 const publicStatus = [
     {
@@ -67,6 +83,7 @@ const selectedPublicStatus = ref(getSelectedPublicStatus(props.masterConfigurati
 const submit = () => {
     form.signal_status = selected.value.value;
     form.is_public = selectedPublicStatus.value.value;
+    form.type = selectedMasterTypes.value.value;
     form.post(route('master.updateMasterConfiguration'))
 }
 </script>
@@ -75,13 +92,54 @@ const submit = () => {
     <div class="flex flex-col items-start gap-5 bg-white dark:bg-gray-900 rounded-md shadow-md p-5 w-full">
         <div class="flex items-center gap-3">
             <div class="text-lg font-semibold">
-                Copy Trade Configuration
+                {{ selectedMasterTypes.name }} Configuration
             </div>
         </div>
         <form class="w-full">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-                <div class="space-y-2 col-span-2">
-                    <div class="space-x-2 flex">
+                <div class="space-y-2 sm:col-span-2">
+                    <Label
+                        for="master_type"
+                        value="Master Type"
+                    />
+                    <RadioGroup v-model="selectedMasterTypes">
+                        <RadioGroupLabel class="sr-only">Master Types</RadioGroupLabel>
+                        <div class="flex gap-3 items-center self-stretch w-full">
+                            <RadioGroupOption
+                                as="template"
+                                v-for="(masterType, index) in masterTypes"
+                                :key="index"
+                                :value="masterType"
+                                v-slot="{ active, checked }"
+                            >
+                                <div
+                                    :class="[
+                                            active
+                                                ? 'ring-0 ring-white ring-offset-0'
+                                                : '',
+                                            checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white',
+                                        ]"
+                                    class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
+                                >
+                                    <div class="flex items-center w-full">
+                                        <div class="text-sm flex flex-col gap-3 w-full">
+                                            <RadioGroupLabel
+                                                as="div"
+                                                class="font-medium"
+                                            >
+                                                <div class="flex justify-center items-center gap-3">
+                                                    {{ masterType.name }}
+                                                </div>
+                                            </RadioGroupLabel>
+                                        </div>
+                                    </div>
+                                </div>
+                            </RadioGroupOption>
+                        </div>
+                    </RadioGroup>
+                </div>
+                <div class="space-y-2 sm:col-span-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div class="space-y-1.5">
                             <Label
                                 for="sharing_profit"
@@ -160,22 +218,22 @@ const submit = () => {
                     />
                     <InputError :message="form.errors.roi_period" />
                 </div>
-                <div class="space-y-2">
-                    <Label
-                        for="subscription_fee"
-                        value="Subscription Fee (Month)"
-                    />
-                    <Input
-                        id="subscription_fee"
-                        type="number"
-                        min="0"
-                        placeholder="$ 0.00"
-                        class="block w-full"
-                        v-model="form.subscription_fee"
-                        :invalid="form.errors.subscription_fee"
-                    />
-                    <InputError :message="form.errors.subscription_fee" />
-                </div>
+<!--                <div class="space-y-2">-->
+<!--                    <Label-->
+<!--                        for="subscription_fee"-->
+<!--                        value="Subscription Fee (Month)"-->
+<!--                    />-->
+<!--                    <Input-->
+<!--                        id="subscription_fee"-->
+<!--                        type="number"-->
+<!--                        min="0"-->
+<!--                        placeholder="$ 0.00"-->
+<!--                        class="block w-full"-->
+<!--                        v-model="form.subscription_fee"-->
+<!--                        :invalid="form.errors.subscription_fee"-->
+<!--                    />-->
+<!--                    <InputError :message="form.errors.subscription_fee" />-->
+<!--                </div>-->
                 <div class="space-y-2">
                     <Label
                         for="eta_montly_return"
@@ -271,21 +329,6 @@ const submit = () => {
                 </div>
                 <div class="space-y-2">
                     <Label
-                        for="management_fee"
-                        value="Management Fee (%)"
-                    />
-                    <Input
-                        id="management_fee"
-                        type="text"
-                        placeholder="%"
-                        class="block w-full"
-                        v-model="form.management_fee"
-                        :invalid="form.errors.management_fee"
-                    />
-                    <InputError :message="form.errors.management_fee" />
-                </div>
-                <div class="space-y-2">
-                    <Label
                         for="master_status"
                         value="Master Status"
                     />
@@ -301,11 +344,11 @@ const submit = () => {
                             >
                                 <div
                                     :class="[
-                                                active
-                                                  ? 'ring-0 ring-white ring-offset-0'
-                                                  : '',
-                                                checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 bg-white dark:bg-gray-700',
-                                            ]"
+                                            active
+                                                ? 'ring-0 ring-white ring-offset-0'
+                                                : '',
+                                            checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white',
+                                        ]"
                                     class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
                                 >
                                     <div class="flex items-center w-full">
@@ -342,11 +385,11 @@ const submit = () => {
                             >
                                 <div
                                     :class="[
-                                                active
-                                                  ? 'ring-0 ring-white ring-offset-0'
-                                                  : '',
-                                                checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 bg-white dark:bg-gray-700',
-                                            ]"
+                                            active
+                                                ? 'ring-0 ring-white ring-offset-0'
+                                                : '',
+                                            checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white',
+                                        ]"
                                     class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
                                 >
                                     <div class="flex items-center w-full">

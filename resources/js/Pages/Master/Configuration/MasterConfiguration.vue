@@ -17,6 +17,7 @@ import {
 import MasterOverview from "@/Pages/Master/Configuration/MasterOverview.vue";
 import CopyTradeConfigurationForm from "@/Pages/Master/Configuration/CopyTradeConfigurationForm.vue";
 import ManagementFeeForm from "@/Pages/Master/Configuration/ManagementFeeForm.vue";
+import MasterLeaderForm from "@/Pages/Master/Configuration/MasterLeaderForm.vue";
 
 const props = defineProps({
     masterConfigurations: Object,
@@ -49,10 +50,16 @@ const props = defineProps({
                     :masterConfigurations="masterConfigurations"
                     :settlementPeriodSel="settlementPeriodSel"
                 />
-                <ManagementFeeForm
-                    :masterConfigurations="masterConfigurations"
-                    :settlementPeriodSel="settlementPeriodSel"
-                />
+                <div class="grid gap-5">
+                    <ManagementFeeForm
+                        :masterConfigurations="masterConfigurations"
+                        :settlementPeriodSel="settlementPeriodSel"
+                    />
+                    <MasterLeaderForm
+                        :masterConfigurations="masterConfigurations"
+                        :settlementPeriodSel="settlementPeriodSel"
+                    />
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>

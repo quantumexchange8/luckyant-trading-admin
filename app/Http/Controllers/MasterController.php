@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\MasterExport;
 use App\Models\Master;
+use App\Models\MasterLeader;
 use App\Models\MasterManagementFee;
 use App\Models\Subscriber;
 use App\Models\Subscription;
@@ -14,6 +15,7 @@ use App\Models\MasterRequest;
 use App\Models\User;
 use App\Http\Requests\MasterConfigurationRequest;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Auth;
@@ -172,7 +174,7 @@ class MasterController extends Controller
             'is_public' => $masterRequest->user->is_public,
         ]);
 
-        return redirect()->route('master.viewMasterConfiguration', ['id' => $master->id])
+        return redirect()->route('master.viewMasterConfiguration', ['meta_login' => $master->meta_login])
             ->with('title', 'Success approve')
             ->with('success', 'Successfully approved LOGIN: ' . $tradingAccount->meta_login . ' to MASTER');
     }
@@ -324,7 +326,7 @@ class MasterController extends Controller
 
     public function viewMasterConfiguration($meta_login)
     {
-        $masterConfigurations = Master::with(['tradingUser:id,meta_login,name,company', 'user', 'masterManagementFee'])
+        $masterConfigurations = Master::with(['tradingUser:id,meta_login,name,company', 'user', 'masterManagementFee', 'masterLeaders'])
             ->where('meta_login', $meta_login)
             ->first();
 
@@ -353,6 +355,7 @@ class MasterController extends Controller
         $master = Master::find($request->master_id);
 
         $master->update([
+            'type' => $request->type,
             'min_join_equity' => $request->min_join_equity,
             'sharing_profit' => $request->sharing_profit,
             'market_profit' => $request->market_profit,
@@ -366,7 +369,6 @@ class MasterController extends Controller
             'roi_period' => $request->roi_period,
             'total_subscribers' => $request->total_subscriber,
             'max_drawdown' => $request->max_drawdown,
-            'management_fee' => $request->management_fee,
             'is_public' => $request->is_public,
         ]);
 
@@ -427,5 +429,40 @@ class MasterController extends Controller
         return redirect()->back()
             ->with('title', 'Success update')
             ->with('success', 'Successfully updated the management fees');
+    }
+
+    public function addVisibleToLeaders(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'master_id' => ['required'],
+            'leader_ids' => ['nullable'],
+        ])->setAttributeNames([
+            'master_id' => 'Master',
+            'leader_ids' => 'Leaders',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        } else {
+            $leaders = $request->leader_ids;
+
+            if ($leaders) {
+                MasterLeader::where('master_id', $request->master_id)->delete();
+
+                foreach ($leaders as $leader) {
+
+                    MasterLeader::create([
+                        'master_id' => $request->master_id,
+                        'leader_id' => $leader['value'],
+                    ]);
+                }
+            } else {
+                MasterLeader::where('master_id', $request->master_id)->delete();
+            }
+
+            return redirect()->route('master.getMasterListing')
+                ->with('title', 'Success update')
+                ->with('success', 'Successfully updated visible to leaders');
+        }
     }
 }

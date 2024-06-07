@@ -186,7 +186,7 @@ class SubscriberController extends Controller
 
     public function approveSubscribe(Request $request)
     {
-        $subscriber = Subscriber::find($request->subscriber_id);
+        $subscriber = Subscriber::with('master')->find($request->subscriber_id);
         $user = User::find($request->userId);
         $cashWallet = $user->wallets()->where('type', 'cash_wallet')->first();
 
@@ -233,7 +233,7 @@ class SubscriberController extends Controller
             'meta_login' => $trading_account->meta_login,
             'meta_balance' => $subscriber->initial_meta_balance,
             'master_id' => $subscriber->master_id,
-            'type' => 'CopyTrade',
+            'type' => $subscriber->master->type,
             'subscription_number' => $subscription_number,
             'subscription_period' => $subscriber->roi_period,
             'transaction_id' => $subscriber->transaction_id,
@@ -271,7 +271,7 @@ class SubscriberController extends Controller
             'demo_fund' => $trading_account->demo_fund ?? 0,
             'master_id' => $subscriber->master_id,
             'master_meta_login' => $subscriber->master_meta_login,
-            'type' => 'CopyTrade',
+            'type' => $subscriber->master->type,
             'subscriber_id' => $subscriber->id,
             'subscription_id' => $subscription->id,
             'subscription_number' => $subscription_number,
