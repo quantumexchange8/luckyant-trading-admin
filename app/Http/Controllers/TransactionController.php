@@ -267,22 +267,41 @@ class TransactionController extends Controller
     public function getTransactionHistory(Request $request)
     {
         $authUser = Auth::user();
-        $query = Transaction::query()
-            ->with(['user:id,name,email,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,user_id,name,type', 'from_wallet:id,user_id,name,type', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account', 'to_wallet.user:id,name,email', 'from_wallet.user:id,name,email'])
+        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        // Decode the JSON
+        $decodedColumnName = json_decode(urldecode($columnName), true);
+
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
+        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+
+        $transaction_query = Transaction::query()
+            ->with(['user:id,name,email,username,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,user_id,name,type,wallet_address', 'from_wallet:id,user_id,name,type,wallet_address', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account', 'to_wallet.user:id,name,email', 'from_wallet.user:id,name,email'])
+            ->whereNotIn('transaction_type', ['Management Fee', 'Settlement'])
             ->whereNotIn('status', ['Processing', 'Pending']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
-            $query->where(function ($q) use ($search) {
-                // $q->whereHas('wallet', function ($wallet_query) use ($search) {
-                //     $wallet_query->where('name', 'like', $search);
-                // })
+            $transaction_query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
-                         ->orWhere('email', 'like', $search);
+                        ->orWhere('email', 'like', $search)
+                        ->orWhere('username', 'like', $search);
                 })
+                    ->orWhereHas('from_wallet', function ($master) use ($search) {
+                        $master->where('wallet_address', 'like', $search);
+                    })
+                    ->orWhereHas('to_wallet', function ($master) use ($search) {
+                        $master->where('wallet_address', 'like', $search);
+                    })
+                    ->orWhereHas('from_meta_login', function ($master) use ($search) {
+                        $master->where('meta_login', 'like', $search);
+                    })
+                    ->orWhereHas('to_meta_login', function ($master) use ($search) {
+                        $master->where('meta_login', 'like', $search);
+                    })
                     ->orWhere('transaction_number', 'like', $search)
-                    ->orWhere('amount', 'like', $search);
+                    ->orWhere('txn_hash', 'like', $search)
+                    ->orWhere('to_wallet_address', 'like', $search);
             });
         }
 
@@ -292,47 +311,41 @@ class TransactionController extends Controller
             $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
-            $query->whereBetween('created_at', [$start_date, $end_date]);
+            $transaction_query->whereBetween('created_at', [$start_date, $end_date]);
         }
 
-        if ($request->filled('filter')) {
-            $filter = $request->input('filter') ;
-            $query->where(function ($q) use ($filter) {
-                $q->where('status', $filter);
-            });
+        if ($request->filled('leader')) {
+            $leader = $request->input('leader');
+            $leaderUser = User::find($leader);
+            if ($leaderUser) {
+                $transaction_query->whereIn('user_id', $leaderUser->getChildrenIds());
+            }
         }
 
         if ($request->filled('type')) {
             $type = $request->input('type');
-            $query->where(function ($q) use ($type) {
+            $transaction_query->where(function ($q) use ($type) {
                 $q->where('transaction_type',  $type);
-            });
-        }
-
-        if ($request->filled('category')) {
-            $category = $request->input('category');
-            $query->where(function ($q) use ($category) {
-                $q->where('category', $category);
             });
         }
 
         if ($request->filled('methods')) {
             $methods = $request->input('methods');
-            $query->where(function ($q) use ($methods) {
+            $transaction_query->where(function ($q) use ($methods) {
                 $q->where('payment_method', $methods);
             });
         }
 
         if ($request->filled('fund_type')) {
             $fund_type = $request->input('fund_type');
-            $query->where(function ($q) use ($fund_type) {
+            $transaction_query->where(function ($q) use ($fund_type) {
                 $q->where('fund_type', $fund_type);
             });
         }
 
         if ($request->filled('status')) {
             $status = $request->input('status');
-            $query->where(function ($q) use ($status) {
+            $transaction_query->where(function ($q) use ($status) {
                 $q->where('status', $status);
             });
         }
@@ -340,33 +353,35 @@ class TransactionController extends Controller
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
-            $query->whereIn('user_id', $childrenIds);
+            $transaction_query->whereIn('user_id', $childrenIds);
         } elseif ($authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
         } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $query->whereIn('user_id', $childrenIds);
+            $transaction_query->whereIn('user_id', $childrenIds);
         } else {
             // No applicable conditions, set whereIn to empty array
-            $query->whereIn('user_id', []);
+            $transaction_query->whereIn('user_id', []);
         }
 
         if ($request->has('exportStatus')) {
             $fileName = Carbon::now() . '-' . $request->type . '_History-report.xlsx';
-            return Excel::download(new TransactionsExport($query), $fileName);
+            return Excel::download(new TransactionsExport($transaction_query), $fileName);
         }
 
-        $totalAmountQuery = clone $query;
-        $rejectedAmountQuery = clone $query;
-        $results = $query->latest()->paginate(10);
+        $totalAmountQuery = clone $transaction_query;
+        $rejectedAmountQuery = clone $transaction_query;
+
+        $results = $transaction_query
+            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
+            ->paginate($request->input('paginate', 10));
 
         $totalAmount = $totalAmountQuery->sum('transaction_amount');
         $successAmount = $totalAmountQuery->where('status', 'Success')->sum('transaction_amount');
         $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('transaction_amount');
 
-        $results->each(function ($transaction) {
-            $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
-            $transaction->user->first_leader = $transaction->user->getFirstLeader() ?? null;
+        $results->each(function ($user) {
+            $user->first_leader = $user->user->getFirstLeader()->name ?? null;
         });
 
         if ($request->input('type') == 'Withdrawal') {

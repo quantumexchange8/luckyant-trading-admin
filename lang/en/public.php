@@ -472,4 +472,10 @@ return [
     "usdt_address_bank_acc" => "USDT Address / Bank Acc",
     "asset" => "Asset",
     "tether_payment_merchant" => "Tether / Payment Merchant",
+    "lot_size_rebate" => "Lot Commission",
+    "same_level_rewards" => "Peer Rewards",
+    "profit_sharing" => "Profit Sharing",
+    "total_profit_sharing" => "Total Profit Sharing",
+    'performance_incentive' => "Performance Incentive",
+    'settlement' => "Settlement",
 ];

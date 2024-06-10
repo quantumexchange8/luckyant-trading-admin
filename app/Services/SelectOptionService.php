@@ -35,12 +35,15 @@ class SelectOptionService
 
     public function getTransactionType()
     {
-        return Transaction::distinct()->pluck('transaction_type')->map(function ($transactionType) {
-            return [
-                'value' => $transactionType,
-                'label' => $transactionType,
-            ];
-        });
+        return Transaction::whereNotIn('transaction_type', ['Management Fee', 'Settlement'])
+            ->distinct()
+            ->pluck('transaction_type')
+            ->map(function ($transactionType) {
+                return [
+                    'value' => $transactionType,
+                    'label' => trans('public.' . strtolower(preg_replace('/([a-z])([A-Z])/', '$1_$2', $transactionType))),
+                ];
+            });
     }
 
     public function getActiveLeverageSelection(): \Illuminate\Support\Collection
