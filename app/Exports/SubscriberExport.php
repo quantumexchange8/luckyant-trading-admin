@@ -36,6 +36,7 @@ class SubscriberExport implements FromCollection, WithHeadings, ShouldQueue
                 'master_trading_account' => $record->master_meta_login,
                 'copy_trade_balance' => $record->subscription->meta_balance ?? null,
                 'approval_date' =>  Carbon::parse($record->approval_date)->format('Y-m-d'),
+                'unsubscribe_date' =>  $record->unsubscribe_date ? Carbon::parse($record->unsubscribe_date)->format('Y-m-d') : null,
                 'status' => $record->status,
             );
         }
@@ -55,6 +56,7 @@ class SubscriberExport implements FromCollection, WithHeadings, ShouldQueue
             'Master Account',
             'Copy Trade Balance',
             'Approval Date',
+            'Unsubscribed Date',
             'Status'
         ];
     }
