@@ -59,6 +59,8 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'member_production_url' => env('MEMBER_PRODUCTION_URL', 'https://member.luckyantfxgroup.com'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

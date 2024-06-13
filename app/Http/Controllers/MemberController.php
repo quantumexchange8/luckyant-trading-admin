@@ -772,9 +772,10 @@ class MemberController extends Controller
         $hashedToken = md5($dataToHash);
 
         $domain = $_SERVER['HTTP_HOST'];
+        $memberProductionUrl = config('app.member_production_url');
 
         if ($domain === 'secure-admin.luckyantfxgroup.com') {
-            $url = "https://member.luckyantfxgroup.com/admin_login/{$hashedToken}";
+            $url = "$memberProductionUrl/admin_login/$hashedToken";
         } elseif ($domain === 'testadmin.luckyantfxasia.com') {
             $url = "https://testmember.luckyantfxasia.com/admin_login/{$hashedToken}";
         } else {
