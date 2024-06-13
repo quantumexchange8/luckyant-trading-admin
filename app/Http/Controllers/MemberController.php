@@ -773,8 +773,8 @@ class MemberController extends Controller
 
         $domain = $_SERVER['HTTP_HOST'];
 
-        if ($domain === 'secure-admin.luckyantfxasia.com') {
-            $url = "https://member.luckyantfxasia.com/admin_login/{$hashedToken}";
+        if ($domain === 'secure-admin.luckyantfxgroup.com') {
+            $url = "https://member.luckyantfxgroup.com/admin_login/{$hashedToken}";
         } elseif ($domain === 'testadmin.luckyantfxasia.com') {
             $url = "https://testmember.luckyantfxasia.com/admin_login/{$hashedToken}";
         } else {
