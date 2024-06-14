@@ -123,8 +123,17 @@ class TransactionController extends Controller
             $transaction->user->first_leader = $transaction->user->getFirstLeader()->name ?? '-';
             $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
             $transaction->receipt_url = $transaction->getFirstMediaUrl('receipt');
-        });
 
+            $profit = WalletLog::where('user_id', $transaction->user_id)
+                ->where('purpose', 'ProfitSharing')
+                ->sum('amount');
+
+            $bonus = WalletLog::where('user_id', $transaction->user_id)
+                ->whereIn('purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate'])
+                ->sum('amount');
+            $transaction->profit_amount = $profit;
+            $transaction->bonus_amount = $bonus;
+        });
 
         return response()->json([
             $type => $results,
@@ -202,10 +211,6 @@ class TransactionController extends Controller
     {
         $type = $request->type;
 
-        $request->validate([
-            'remarks' => ['required'],
-        ]);
-
         if ($type == 'reject_selected') {
             $transactions = Transaction::whereIn('id', $request->id)->get();
 
@@ -228,6 +233,10 @@ class TransactionController extends Controller
                 }
             }
         } else {
+            $request->validate([
+                'remarks' => ['required'],
+            ]);
+
             $transaction = Transaction::find($request->id);
 
             if ($transaction->status == 'Rejected') {
@@ -386,8 +395,13 @@ class TransactionController extends Controller
 
         if ($request->input('type') == 'Withdrawal') {
             $results->each(function ($transaction) {
-                $profit = WalletLog::where('user_id', $transaction->user_id)->where('category', 'profit')->sum('amount');
-                $bonus = WalletLog::where('user_id', $transaction->user_id)->where('category', 'bonus')->sum('amount');
+                $profit = WalletLog::where('user_id', $transaction->user_id)
+                    ->where('purpose', 'ProfitSharing')
+                    ->sum('amount');
+
+                $bonus = WalletLog::where('user_id', $transaction->user_id)
+                    ->whereIn('purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate'])
+                    ->sum('amount');
                 $transaction->profit_amount = $profit;
                 $transaction->bonus_amount = $bonus;
             });
