@@ -771,13 +771,16 @@ class MemberController extends Controller
         $dataToHash = $user->name . $user->email . $user->id;
         $hashedToken = md5($dataToHash);
 
-        $domain = $_SERVER['HTTP_HOST'];
+        $currentHost = $_SERVER['HTTP_HOST'];
+
+        // Retrieve the app URL and parse its host
+        $appUrl = parse_url(config('app.url'), PHP_URL_HOST);
         $memberProductionUrl = config('app.member_production_url');
 
-        if ($domain === 'secure-admin.luckyantfxgroup.com') {
-            $url = "$memberProductionUrl/admin_login/$hashedToken";
-        } elseif ($domain === 'testadmin.luckyantfxasia.com') {
+        if ($currentHost === 'testadmin.luckyantfxasia.com') {
             $url = "https://testmember.luckyantfxasia.com/admin_login/{$hashedToken}";
+        } elseif ($currentHost === $appUrl) {
+            $url = "$memberProductionUrl/admin_login/$hashedToken";
         } else {
             return back();
         }
