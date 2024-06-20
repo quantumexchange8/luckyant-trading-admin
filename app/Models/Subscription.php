@@ -28,6 +28,7 @@ class Subscription extends Model
         'remarks',
         'approval_date',
         'expired_date',
+        'max_out_amount',
         'handle_by',
     ];
 

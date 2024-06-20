@@ -28,6 +28,7 @@ class SubscriptionBatch extends Model
         'subscription_period',
         'transaction_id',
         'subscription_fee',
+        'max_out_amount',
         'settlement_start_date',
         'settlement_date',
         'termination_date',
@@ -74,7 +75,7 @@ class SubscriptionBatch extends Model
     {
         return $this->hasOne(SubscriptionPenaltyLog::class, 'subscription_batch_id', 'id');
     }
-    
+
     public function getActivitylogOptions(): LogOptions
     {
         $subscriptionBatch = $this->fresh();

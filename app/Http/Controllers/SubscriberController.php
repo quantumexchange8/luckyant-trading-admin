@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Master;
 use App\Models\SwitchMaster;
+use App\Services\dealAction;
 use Auth;
 use App\Exports\PendingSubscriberExport;
 use App\Exports\SubscriberExport;
@@ -225,13 +226,66 @@ class SubscriberController extends Controller
             'handle_by' => Auth::user()->id,
         ]);
 
+        $subscription_amount = $subscriber->master->type == 'PAMM' ? $subscriber->initial_meta_balance / 2 : $subscriber->initial_meta_balance;
+        if ($subscriber->master->type == 'PAMM') {
+            $deal = [];
+
+            try {
+                $deal = (new MetaFiveService())->createDeal($subscriber->meta_login, $subscription_amount, 'Join PAMM', dealAction::WITHDRAW);
+            } catch (\Exception $e) {
+                \Log::error('Error fetching trading accounts: '. $e->getMessage());
+            }
+
+            Transaction::create([
+                'category' => 'trading_account',
+                'user_id' => $subscriber->user_id,
+                'from_meta_login' => $subscriber->meta_login,
+                'ticket' => $deal['deal_Id'],
+                'transaction_number' => RunningNumberService::getID('transaction'),
+                'transaction_type' => 'PurchaseProduct',
+                'fund_type' => 'RealFund',
+                'amount' => $subscription_amount,
+                'transaction_charges' => 0,
+                'transaction_amount' => $subscription_amount,
+                'status' => 'Success',
+                'comment' => $deal['conduct_Deal']['comment'],
+            ]);
+
+            $pamm_master_deal = [];
+
+            try {
+                $pamm_master_deal = (new MetaFiveService())->createDeal($subscriber->master_meta_login, $subscription_amount, 'Deposit PAMM Capital', dealAction::DEPOSIT);
+            } catch (\Exception $e) {
+                \Log::error('Error fetching trading accounts: '. $e->getMessage());
+            }
+
+            Transaction::create([
+                'category' => 'trading_account',
+                'user_id' => $subscriber->master->user_id,
+                'to_meta_login' => $subscriber->master_meta_login,
+                'ticket' => $pamm_master_deal['deal_Id'],
+                'transaction_number' => RunningNumberService::getID('transaction'),
+                'transaction_type' => 'DepositCapital',
+                'fund_type' => 'RealFund',
+                'amount' => $subscription_amount,
+                'transaction_charges' => 0,
+                'transaction_amount' => $subscription_amount,
+                'status' => 'Success',
+                'comment' => $pamm_master_deal['conduct_Deal']['comment'],
+            ]);
+
+            $master = Master::find($subscriber->master->id);
+            $master->total_fund += $subscription_amount;
+            $master->save();
+        }
+
         $subscription_number = RunningNumberService::getID('subscription');
 
         $subscription = Subscription::create([
             'user_id' => $user->id,
             'trading_account_id' => $trading_account->id,
             'meta_login' => $trading_account->meta_login,
-            'meta_balance' => $subscriber->initial_meta_balance,
+            'meta_balance' => $subscription_amount,
             'master_id' => $subscriber->master_id,
             'type' => $subscriber->master->type,
             'subscription_number' => $subscription_number,
@@ -240,9 +294,13 @@ class SubscriberController extends Controller
             'subscription_fee' => $subscriber->initial_subscription_fee,
             'next_pay_date' => now()->addDays($subscriber->roi_period)->endOfDay()->toDateString(),
             'expired_date' => now()->addDays($subscriber->roi_period)->endOfDay(),
+            'max_out_amount' => $subscriber->max_out_amount,
             'status' => 'Active',
             'approval_date' => now(),
         ]);
+
+        $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/subscription/join', $subscription);
+        \Log::debug($response);
 
         $subscriber->subscription_id = $subscription->id;
         $subscriber->save();
@@ -253,7 +311,7 @@ class SubscriberController extends Controller
             'meta_login' => $trading_account->meta_login,
             'master_id' => $subscriber->master_id,
             'master_meta_login' => $subscriber->master_meta_login,
-            'amount' => $subscriber->initial_meta_balance,
+            'amount' => $subscription_amount,
             'real_fund' => abs($trading_account->demo_fund - $trading_account->balance),
             'demo_fund' => $trading_account->demo_fund,
             'type' => 'Deposit',
@@ -266,7 +324,7 @@ class SubscriberController extends Controller
             'user_id' => $user->id,
             'trading_account_id' => $trading_account->id,
             'meta_login' => $trading_account->meta_login,
-            'meta_balance' => $subscriber->initial_meta_balance,
+            'meta_balance' => $subscription_amount,
             'real_fund' => abs($trading_account->demo_fund - $trading_account->balance),
             'demo_fund' => $trading_account->demo_fund ?? 0,
             'master_id' => $subscriber->master_id,
@@ -278,6 +336,7 @@ class SubscriberController extends Controller
             'subscription_period' => $subscriber->roi_period,
             'transaction_id' => $subscriber->transaction_id,
             'subscription_fee' => $subscriber->initial_subscription_fee,
+            'max_out_amount' => $subscriber->max_out_amount,
             'settlement_start_date' => now(),
             'settlement_date' => now()->addDays($master->masterManagementFee->sum('penalty_days'))->endOfDay(),
             'status' => 'Active',
@@ -299,7 +358,9 @@ class SubscriberController extends Controller
             ]);
         }
 
-        Notification::route('mail', $user->email)->notify(new SubscriptionConfirmationNotification($subscription_batch));
+        if ($subscription->type == 'CopyTrade') {
+            Notification::route('mail', $user->email)->notify(new SubscriptionConfirmationNotification($subscription_batch));
+        }
 
         return redirect()->back()
             ->with('title', 'Success approve')
