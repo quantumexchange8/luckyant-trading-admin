@@ -1,5 +1,5 @@
 <script setup>
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import Tooltip from "@/Components/Tooltip.vue";
 import {MemberDetailIcon, alertTriangle} from "@/Components/Icons/outline.jsx";
 import {CheckIcon, XIcon} from "@heroicons/vue/outline";
@@ -17,6 +17,7 @@ const props = defineProps({
 
 const transactionModal = ref(false);
 const modalComponent = ref(null);
+const transactionData = ref(props.transaction)
 const { formatDateTime, formatAmount, formatType } = transactionFormat();
 
 const openTransactionModal = (ibId, componentType) => {
@@ -38,10 +39,14 @@ const closeModal = () => {
 }
 
 const form = useForm({
-    id: props.transaction.id,
+    id: '',
     type: 'single',
     remarks: '',
 });
+
+watch(() => props.transaction, (newValue) => {
+    transactionData.value = newValue;
+})
 
 const submitForm = () => {
     let submitRoute;
@@ -52,6 +57,7 @@ const submitForm = () => {
     }
 
     if (submitRoute) {
+        form.id = transactionData.value.id;
         form.post(submitRoute, {
             onSuccess: () => {
                 closeModal();
