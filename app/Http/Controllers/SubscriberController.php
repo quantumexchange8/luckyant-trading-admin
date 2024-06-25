@@ -231,9 +231,9 @@ class SubscriberController extends Controller
             $deal = [];
 
             try {
-                $deal = (new MetaFiveService())->createDeal($subscriber->meta_login, $subscription_amount, 'Join PAMM', dealAction::WITHDRAW);
+                $deal = (new MetaFiveService())->createDeal($subscriber->meta_login, $subscription_amount, $subscriber->meta_login . ' join PAMM Master - ' . $subscriber->master_meta_login, dealAction::WITHDRAW);
             } catch (\Exception $e) {
-                \Log::error('Error fetching trading accounts: '. $e->getMessage());
+                \Log::error('Balance Out error on: ' . $subscriber->meta_login . $e->getMessage());
             }
 
             Transaction::create([
@@ -277,6 +277,9 @@ class SubscriberController extends Controller
             $master = Master::find($subscriber->master->id);
             $master->total_fund += $subscription_amount;
             $master->save();
+
+            $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/strategy', $master);
+            \Log::debug($response);
         }
 
         $subscription_number = RunningNumberService::getID('subscription');

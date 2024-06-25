@@ -381,6 +381,9 @@ class MasterController extends Controller
             ]);
         }
 
+        $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/strategy', $master);
+        \Log::debug($response);
+
         return redirect()->back()
             ->with('title', 'Success configure setting')
             ->with('success', 'Successfully configure requirements to follow Master Account for LOGIN: ' . $master->meta_login);
