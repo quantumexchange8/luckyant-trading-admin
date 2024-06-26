@@ -381,8 +381,11 @@ class MasterController extends Controller
             ]);
         }
 
-        $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/strategy', $master);
-        \Log::debug($response);
+        if ($master->type == 'PAMM') {
+            $masterData = $master->toArray();
+            $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/strategy', $masterData);
+            \Log::debug($response);
+        }
 
         return redirect()->back()
             ->with('title', 'Success configure setting')
