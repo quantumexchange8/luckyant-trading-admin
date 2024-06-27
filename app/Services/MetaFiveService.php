@@ -47,6 +47,7 @@ class MetaFiveService {
         foreach ($tradingAccounts as $row) {
             $userData = $this->getMetaUser($row->meta_login);
             $metaAccountData = $this->getMetaAccount($row->meta_login);
+            Log::debug($userData, $metaAccountData);
             if($userData && $metaAccountData) {
                 (new UpdateTradingAccount)->execute($row->meta_login, $metaAccountData);
                 (new UpdateTradingUser)->execute($row->meta_login, $userData);

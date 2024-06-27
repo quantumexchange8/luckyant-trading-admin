@@ -212,7 +212,7 @@ class SubscriberController extends Controller
         try {
             (new MetaFiveService())->getUserInfo(TradingAccount::where('meta_login', $subscriber->meta_login)->get());
         } catch (\Exception $e) {
-            \Log::error('Error fetching trading accounts: '. $e->getMessage());
+            \Log::error('Error update: '. $e->getMessage());
 
             return redirect()->back()
                 ->with('title', trans('public.server_under_maintenance'))
@@ -234,7 +234,7 @@ class SubscriberController extends Controller
             try {
                 $deal = (new MetaFiveService())->createDeal($subscriber->meta_login, $subscription_amount, $subscriber->meta_login . ' join PAMM Master - ' . $subscriber->master_meta_login, dealAction::WITHDRAW);
             } catch (\Exception $e) {
-                \Log::error('Balance Out error on: ' . $subscriber->meta_login . ' - ' .$e->getMessage());
+                \Log::error('Balance Out error on: ' . $subscriber->meta_login . ' - ' . $e->getMessage());
             }
 
             Transaction::create([
@@ -257,7 +257,7 @@ class SubscriberController extends Controller
             try {
                 $pamm_master_deal = (new MetaFiveService())->createDeal($subscriber->master_meta_login, $subscription_amount, 'Deposit PAMM Capital', dealAction::DEPOSIT);
             } catch (\Exception $e) {
-                \Log::error('Error fetching trading accounts: '. $e->getMessage());
+                \Log::error('Error fetching master: '. $subscriber->master_meta_login . ' - ' . $e->getMessage());
             }
 
             Transaction::create([
