@@ -23,6 +23,7 @@ use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -233,7 +234,7 @@ class SubscriberController extends Controller
             try {
                 $deal = (new MetaFiveService())->createDeal($subscriber->meta_login, $subscription_amount, $subscriber->meta_login . ' join PAMM Master - ' . $subscriber->master_meta_login, dealAction::WITHDRAW);
             } catch (\Exception $e) {
-                \Log::error('Balance Out error on: ' . $subscriber->meta_login . $e->getMessage());
+                \Log::error('Balance Out error on: ' . $subscriber->meta_login . ' - ' .$e->getMessage());
             }
 
             Transaction::create([
@@ -278,7 +279,7 @@ class SubscriberController extends Controller
             $master->total_fund += $subscription_amount;
             $master->save();
 
-            $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $master);
+            $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $master);
             \Log::debug($response);
         }
 
@@ -301,8 +302,7 @@ class SubscriberController extends Controller
             'status' => 'Active',
             'approval_date' => now(),
         ]);
-
-        $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $subscription);
+        $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $subscription);
         \Log::debug($response);
 
         $subscriber->subscription_id = $subscription->id;

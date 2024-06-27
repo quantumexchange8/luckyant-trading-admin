@@ -10,6 +10,7 @@ class UpdateTradingUser
 {
     public function execute($meta_login, $data): TradingUser
     {
+        \Log::debug($data);
         return $this->updateTradingUser($meta_login, $data);
     }
 

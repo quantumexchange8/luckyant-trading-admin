@@ -11,6 +11,7 @@ class UpdateTradingAccount
 {
     public function execute($meta_login, $data): TradingAccount
     {
+        \Log::debug($data);
         return $this->updateTradingAccount($meta_login, $data);
     }
 

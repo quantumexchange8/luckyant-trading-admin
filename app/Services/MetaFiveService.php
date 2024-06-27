@@ -34,12 +34,12 @@ class MetaFiveService {
 
     public function getMetaUser($meta_login)
     {
-        return Http::acceptJson()->get($this->baseURL . "/m_user/{$meta_login}")->json();
+        return Http::acceptJson()->get($this->baseURL . "/m_user/$meta_login")->json();
     }
 
     public function getMetaAccount($meta_login)
     {
-        return Http::acceptJson()->get($this->baseURL . "/trade_acc/{$meta_login}")->json();
+        return Http::acceptJson()->get($this->baseURL . "/trade_acc/$meta_login")->json();
     }
 
     public function getUserInfo($tradingAccounts): void
@@ -91,7 +91,6 @@ class MetaFiveService {
     public function disableTrade($meta_login)
     {
         $disableTrade = Http::acceptJson()->patch($this->baseURL . "/disable_trade/{$meta_login}")->json();
-        Log::debug($disableTrade);
 
         $userData = $this->getMetaUser($meta_login);
         $metaAccountData = $this->getMetaAccount($meta_login);
@@ -113,8 +112,10 @@ class MetaFiveService {
             'leverage' => $leverage,
         ]);
         $upatedResponse = $upatedResponse->json();
-
-        Log::debug($upatedResponse);
+        $userData = $this->getMetaUser($meta_login);
+        $metaAccountData = $this->getMetaAccount($meta_login);
+        (new UpdateTradingAccount)->execute($meta_login, $metaAccountData);
+        (new UpdateTradingUser)->execute($meta_login, $userData);
 
         return $upatedResponse;
     }
@@ -126,11 +127,12 @@ class MetaFiveService {
             'type' => $type,
             'password' => $password,
         ]);
-        $passwordResponse = $passwordResponse->json();
+        return $passwordResponse->json();
+    }
 
-        Log::debug($passwordResponse);
-
-        return $passwordResponse;
+    public function userTrade($meta_login)
+    {
+        return Http::acceptJson()->get($this->baseURL . "/check_position/{$meta_login}")->json();
     }
 
 }
