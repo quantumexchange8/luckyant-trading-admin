@@ -32,19 +32,16 @@ class ReportController extends Controller
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
         $query = TradeRebateSummary::query()
-            ->with('upline_user:id,name,email', 'user:id,name,email');
+            ->with('upline_user:id,name,email', 'user:id,name,email')
+            ->where('status', 'Approved');
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
             $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
+                $q->whereHas('upline_user', function ($user) use ($search) {
                     $user->where('name', 'like', $search)
                         ->orWhere('email', 'like', $search);
-                })
-                    ->orWhereHas('upline_user', function ($to_wallet) use ($search) {
-                        $to_wallet->where('name', 'like', $search)
-                            ->orWhere('email', 'like', $search);
-                    });
+                });
             });
         }
 
@@ -71,6 +68,8 @@ class ReportController extends Controller
             $query->whereIn('user_id', []);
         }
 
+        $totalRebateQuery = clone $query;
+
         if ($request->has('exportStatus')) {
             return Excel::download(new TradeRebatesExport($query), Carbon::now() . '-trade-rebates-report.xlsx');
         }
@@ -78,7 +77,11 @@ class ReportController extends Controller
         $trade_rebates = $query->orderBy($column == null ? 'created_at' : $column, $sortOrder)
             ->paginate($request->input('paginate', 10));
 
-        return response()->json($trade_rebates);
+        return response()->json([
+            'result' => $trade_rebates,
+            'totalRebateAmount' => $totalRebateQuery->sum('rebate'),
+            'totalTradeLots' => $totalRebateQuery->sum('volume'),
+        ]);
     }
 
     public function performance_incentive()
