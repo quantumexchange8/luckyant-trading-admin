@@ -278,7 +278,7 @@ class SubscriberController extends Controller
             $master->total_fund += $subscription_amount;
             $master->save();
 
-            $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/strategy', $master);
+            $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $master);
             \Log::debug($response);
         }
 
@@ -302,7 +302,7 @@ class SubscriberController extends Controller
             'approval_date' => now(),
         ]);
 
-        $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/subscription/join', $subscription);
+        $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $subscription);
         \Log::debug($response);
 
         $subscriber->subscription_id = $subscription->id;

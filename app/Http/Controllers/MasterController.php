@@ -383,7 +383,7 @@ class MasterController extends Controller
 
         if ($master->type == 'PAMM') {
             $masterData = $master->toArray();
-            $response = \Http::post('http://103.21.90.87:8080/serverapi/pamm/strategy', $masterData);
+            $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterData);
             \Log::debug($response);
         }
 
