@@ -341,7 +341,7 @@ class MasterController extends Controller
 
         $masterConfigurations->user->profile_photo_url = $masterConfigurations->user->getFirstMediaUrl('profile_photo');
         $masterConfigurations->total_fund_size = $totalFundSize;
-        $masterConfigurations->subscribe_percentage = ($totalSubscribersBasedOnMaster / $totalSubscribers) * 100;
+        $masterConfigurations->subscribe_percentage = ($totalSubscribersBasedOnMaster ?? 0 / $totalSubscribers) * 100;
 
         return Inertia::render('Master/Configuration/MasterConfiguration', [
             'masterConfigurations' => $masterConfigurations,
