@@ -108,7 +108,13 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="submitForm"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
@@ -149,7 +155,13 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="submitForm"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
     </Modal>
