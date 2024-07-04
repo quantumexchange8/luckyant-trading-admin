@@ -161,7 +161,8 @@ class MemberController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%");
                 });
             })
             ->when($request->filled('type'), function ($query) use ($request) {
