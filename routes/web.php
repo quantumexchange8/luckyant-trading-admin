@@ -3,6 +3,7 @@
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\PammController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\TransactionController;
@@ -121,6 +122,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/master_configuration/{meta_login}', [MasterController::class, 'viewMasterConfiguration'])->name('master.viewMasterConfiguration');
         Route::post('/updateMasterConfiguration', [MasterController::class, 'updateMasterConfiguration'])->name('master.updateMasterConfiguration');
         Route::post('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
+        Route::post('/updateMasterSubscriptionPackage', [MasterController::class, 'updateMasterSubscriptionPackage'])->name('master.updateMasterSubscriptionPackage');
         Route::post('/addVisibleToLeaders', [MasterController::class, 'addVisibleToLeaders'])->name('master.addVisibleToLeaders');
     });
 
@@ -171,6 +173,23 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         // subscription renewal
         Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
         Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
+    });
+
+    /**
+     * ==============================
+     *            PAMM
+     * ==============================
+     */
+    Route::prefix('pamm')->group(function () {
+        //pending pamm
+        Route::get('/pending_pamm', [PammController::class, 'pending_pamm'])->name('pamm.pending_pamm');
+        Route::get('/getPendingPammData', [PammController::class, 'getPendingPammData'])->name('subscription.getPendingPammData');
+        Route::post('/approveSubscribePamm', [PammController::class, 'approveSubscribePamm'])->name('pamm.approveSubscribePamm');
+        Route::post('/rejectSubscribePamm', [PammController::class, 'rejectSubscribePamm'])->name('pamm.rejectSubscribePamm');
+
+        // pamm listing
+        Route::get('/pamm_listing', [PammController::class, 'pamm_listing'])->name('pamm.pamm_listing');
+        Route::get('/getPammListingData', [PammController::class, 'getPammListingData'])->name('pamm.getPammListingData');
     });
 
     /**

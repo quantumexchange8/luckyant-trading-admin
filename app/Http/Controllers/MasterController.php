@@ -6,6 +6,7 @@ use App\Exports\MasterExport;
 use App\Models\Master;
 use App\Models\MasterLeader;
 use App\Models\MasterManagementFee;
+use App\Models\MasterSubscriptionPackage;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\TradingAccount;
@@ -326,7 +327,7 @@ class MasterController extends Controller
 
     public function viewMasterConfiguration($meta_login)
     {
-        $masterConfigurations = Master::with(['tradingUser:id,meta_login,name,company', 'user', 'masterManagementFee', 'masterLeaders'])
+        $masterConfigurations = Master::with(['tradingUser:id,meta_login,name,company', 'user', 'masterManagementFee', 'masterSubscriptionPackage'])
             ->where('meta_login', $meta_login)
             ->first();
 
@@ -355,6 +356,7 @@ class MasterController extends Controller
         $master = Master::find($request->master_id);
 
         $master->update([
+            'category' => $request->category,
             'type' => $request->type,
             'min_join_equity' => $request->min_join_equity,
             'sharing_profit' => $request->sharing_profit,
@@ -364,7 +366,7 @@ class MasterController extends Controller
             'signal_status' => $request->signal_status,
             'estimated_monthly_returns' => $request->eta_montly_return,
             'estimated_lot_size' => $request->eta_lot_size,
-            'extra_fund' => $request->extra_fund,
+            'join_period' => $request->join_period,
             'total_fund' => $request->total_fund,
             'roi_period' => $request->roi_period,
             'total_subscribers' => $request->total_subscriber,
@@ -381,7 +383,7 @@ class MasterController extends Controller
             ]);
         }
 
-        if ($master->type == 'PAMM') {
+        if ($master->category == 'pamm') {
             $masterData = $master->toArray();
             $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterData);
             \Log::debug($response);
@@ -435,6 +437,45 @@ class MasterController extends Controller
         return redirect()->back()
             ->with('title', 'Success update')
             ->with('success', 'Successfully updated the management fees');
+    }
+
+    public function updateMasterSubscriptionPackage(Request $request)
+    {
+        $amounts = $request->amounts;
+        $max_out_amounts = $request->max_out_amounts ?? 0;
+
+        $errors = [];
+
+        // Validate amounts
+        foreach ($amounts as $index => $amount) {
+            if (empty($amount)) {
+                $errors["amounts.$index"] = trans('validation.required', ['attribute' => 'Amount']);
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $master = Master::with('masterSubscriptionPackage')->find($request->master_id);
+
+        foreach ($master->masterSubscriptionPackage() as $item) {
+            $item->delete();
+        }
+
+        foreach ($max_out_amounts as $index => $max_amount) {
+            MasterSubscriptionPackage::create([
+                'master_id' => $master->id,
+                'meta_login' => $master->meta_login,
+                'label' => $amounts[$index],
+                'amount' => $amounts[$index],
+                'max_out_amount' => $max_amount
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('title', 'Success update')
+            ->with('success', 'Successfully updated the subscription packages');
     }
 
     public function addVisibleToLeaders(Request $request)

@@ -9,6 +9,8 @@ class MasterConfigurationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'category' => ['required'],
+            'type' => ['required_if:category,pamm'],
             'min_join_equity' => ['required', 'numeric'],
             'sharing_profit' => ['required', 'numeric'],
             'market_profit' => ['required', 'numeric'],
@@ -17,7 +19,7 @@ class MasterConfigurationRequest extends FormRequest
             'signal_status' => ['required'],
             'eta_montly_return' => ['required'],
             'eta_lot_size' => ['required'],
-            'extra_fund' => ['required'],
+            'join_period' => ['required'],
             'total_fund' => ['required'],
         ];
     }
@@ -51,6 +53,8 @@ class MasterConfigurationRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'category' => 'Master Type',
+            'type' => 'PAMM Type',
             'min_join_equity' => 'Minimum Equity',
             'sharing_profit' => 'Sharing Profit (%)',
             'market_profit' => 'Market Profit (%)',
@@ -59,7 +63,7 @@ class MasterConfigurationRequest extends FormRequest
             'signal_status' => 'Trade Signal Status',
             'eta_montly_return' => 'Estimated Monthly Return',
             'eta_lot_size' => 'Estimated Lot Size',
-            'extra_fund' => 'Extra Size',
+            'join_period' => 'Join Period (Days)',
             'total_fund' => 'Total Fund',
         ];
     }

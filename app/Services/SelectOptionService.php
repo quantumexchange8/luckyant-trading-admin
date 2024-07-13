@@ -72,7 +72,7 @@ class SelectOptionService
     {
         return SettingSettlementPeriod::where('status', 'Active')->get()->map(function ($period) {
             return [
-                'label' => trans('public.' . $period->label),
+                'label' => $period->value . ' Days',
                 'value' => $period->value,
             ];
         });

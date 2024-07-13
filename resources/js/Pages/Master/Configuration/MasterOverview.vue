@@ -34,24 +34,24 @@ const { formatAmount } = transactionFormat();
 
         <div class="flex flex-col sm:flex-row justify-center items-center gap-5 self-stretch">
             <div class="flex flex-row-reverse justify-between sm:justify-center sm:flex-col items-center w-full">
-                <div class="text-lg font-semibold">
+                <div class="text-xl font-semibold">
                     {{ subscriberCount }}
                 </div>
                 <div class="text-sm text-gray-400">
-                    Total Subscribers
+                    Real Subscribers
                 </div>
             </div>
             <div class="flex flex-row-reverse justify-between sm:justify-center sm:flex-col items-center w-full">
-                <div class="text-lg font-semibold">
+                <div class="text-xl font-semibold">
                     $ {{ formatAmount(masterConfigurations.total_fund_size) }}
                 </div>
                 <div class="text-sm text-gray-400">
-                    Total Subscription Amount
+                    Real Fund Size
                 </div>
             </div>
             <div class="flex flex-row-reverse justify-between sm:justify-center sm:flex-col items-center w-full">
                 <div
-                    class="text-lg font-semibold"
+                    class="text-xl font-semibold"
                     :class="{
                         'text-success-500': masterConfigurations.subscribe_percentage > 0,
                         'text-error-500': masterConfigurations.subscribe_percentage < 0,

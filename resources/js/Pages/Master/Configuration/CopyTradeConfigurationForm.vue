@@ -23,12 +23,13 @@ const form = useForm({
     signal_status: '',
     eta_montly_return: props.masterConfigurations.estimated_monthly_returns,
     eta_lot_size: props.masterConfigurations.estimated_lot_size,
-    extra_fund: props.masterConfigurations.extra_fund,
+    join_period: props.masterConfigurations.join_period,
     total_fund: props.masterConfigurations.total_fund,
     roi_period: props.masterConfigurations.roi_period,
     total_subscriber: props.masterConfigurations.total_subscribers,
     max_drawdown: props.masterConfigurations.max_drawdown,
     is_public: '',
+    category: '',
     type: '',
 })
 
@@ -51,18 +52,40 @@ const selected = ref(getSelectedPlan(props.masterConfigurations.signal_status));
 const masterTypes = [
     {
         name: 'Copy Trade',
-        value: 'CopyTrade',
+        value: 'copy_trade',
     },
     {
         name: 'PAMM',
-        value: 'PAMM',
+        value: 'pamm',
     },
 ]
 
 const getSelectedMasterTypes = (master_type) => {
     return masterTypes.find(plan => plan.value === master_type);
 }
-const selectedMasterTypes = ref(getSelectedMasterTypes(props.masterConfigurations.type));
+const selectedMasterTypes = ref(getSelectedMasterTypes(props.masterConfigurations.category));
+
+const pammTypes = [
+    {
+        name: 'Standard',
+        value: 'Standard',
+    },
+    {
+        name: 'ESG',
+        value: 'ESG',
+    },
+]
+
+const getSelectedPammTypes = (pamm_type) => {
+    if (pamm_type === 'CopyTrade') {
+        pamm_type = 'Standard'
+    }
+
+    console.log(pamm_type)
+    return pammTypes.find(plan => plan.value === pamm_type);
+}
+
+const selectedPammTypes = ref(getSelectedPammTypes(props.masterConfigurations.type));
 
 const publicStatus = [
     {
@@ -83,7 +106,8 @@ const selectedPublicStatus = ref(getSelectedPublicStatus(props.masterConfigurati
 const submit = () => {
     form.signal_status = selected.value.value;
     form.is_public = selectedPublicStatus.value.value;
-    form.type = selectedMasterTypes.value.value;
+    form.category = selectedMasterTypes.value.value;
+    form.type = selectedMasterTypes.value.value === 'pamm' ? selectedPammTypes.value.value : '';
     form.post(route('master.updateMasterConfiguration'))
 }
 </script>
@@ -92,11 +116,11 @@ const submit = () => {
     <div class="flex flex-col items-start gap-5 bg-white dark:bg-gray-900 rounded-md shadow-md p-5 w-full">
         <div class="flex items-center gap-3">
             <div class="text-lg font-semibold">
-                {{ selectedMasterTypes.name }} Configuration
+                Master Setting
             </div>
         </div>
         <form class="w-full">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <div class="space-y-2 sm:col-span-2">
                     <Label
                         for="master_type"
@@ -104,7 +128,7 @@ const submit = () => {
                     />
                     <RadioGroup v-model="selectedMasterTypes">
                         <RadioGroupLabel class="sr-only">Master Types</RadioGroupLabel>
-                        <div class="flex gap-3 items-center self-stretch w-full">
+                        <div class="flex gap-4 items-center self-stretch w-full">
                             <RadioGroupOption
                                 as="template"
                                 v-for="(masterType, index) in masterTypes"
@@ -138,8 +162,52 @@ const submit = () => {
                         </div>
                     </RadioGroup>
                 </div>
+                <div
+                    v-if="selectedMasterTypes.value === 'pamm'"
+                    class="space-y-2 sm:col-span-2"
+                >
+                    <Label
+                        for="pamm_type"
+                        value="PAMM Type"
+                    />
+                    <RadioGroup v-model="selectedPammTypes">
+                        <RadioGroupLabel class="sr-only">PAMM Types</RadioGroupLabel>
+                        <div class="flex gap-4 items-center self-stretch w-full">
+                            <RadioGroupOption
+                                as="template"
+                                v-for="(pammType, index) in pammTypes"
+                                :key="index"
+                                :value="pammType"
+                                v-slot="{ active, checked }"
+                            >
+                                <div
+                                    :class="[
+                                            active
+                                                ? 'ring-0 ring-white ring-offset-0'
+                                                : '',
+                                            checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white',
+                                        ]"
+                                    class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
+                                >
+                                    <div class="flex items-center w-full">
+                                        <div class="text-sm flex flex-col gap-3 w-full">
+                                            <RadioGroupLabel
+                                                as="div"
+                                                class="font-medium"
+                                            >
+                                                <div class="flex justify-center items-center gap-3">
+                                                    {{ pammType.name }}
+                                                </div>
+                                            </RadioGroupLabel>
+                                        </div>
+                                    </div>
+                                </div>
+                            </RadioGroupOption>
+                        </div>
+                    </RadioGroup>
+                </div>
                 <div class="space-y-2 sm:col-span-2">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="space-y-1.5">
                             <Label
                                 for="sharing_profit"
@@ -236,6 +304,39 @@ const submit = () => {
 <!--                </div>-->
                 <div class="space-y-2">
                     <Label
+                        for="join_period"
+                        value="Join Period (Days)"
+                    />
+                    <Input
+                        id="join_period"
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        class="block w-full"
+                        v-model="form.join_period"
+                        :invalid="form.errors.join_period"
+                    />
+                    <InputError :message="form.errors.join_period" />
+                </div>
+                <div class="space-y-2">
+                    <Label
+                        for="total_fund"
+                        value="Total Fund"
+                    />
+                    <Input
+                        id="total_fund"
+                        type="number"
+                        min="0"
+                        placeholder="$ 0.00"
+                        class="block w-full"
+                        v-model="form.total_fund"
+                        :invalid="form.errors.total_fund"
+                    />
+                    <InputError :message="form.errors.total_fund" />
+                </div>
+
+                <div class="space-y-2">
+                    <Label
                         for="eta_montly_return"
                         value="Estimated Monthly Return (%)"
                     />
@@ -263,38 +364,6 @@ const submit = () => {
                         :invalid="form.errors.eta_lot_size"
                     />
                     <InputError :message="form.errors.eta_lot_size" />
-                </div>
-                <div class="space-y-2">
-                    <Label
-                        for="extra_fund"
-                        value="Extra Fund"
-                    />
-                    <Input
-                        id="extra_fund"
-                        type="number"
-                        min="0"
-                        placeholder="$ 0.00"
-                        class="block w-full"
-                        v-model="form.extra_fund"
-                        :invalid="form.errors.extra_fund"
-                    />
-                    <InputError :message="form.errors.extra_fund" />
-                </div>
-                <div class="space-y-2">
-                    <Label
-                        for="total_fund"
-                        value="Total Fund"
-                    />
-                    <Input
-                        id="total_fund"
-                        type="number"
-                        min="0"
-                        placeholder="$ 0.00"
-                        class="block w-full"
-                        v-model="form.total_fund"
-                        :invalid="form.errors.total_fund"
-                    />
-                    <InputError :message="form.errors.total_fund" />
                 </div>
                 <div class="space-y-2">
                     <Label
@@ -334,7 +403,7 @@ const submit = () => {
                     />
                     <RadioGroup v-model="selectedPublicStatus">
                         <RadioGroupLabel class="sr-only">Master Status</RadioGroupLabel>
-                        <div class="flex gap-3 items-center self-stretch w-full">
+                        <div class="flex gap-4 items-center self-stretch w-full">
                             <RadioGroupOption
                                 as="template"
                                 v-for="(public_status, index) in publicStatus"
@@ -375,7 +444,7 @@ const submit = () => {
                     />
                     <RadioGroup v-model="selected">
                         <RadioGroupLabel class="sr-only">Signal Status</RadioGroupLabel>
-                        <div class="flex gap-3 items-center self-stretch w-full">
+                        <div class="flex gap-4 items-center self-stretch w-full">
                             <RadioGroupOption
                                 as="template"
                                 v-for="(plan, index) in plans"

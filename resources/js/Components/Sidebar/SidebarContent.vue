@@ -168,6 +168,31 @@ const { hasRole } = usePermission();
         </SidebarCollapsible>
 
         <SidebarCollapsible
+            title="PAMM"
+            :active="route().current('pamm.*')"
+            :pending-counts="pendingSubscriberRequestCount"
+        >
+            <template #icon>
+                <FileCheck02Icon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('pamm.pending_pamm')"
+                title="Pending PAMM"
+                :active="route().current('pamm.pending_pamm')"
+                :pending-counts="pendingRenewalCount"
+            />
+            <SidebarCollapsibleItem
+                :href="route('pamm.pamm_listing')"
+                title="PAMM Listing"
+                :active="route().current('pamm.pamm_listing')"
+            />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
             title="Transactions"
             :active="route().current('transaction.*')"
             :pending-counts="pendingTransactionCount"

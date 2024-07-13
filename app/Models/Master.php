@@ -16,6 +16,7 @@ class Master extends Model
         'user_id',
         'trading_account_id',
         'meta_login',
+        'category',
         'type',
         'min_join_equity',
         'sharing_profit',
@@ -27,6 +28,7 @@ class Master extends Model
         'total_fund',
         'extra_fund',
         'roi_period',
+        'join_period',
         'signal_status',
         'is_public',
         'status',
@@ -65,9 +67,9 @@ class Master extends Model
         return $this->hasMany(MasterManagementFee::class, 'master_id', 'id');
     }
 
-    public function masterLeaders(): \Illuminate\Database\Eloquent\Relations\hasMany
+    public function masterSubscriptionPackage(): \Illuminate\Database\Eloquent\Relations\hasMany
     {
-        return $this->hasMany(MasterLeader::class, 'master_id', 'id');
+        return $this->hasMany(MasterSubscriptionPackage::class, 'master_id', 'id');
     }
 
     public function getActivitylogOptions(): LogOptions

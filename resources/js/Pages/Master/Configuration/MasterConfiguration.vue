@@ -18,6 +18,7 @@ import MasterOverview from "@/Pages/Master/Configuration/MasterOverview.vue";
 import CopyTradeConfigurationForm from "@/Pages/Master/Configuration/CopyTradeConfigurationForm.vue";
 import ManagementFeeForm from "@/Pages/Master/Configuration/ManagementFeeForm.vue";
 import MasterLeaderForm from "@/Pages/Master/Configuration/MasterLeaderForm.vue";
+import MasterAmountForm from "@/Pages/Master/Configuration/MasterAmountForm.vue";
 
 const props = defineProps({
     masterConfigurations: Object,
@@ -55,7 +56,7 @@ const props = defineProps({
                         :masterConfigurations="masterConfigurations"
                         :settlementPeriodSel="settlementPeriodSel"
                     />
-                    <MasterLeaderForm
+                    <MasterAmountForm
                         :masterConfigurations="masterConfigurations"
                         :settlementPeriodSel="settlementPeriodSel"
                     />
