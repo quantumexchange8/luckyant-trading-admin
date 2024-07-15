@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 use App\Models\Wallet;
 use App\Models\WalletLog;
@@ -165,11 +166,15 @@ class TransactionController extends Controller
                     $wallet->balance += $transaction->amount;
                     $wallet->save();
 
-                    Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
+                    if (App::environment('production')) {
+                        Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
+                    }
                 } elseif ($transaction->transaction_type == 'Withdrawal') {
                     $wallet = Wallet::find($transaction->from_wallet_id);
 
-                    Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
+                    if (App::environment('production')) {
+                        Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
+                    }
                 }
             }
         } else {
@@ -192,7 +197,10 @@ class TransactionController extends Controller
                 $wallet->balance += $transaction->amount;
                 $wallet->save();
 
-                Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
+                if (App::environment('production')) {
+                    Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
+                }
+
             } elseif ($transaction->transaction_type == 'Withdrawal') {
 
                 $transaction->update([
@@ -200,7 +208,9 @@ class TransactionController extends Controller
                     'handle_by' => Auth::user()->id,
                 ]);
 
-                Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
+                if (App::environment('production')) {
+                    Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
+                }
             }
         }
 
