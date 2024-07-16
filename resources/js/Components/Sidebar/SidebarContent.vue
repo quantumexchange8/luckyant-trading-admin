@@ -16,6 +16,7 @@ const pendingMasterCount = ref(page.props.pendingMasterCount);
 const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
 const pendingRenewalCount = ref(page.props.pendingRenewalCount);
 const pendingSwitchMasterCount = ref(page.props.pendingSwitchMasterCount);
+const pendingPammCount = ref(page.props.pendingPammCount);
 const { hasRole } = usePermission();
 </script>
 
@@ -170,7 +171,7 @@ const { hasRole } = usePermission();
         <SidebarCollapsible
             title="PAMM"
             :active="route().current('pamm.*')"
-            :pending-counts="pendingSubscriberRequestCount"
+            :pending-counts="pendingPammCount"
         >
             <template #icon>
                 <FileCheck02Icon

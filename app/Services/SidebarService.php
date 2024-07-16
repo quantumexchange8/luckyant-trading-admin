@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MasterRequest;
+use App\Models\PammSubscription;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionRenewalRequest;
@@ -133,5 +134,26 @@ class SidebarService {
         }
 
         return $switch_master->count();
+    }
+
+    public function getPendingPammCount(): int
+    {
+        $authUser = \Auth::user();
+        $pending_pamm = PammSubscription::where('status', 'Pending');
+        if (!empty($authUser) && $authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $pending_pamm->whereIn('user_id', $childrenIds);
+        } elseif (!empty($authUser) && $authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser) && !empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $pending_pamm->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $pending_pamm->whereIn('user_id', []);
+        }
+
+        return $pending_pamm->count();
     }
 }

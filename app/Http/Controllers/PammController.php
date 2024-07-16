@@ -10,6 +10,8 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Notifications\SubscriptionConfirmationNotification;
+use App\Services\dealAction;
+use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -117,6 +119,30 @@ class PammController extends Controller
             'approval_date' => now(),
             'status' => 'Active',
             'handle_by' => \Auth::id(),
+        ]);
+
+        $description = $pamm_subscription->meta_login ? $pamm_subscription->meta_login : ('User ID: ' . $pamm_subscription->user_id) . ' follow PAMM Master - ' . $pamm_subscription->master_meta_login . ' - FUND $ ' . $pamm_subscription->subscription_amount;
+        $deal = [];
+
+        try {
+            $deal = (new MetaFiveService())->createDeal($pamm_subscription->master_meta_login, $pamm_subscription->subscription_amount, $description, dealAction::DEPOSIT);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching trading accounts: '. $e->getMessage());
+        }
+
+        Transaction::create([
+            'category' => 'trading_account',
+            'user_id' => $pamm_subscription->master->user_id,
+            'to_meta_login' => $pamm_subscription->master_meta_login,
+            'ticket' => $deal['deal_Id'],
+            'transaction_number' => RunningNumberService::getID('transaction'),
+            'transaction_type' => 'DepositCapital',
+            'fund_type' => 'RealFund',
+            'amount' => $pamm_subscription->subscription_amount,
+            'transaction_charges' => 0,
+            'transaction_amount' => $pamm_subscription->subscription_amount,
+            'status' => 'Success',
+            'comment' => $deal['conduct_Deal']['comment'],
         ]);
 
         $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $pamm_subscription);
