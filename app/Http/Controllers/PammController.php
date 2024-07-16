@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PammSubscriptionExport;
 use App\Models\Master;
 use App\Models\PammSubscription;
 use App\Models\TradingAccount;
@@ -83,7 +84,7 @@ class PammController extends Controller
         }
 
         if ($request->has('exportStatus')) {
-            return Excel::download(new PendingSubscriberExport($pendingSubscriber), Carbon::now() . '-pending-subscribers-report.xlsx');
+            return Excel::download(new PammSubscriptionExport($pendingSubscriber), Carbon::now() . '-pending-pamm-report.xlsx');
         }
 
         $totalSubscriberQuery = clone $pendingSubscriber;
@@ -187,7 +188,7 @@ class PammController extends Controller
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
         $subscription = PammSubscription::query()
-            ->with(['user', 'master', 'transaction', 'master.tradingUser']);
+            ->with(['user', 'master', 'transaction', 'master.tradingUser', 'package']);
 
         if ($request->filled('search')) {
             $search = '%' . $request->input('search') . '%';
@@ -225,6 +226,11 @@ class PammController extends Controller
             $subscription->where('status', $status);
         }
 
+        if ($request->filled('product')) {
+            $product = '%' . $request->input('product') . '%';
+            $subscription->where('subscription_package_product', 'like', $product);
+        }
+
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
@@ -240,7 +246,7 @@ class PammController extends Controller
         }
 
         if ($request->has('exportStatus')) {
-            return Excel::download(new SubscriptionExport($subscription), Carbon::now() . '-subscription-report.xlsx');
+            return Excel::download(new PammSubscriptionExport($subscription), Carbon::now() . '-pamm_subscription-report.xlsx');
         }
 
         $totalSubscriptionQuery = clone $subscription;
