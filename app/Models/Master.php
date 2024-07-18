@@ -30,6 +30,7 @@ class Master extends Model
         'roi_period',
         'join_period',
         'signal_status',
+        'delivery_requirement',
         'is_public',
         'status',
         'total_subscribers',

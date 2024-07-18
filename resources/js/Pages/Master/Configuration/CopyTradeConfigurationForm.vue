@@ -20,7 +20,7 @@ const form = useForm({
     market_profit: props.masterConfigurations.market_profit,
     company_profit: props.masterConfigurations.company_profit,
     subscription_fee: props.masterConfigurations.subscription_fee,
-    signal_status: '',
+    delivery_requirement: '',
     eta_montly_return: props.masterConfigurations.estimated_monthly_returns,
     eta_lot_size: props.masterConfigurations.estimated_lot_size,
     join_period: props.masterConfigurations.join_period,
@@ -103,8 +103,24 @@ const getSelectedPublicStatus = (public_status) => {
 }
 const selectedPublicStatus = ref(getSelectedPublicStatus(props.masterConfigurations.is_public));
 
+const requireDeliverySel = [
+    {
+        name: 'Required',
+        value: 1,
+    },
+    {
+        name: 'Not Required',
+        value: 0,
+    },
+]
+
+const getRequireDeliverySel = (status) => {
+    return requireDeliverySel.find(delivery => delivery.value === status);
+}
+const selectedRequiredDelivery = ref(getRequireDeliverySel(props.masterConfigurations.delivery_requirement));
+
 const submit = () => {
-    form.signal_status = selected.value.value;
+    form.delivery_requirement = selectedRequiredDelivery.value.value;
     form.is_public = selectedPublicStatus.value.value;
     form.category = selectedMasterTypes.value.value;
     form.type = selectedMasterTypes.value.value === 'pamm' ? selectedPammTypes.value.value : '';
@@ -439,15 +455,15 @@ const submit = () => {
                 </div>
                 <div class="space-y-2">
                     <Label
-                        for="signal_status"
-                        value="Trade Signal Status"
+                        for="delivery_requirement"
+                        value="Delivery Requirement"
                     />
-                    <RadioGroup v-model="selected">
-                        <RadioGroupLabel class="sr-only">Signal Status</RadioGroupLabel>
+                    <RadioGroup v-model="selectedRequiredDelivery">
+                        <RadioGroupLabel class="sr-only">Delivery Requirement</RadioGroupLabel>
                         <div class="flex gap-4 items-center self-stretch w-full">
                             <RadioGroupOption
                                 as="template"
-                                v-for="(plan, index) in plans"
+                                v-for="(plan, index) in requireDeliverySel"
                                 :key="index"
                                 :value="plan"
                                 v-slot="{ active, checked }"

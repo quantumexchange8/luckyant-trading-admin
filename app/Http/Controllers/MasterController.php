@@ -372,6 +372,7 @@ class MasterController extends Controller
             'total_subscribers' => $request->total_subscriber,
             'max_drawdown' => $request->max_drawdown,
             'is_public' => $request->is_public,
+            'delivery_requirement' => $request->delivery_requirement,
         ]);
 
         if ($master->min_join_equity != null &&
