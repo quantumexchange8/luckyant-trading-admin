@@ -121,7 +121,7 @@ class PammController extends Controller
             'handle_by' => \Auth::id(),
         ]);
 
-        $description = $pamm_subscription->meta_login ? $pamm_subscription->meta_login : ('User ID: ' . $pamm_subscription->user_id) . ' follow PAMM Master - ' . $pamm_subscription->master_meta_login . ' - FUND $ ' . $pamm_subscription->subscription_amount;
+        $description = $pamm_subscription->meta_login ? 'Login #' . $pamm_subscription->meta_login : ('Client #' . $pamm_subscription->user_id);
         $deal = [];
 
         try {
@@ -172,26 +172,28 @@ class PammController extends Controller
 
         $pamm_subscription->update([
             'approval_date' => now(),
-            'status' => 'Active',
+            'status' => 'Rejected',
             'handle_by' => \Auth::id(),
         ]);
 
-        Transaction::create([
-            'category' => 'wallet',
-            'user_id' => $user->id,
-            'to_wallet_id' => $wallet->id,
-            'transaction_number' => RunningNumberService::getID('transaction'),
-            'transaction_type' => 'PammEsg',
-            'amount' => $pamm_subscription->subscription_amount,
-            'transaction_charges' => 0,
-            'transaction_amount' => $pamm_subscription->subscription_amount,
-            'status' => 'Success',
-            'remarks' => 'Reject PAMM Subscription',
-            'new_wallet_amount' => $wallet->balance - $pamm_subscription->subscription_amount,
-        ]);
+        if ($pamm_subscription->type == 'ESG') {
+            Transaction::create([
+                'category' => 'wallet',
+                'user_id' => $user->id,
+                'to_wallet_id' => $wallet->id,
+                'transaction_number' => RunningNumberService::getID('transaction'),
+                'transaction_type' => 'PammEsg',
+                'amount' => $pamm_subscription->subscription_amount,
+                'transaction_charges' => 0,
+                'transaction_amount' => $pamm_subscription->subscription_amount,
+                'status' => 'Success',
+                'remarks' => 'Reject PAMM Subscription',
+                'new_wallet_amount' => $wallet->balance - $pamm_subscription->subscription_amount,
+            ]);
 
-        $wallet->balance += $pamm_subscription->subscription_amount;
-        $wallet->save();
+            $wallet->balance += $pamm_subscription->subscription_amount;
+            $wallet->save();
+        }
 
         return redirect()->back()
             ->with('title', 'Success rejected')
