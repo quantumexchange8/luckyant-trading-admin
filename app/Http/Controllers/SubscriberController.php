@@ -519,7 +519,7 @@ class SubscriberController extends Controller
             ->with('subscription')
             ->get()
             ->sum(function ($subscriber) {
-                return $subscriber->subscription->meta_balance;
+                return $subscriber->subscription->meta_balance ?? 0;
             });
 
         $results->each(function ($user) {
