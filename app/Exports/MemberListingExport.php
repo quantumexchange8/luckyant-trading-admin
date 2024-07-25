@@ -34,7 +34,7 @@ class MemberListingExport implements FromCollection, WithHeadings
 
             $total_pamm_subscription = PammSubscription::where('user_id', $record->id)
                 ->where('status', 'Active')
-                ->sum('subscriptoin_amount');
+                ->sum('subscription_amount');
 
             $real_fund = SubscriptionBatch::where('user_id', $record->id)
                 ->where('status', 'Active')
@@ -50,7 +50,7 @@ class MemberListingExport implements FromCollection, WithHeadings
 
             $total_group_pamm_subscription = PammSubscription::whereIn('user_id', $record->getChildrenIds())
                 ->where('status', 'Active')
-                ->sum('subscriptoin_amount');
+                ->sum('subscription_amount');
 
             $result[] = [
                 'name' => $record->name,
