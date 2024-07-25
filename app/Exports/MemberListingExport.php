@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Country;
+use App\Models\PammSubscription;
 use App\Models\SubscriptionBatch;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -27,9 +28,13 @@ class MemberListingExport implements FromCollection, WithHeadings
 
         foreach ($records as $record) {
             // Check if $record is an array and has the necessary properties
-            $total_fund = SubscriptionBatch::where('user_id', $record->id)
+            $total_subcsription = SubscriptionBatch::where('user_id', $record->id)
                 ->where('status', 'Active')
                 ->sum('meta_balance');
+
+            $total_pamm_subscription = PammSubscription::where('user_id', $record->id)
+                ->where('status', 'Active')
+                ->sum('subscriptoin_amount');
 
             $real_fund = SubscriptionBatch::where('user_id', $record->id)
                 ->where('status', 'Active')
@@ -38,6 +43,14 @@ class MemberListingExport implements FromCollection, WithHeadings
             $demo_fund = SubscriptionBatch::where('user_id', $record->id)
                 ->where('status', 'Active')
                 ->sum('demo_fund');
+
+            $total_group_deposit = SubscriptionBatch::whereIn('user_id', $record->getChildrenIds())
+                ->where('status', 'Active')
+                ->sum('meta_balance');
+
+            $total_group_pamm_subscription = PammSubscription::whereIn('user_id', $record->getChildrenIds())
+                ->where('status', 'Active')
+                ->sum('subscriptoin_amount');
 
             $result[] = [
                 'name' => $record->name,
@@ -52,9 +65,10 @@ class MemberListingExport implements FromCollection, WithHeadings
                 'country' => Country::find($record->country)->name,
                 'rank' => $record->rank->name,
                 'kyc_approval' => $record->kyc_approval,
-                'total_deposit' => $total_fund,
+                'total_deposit' => $total_subcsription + $total_pamm_subscription,
                 'real_fund' => $real_fund,
                 'demo_fund' => $demo_fund,
+                'total_group_deposit' => $total_group_deposit + $total_group_pamm_subscription,
             ];
         }
 
@@ -79,6 +93,7 @@ class MemberListingExport implements FromCollection, WithHeadings
             'Total Deposit',
             'Real Fund',
             'Demo Fund',
+            'Total Group Deposit',
         ];
     }
 }
