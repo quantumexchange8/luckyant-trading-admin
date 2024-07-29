@@ -135,7 +135,7 @@ const submit = () => {
                 Master Setting
             </div>
         </div>
-        <form class="w-full">
+        <form class="w-full" @submit.prevent="submit">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <div class="space-y-2 sm:col-span-2">
                     <Label
