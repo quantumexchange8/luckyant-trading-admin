@@ -170,13 +170,13 @@ class PammController extends Controller
             'comment' => $deal['conduct_Deal']['comment'],
         ]);
 
-        $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $pamm_subscription);
-        \Log::debug($response);
+//        $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $pamm_subscription);
+//        \Log::debug($response);
         $masterAccount = Master::find($pamm_subscription->master_id);
         $masterAccount->total_fund += $pamm_subscription->subscription_amount;
         $masterAccount->save();
-        $master_response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterAccount);
-        \Log::debug($master_response);
+//        $master_response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterAccount);
+//        \Log::debug($master_response);
 
         return redirect()->back()
             ->with('title', 'Success approve')

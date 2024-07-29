@@ -384,11 +384,11 @@ class MasterController extends Controller
             ]);
         }
 
-        if ($master->category == 'pamm') {
-            $masterData = $master->toArray();
-            $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterData);
-            \Log::debug($response);
-        }
+//        if ($master->category == 'pamm') {
+//            $masterData = $master->toArray();
+//            $response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterData);
+//            \Log::debug($response);
+//        }
 
         return redirect()->back()
             ->with('title', 'Success configure setting')
