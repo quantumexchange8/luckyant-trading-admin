@@ -48,6 +48,7 @@ const submit = () => {
 const tncSetting = [
     { value: 'register', label: "Register" },
     { value: 'subscribe', label: "Subscribe" },
+    { value: 'pamm_esg', label: "ESG Investment" },
     { value: 'trading_account', label: "Add Trading Account" },
     { value: 'terminate', label: "Terminate" },
     { value: 'stop_renewal', label: "Stop Renewal" },
@@ -83,7 +84,7 @@ const tncSetting = [
                     <BaseListbox
                         v-model="form.type"
                         :options=tncSetting
-                        :error="form.errors.type"
+                        :error="!!form.errors.type"
                     />
                 </div>
                     <InputError :message="form.errors.type" class="mt-2" />
