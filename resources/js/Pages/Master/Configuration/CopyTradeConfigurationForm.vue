@@ -31,6 +31,10 @@ const form = useForm({
     is_public: '',
     category: '',
     type: '',
+    en_tnc_pdf: null,
+    cn_tnc_pdf: null,
+    en_tree_pdf: null,
+    cn_tree_pdf: null,
 })
 
 const plans = [
@@ -118,6 +122,86 @@ const getRequireDeliverySel = (status) => {
     return requireDeliverySel.find(delivery => delivery.value === status);
 }
 const selectedRequiredDelivery = ref(getRequireDeliverySel(props.masterConfigurations.delivery_requirement));
+
+// en pdf
+const selectedEnTncPdf = ref(null);
+
+const onEnTncPdfChange = (event) => {
+    const planLogoInput = event.target;
+    const file = planLogoInput.files[0];
+
+    if(file) {
+        //Display the selected image
+        const reader = new FileReader();
+        reader.onload = () => {
+            selectedEnTncPdf.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+        form.en_tnc_pdf = file;
+    } else {
+        selectedEnTncPdf.value = null;
+    }
+}
+
+// cn pdf
+const selectedCnTncPdf = ref(null);
+
+const onCnTncPdfChange = (event) => {
+    const planLogoInput = event.target;
+    const file = planLogoInput.files[0];
+
+    if(file) {
+        //Display the selected image
+        const reader = new FileReader();
+        reader.onload = () => {
+            selectedCnTncPdf.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+        form.cn_tnc_pdf = file;
+    } else {
+        selectedCnTncPdf.value = null;
+    }
+}
+
+// cn pdf
+const selectedEnTreePdf = ref(null);
+
+const onEnTreePdfChange = (event) => {
+    const planLogoInput = event.target;
+    const file = planLogoInput.files[0];
+
+    if(file) {
+        //Display the selected image
+        const reader = new FileReader();
+        reader.onload = () => {
+            selectedEnTreePdf.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+        form.en_tree_pdf = file;
+    } else {
+        selectedEnTreePdf.value = null;
+    }
+}
+
+// cn pdf
+const selectedCnTreePdf = ref(null);
+
+const onCnTreePdfChange = (event) => {
+    const planLogoInput = event.target;
+    const file = planLogoInput.files[0];
+
+    if(file) {
+        //Display the selected image
+        const reader = new FileReader();
+        reader.onload = () => {
+            selectedCnTreePdf.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+        form.cn_tree_pdf = file;
+    } else {
+        selectedCnTreePdf.value = null;
+    }
+}
 
 const submit = () => {
     form.delivery_requirement = selectedRequiredDelivery.value.value;
@@ -493,6 +577,102 @@ const submit = () => {
                             </RadioGroupOption>
                         </div>
                     </RadioGroup>
+                </div>
+
+                <!-- upload en tnc pdf-->
+                <div class="space-y-2">
+                    <Label
+                        for="en_tnc_pdf"
+                        value="PAMM TNC (En)"
+                    />
+                    <input
+                        ref="enTncPdf"
+                        id="en_tnc_pdf"
+                        type="file"
+                        class="hidden"
+                        accept="application/pdf"
+                        @change="onEnTncPdfChange"
+                    />
+                    <Button
+                        type="button"
+                        variant="gray"
+                        @click="$refs.enTncPdf.click()"
+                        class="justify-center gap-2"
+                    >
+                        <span>Browse</span>
+                    </Button>
+                </div>
+
+                <!-- upload cn tnc pdf-->
+                <div class="space-y-2">
+                    <Label
+                        for="cn_tnc_pdf"
+                        value="PAMM TNC (Cn)"
+                    />
+                    <input
+                        ref="cnTncPdf"
+                        id="cn_tnc_pdf"
+                        type="file"
+                        class="hidden"
+                        accept="application/pdf"
+                        @change="onCnTncPdfChange"
+                    />
+                    <Button
+                        type="button"
+                        variant="gray"
+                        @click="$refs.cnTncPdf.click()"
+                        class="justify-center gap-2"
+                    >
+                        <span>Browse</span>
+                    </Button>
+                </div>
+
+                <!-- upload en tree pdf-->
+                <div class="space-y-2">
+                    <Label
+                        for="en_tree_pdf"
+                        value="Tree TNC (En)"
+                    />
+                    <input
+                        ref="enTreePdf"
+                        id="en_tree_pdf"
+                        type="file"
+                        class="hidden"
+                        accept="application/pdf"
+                        @change="onEnTreePdfChange"
+                    />
+                    <Button
+                        type="button"
+                        variant="gray"
+                        @click="$refs.enTreePdf.click()"
+                        class="justify-center gap-2"
+                    >
+                        <span>Browse</span>
+                    </Button>
+                </div>
+
+                <!-- upload en tree pdf-->
+                <div class="space-y-2">
+                    <Label
+                        for="cn_tree_pdf"
+                        value="Tree TNC (En)"
+                    />
+                    <input
+                        ref="cnTreePdf"
+                        id="cn_tree_pdf"
+                        type="file"
+                        class="hidden"
+                        accept="application/pdf"
+                        @change="onCnTreePdfChange"
+                    />
+                    <Button
+                        type="button"
+                        variant="gray"
+                        @click="$refs.cnTreePdf.click()"
+                        class="justify-center gap-2"
+                    >
+                        <span>Browse</span>
+                    </Button>
                 </div>
             </div>
 

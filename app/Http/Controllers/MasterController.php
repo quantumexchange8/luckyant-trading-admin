@@ -363,7 +363,7 @@ class MasterController extends Controller
             'market_profit' => $request->market_profit,
             'company_profit' => $request->company_profit,
             'subscription_fee' => $request->subscription_fee,
-            'signal_status' => $request->signal_status,
+            'signal_status' => $request->signal_status ?? 1,
             'estimated_monthly_returns' => $request->eta_montly_return,
             'estimated_lot_size' => $request->eta_lot_size,
             'join_period' => $request->join_period,
@@ -382,6 +382,26 @@ class MasterController extends Controller
             $master->update([
                 'status' => 'Active',
             ]);
+        }
+
+        if ($request->hasFile('en_tnc_pdf')) {
+            $master->clearMediaCollection('en_tnc_pdf');
+            $master->addMedia($request->en_tnc_pdf)->toMediaCollection('en_tnc_pdf');
+        }
+
+        if ($request->hasFile('cn_tnc_pdf')) {
+            $master->clearMediaCollection('cn_tnc_pdf');
+            $master->addMedia($request->cn_tnc_pdf)->toMediaCollection('cn_tnc_pdf');
+        }
+
+        if ($request->hasFile('en_tree_pdf')) {
+            $master->clearMediaCollection('en_tree_pdf');
+            $master->addMedia($request->en_tree_pdf)->toMediaCollection('en_tree_pdf');
+        }
+
+        if ($request->hasFile('cn_tree_pdf')) {
+            $master->clearMediaCollection('cn_tree_pdf');
+            $master->addMedia($request->cn_tree_pdf)->toMediaCollection('cn_tree_pdf');
         }
 
 //        if ($master->category == 'pamm') {
