@@ -78,6 +78,10 @@ const pammTypes = [
         name: 'ESG',
         value: 'ESG',
     },
+    {
+        name: 'StandardGroup',
+        value: 'StandardGroup',
+    },
 ]
 
 const getSelectedPammTypes = (pamm_type) => {
@@ -651,11 +655,11 @@ const submit = () => {
                     </Button>
                 </div>
 
-                <!-- upload en tree pdf-->
+                <!-- upload cn tree pdf-->
                 <div class="space-y-2">
                     <Label
                         for="cn_tree_pdf"
-                        value="Tree TNC (En)"
+                        value="Tree TNC (Cn)"
                     />
                     <input
                         ref="cnTreePdf"

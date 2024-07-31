@@ -150,7 +150,7 @@ const columns = [
         accessorKey: 'subscription_package_product',
         header: 'package',
         enableSorting: false,
-        cell: ({ row }) => '$ ' + formatAmount(row.original.package.amount, 0) + ' - ' + row.original.subscription_package_product,
+        cell: ({ row }) => row.original.package ? '$ ' + formatAmount(row.original.package.amount, 0) + ' - ' + row.original.subscription_package_product : '-',
     },
     {
         accessorKey: 'master.trading_user.name',
