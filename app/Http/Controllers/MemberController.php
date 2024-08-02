@@ -7,6 +7,7 @@ use App\Exports\MemberListingExport;
 use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
 use App\Models\Country;
+use App\Models\PammSubscription;
 use App\Models\RankingLog;
 use App\Models\SettingRank;
 use App\Models\TradingAccount;
@@ -707,20 +708,30 @@ class MemberController extends Controller
 
     protected function getSelfDeposit($user)
     {
-        return Subscription::query()
-            ->where('user_id', $user->id)
+        $subscriptions = Subscription::where('user_id', $user->id)
             ->where('status', 'Active')
             ->sum('meta_balance');
+
+        $pamm = PammSubscription::where('user_id', $user->id)
+            ->where('status', 'Active')
+            ->sum('subscription_amount');
+
+        return $subscriptions + $pamm;
     }
 
     protected function getTotalGroupDeposit($user)
     {
         $ids = $user->getChildrenIds();
 
-        return Subscription::query()
-            ->whereIn('user_id', $ids)
+        $subscriptions = Subscription::whereIn('user_id', $ids)
             ->where('status', 'Active')
             ->sum('meta_balance');
+
+        $pamm = PammSubscription::whereIn('user_id', $ids)
+            ->where('status', 'Active')
+            ->sum('subscription_amount');
+
+        return $subscriptions + $pamm;
     }
 
     protected function mapUser($user, $level) {
