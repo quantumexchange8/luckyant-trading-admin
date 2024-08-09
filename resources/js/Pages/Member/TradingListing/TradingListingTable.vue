@@ -8,10 +8,13 @@ const props = defineProps({
     refresh: Boolean,
     isLoading: Boolean,
     search: String,
+    type: String,
     date: String,
     exportStatus: Boolean,
     leverageSel: Array,
 })
+
+const emit = defineEmits(['update:loading', 'update:refresh', 'update:export']);
 
 </script>
 
@@ -43,11 +46,12 @@ const props = defineProps({
                     :refresh="refresh"
                     :isLoading="isLoading"
                     :search="search"
+                    :type="type"
                     :date="date"
                     :exportStatus="exportStatus"
-                    @update:loading="isLoading = $event"
-                    @update:refresh="refresh = $event"
-                    @update:export="exportStatus = $event"
+                    @update:loading="$emit('update:loading', $event)"
+                    @update:refresh="$emit('update:refresh', $event)"
+                    @update:export="$emit('update:export', $event)"
                     />
                 </TabPanel>
             </TabPanels>

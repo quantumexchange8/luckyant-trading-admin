@@ -15,6 +15,7 @@ const props = defineProps({
     refresh: Boolean,
     isLoading: Boolean,
     search: String,
+    type: String,
     date: String,
     exportStatus: Boolean,
     leverageSel: Array,
@@ -28,19 +29,23 @@ const refreshDeposit = ref(props.refresh);
 const currentPage = ref(1);
 
 watch(
-    [() => props.search, () => props.date],
-    debounce(([searchValue, dateValue]) => {
-        getResults(1, searchValue, dateValue);
+    [() => props.search, () => props.type, () => props.date],
+    debounce(([searchValue, typeValue, dateValue]) => {
+        getResults(1, searchValue, typeValue, dateValue);
     }, 300)
 );
 
-const getResults = async (page = 1, search = '', date = '') => {
+const getResults = async (page = 1, search = '', type = '', date = '') => {
     tradingLoading.value = true
     try {
         let url = `/member/getTradingAccount?page=${page}`;
 
         if (search) {
             url += `&search=${search}`;
+        }
+
+        if (type) {
+            url += `&type=${type}`;
         }
 
         if (date) {
@@ -64,7 +69,7 @@ const handlePageChange = (newPage) => {
     if (newPage >= 1) {
         currentPage.value = newPage;
 
-        getResults(currentPage.value, props.search, props.date);
+        getResults(currentPage.value, props.search,  props.type, props.date);
     }
 };
 
@@ -81,9 +86,12 @@ watch(() => props.exportStatus, (newVal) => {
     refreshDeposit.value = newVal;
     if (newVal) {
         let url = `/member/getTradingAccount?exportStatus=yes`;
-
         if (props.date) {
             url += `&date=${props.date}`;
+        }
+
+        if (props.type) {
+            url += `&type=${props.type}`;
         }
 
         if (props.search) {

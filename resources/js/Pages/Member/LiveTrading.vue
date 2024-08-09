@@ -6,11 +6,17 @@ import VueTailwindDatepicker from "vue-tailwind-datepicker";
 import {onMounted, ref} from "vue";
 import Input from "@/Components/Input.vue";
 import Button from "@/Components/Button.vue";
+import BaseListbox from "@/Components/BaseListbox.vue";
 import TradingListingTable from "@/Pages/Member/TradingListing/TradingListingTable.vue";
 
 const props = defineProps({
     leverageSel: Array,
 })
+
+const typeFilter = [
+    {value: '', label:"All"},
+    {value: 'inactive', label:"0 Balance"},
+];
 
 const search = ref('');
 const date = ref('');
@@ -84,6 +90,14 @@ const exportTransaction = () => {
                     </InputIconWrapper>
                 </div>
                 <div class="w-full md:w-[240px]">
+                    <BaseListbox
+                    v-model="type"
+                    :options="typeFilter"
+                    :placeholder="$t('public.filters_placeholder')"
+                    class="w-full"
+                />
+                </div>
+                <div class="w-full md:w-[240px]">
                     <vue-tailwind-datepicker
                         placeholder="Select dates"
                         :formatter="formatter"
@@ -110,6 +124,7 @@ const exportTransaction = () => {
                 :refresh="refresh"
                 :isLoading="isLoading"
                 :search="search"
+                :type="type"
                 :date="date"
                 :exportStatus="exportStatus"
                 @update:loading="isLoading = $event"

@@ -136,6 +136,12 @@ class MetaFiveService {
         return Http::acceptJson()->get($this->baseURL . "/check_position/{$meta_login}")->json();
     }
 
+    public function deleteAccount($meta_login)
+    {
+        $deleteAccount = Http::acceptJson()->delete($this->baseURL . "/delete_tradeacc/{$meta_login}")->json();
+
+        return $deleteAccount;
+    }
 }
 
 class dealAction

@@ -23,6 +23,7 @@ use App\Services\SelectOptionService;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\ChangeTradingAccountPassowrdNotification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Services\MetaFiveService;
 use App\Services\passwordType;
 
@@ -50,7 +51,11 @@ class TradingController extends Controller
         // }
 
         $tradingListing = TradingAccount::query()
-            ->with(['user', 'accountType', 'tradingUser']);
+        ->select([
+            'trading_accounts.*',
+            DB::raw('ABS(IFNULL(demo_fund, 0) - balance) AS real_fund')
+        ])
+        ->with(['user', 'accountType', 'tradingUser']);
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
@@ -81,6 +86,10 @@ class TradingController extends Controller
             });
         }
 
+        if ($request->filled('type') && $request->input('type') === 'inactive') {
+            $tradingListing->whereRaw('ABS(IFNULL(demo_fund, 0) - balance) = 0');
+        }
+
         if ($request->filled('date')) {
             $date = $request->input('date');
             $dateRange = explode(' - ', $date);
@@ -89,16 +98,12 @@ class TradingController extends Controller
 
             $tradingListing->whereBetween('created_at', [$start_date, $end_date]);
         }
-
+           
         if ($request->has('exportStatus')) {
             return Excel::download(new TradingAccountExport($tradingListing), Carbon::now() . '_Trading Account' .'_History-report.xlsx');
         }
 
         $results = $tradingListing->latest()->paginate(10);
-
-        $results->each(function ($trading_account) {
-            $trading_account->real_fund = abs($trading_account->demo_fund - $trading_account->balance);
-        });
 
         return response()->json($results);
     }
@@ -320,5 +325,39 @@ class TradingController extends Controller
         return redirect()->back()
             ->with('title', 'Success adjustment')
             ->with('success', 'Successfully ' . $request->transaction_type . ' to LOGIN: ' . $meta_login);
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $tradingAcc = TradingAccount::find($request->id);
+        $tradingUser = TradingUser::find($request->trade_user);
+
+        $request->validate([
+            'remarks' => ['required'],
+        ]);
+
+        $metaService = new MetaFiveService();
+        $connection = $metaService->getConnectionStatus();
+
+        if ($connection != 0) {
+            return redirect()->back()
+                ->with('title', trans('public.server_under_maintenance'))
+                ->with('warning', trans('public.try_again_later'));
+        }
+        else{
+            $metaService->deleteAccount($request->meta_login);
+        }
+
+        $tradingUser->update([
+            'remarks' => $request->remarks . ' - by ID : ' . \Auth::user()->id,
+        ]);
+
+        $tradingAcc->delete();
+        $tradingUser->delete();
+
+        
+        return redirect()->back()
+            ->with('title', 'Success delete')
+            ->with('success', 'Successfully deleted LOGIN: ' . $request->meta_login);
     }
 }

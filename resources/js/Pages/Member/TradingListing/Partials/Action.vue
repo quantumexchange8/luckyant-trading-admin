@@ -1,7 +1,7 @@
 <script setup>
 import {ref} from "vue";
 import Tooltip from "@/Components/Tooltip.vue";
-import {MemberDetailIcon, Edit, PasscodeLockIcon} from "@/Components/Icons/outline.jsx";
+import {MemberDetailIcon, Edit, PasscodeLockIcon, Trash03Icon} from "@/Components/Icons/outline.jsx";
 import Button from "@/Components/Button.vue";
 import Modal from "@/Components/Modal.vue";
 import {transactionFormat} from "@/Composables/index.js";
@@ -9,6 +9,7 @@ import {useForm} from "@inertiajs/vue3";
 import EditLeverage from "@/Pages/Member/TradingListing/Partials/EditLeverage.vue";
 import ChangePassword from "@/Pages/Member/TradingListing/Partials/ChangePassword.vue";
 import BalanceAdjustment from "@/Pages/Member/TradingListing/Partials/BalanceAdjustment.vue";
+import DeleteAccount from "@/Pages/Member/TradingListing/Partials/DeleteAccount.vue";
 
 const props = defineProps({
     tradingListing: Object,
@@ -29,6 +30,8 @@ const openTradingModal = (id, componentType) => {
         modalComponent.value = 'Edit Leverage';
     } else if (componentType === 'balance_adjustment') {
         modalComponent.value = 'Balance Adjustment';
+    } else if (componentType === 'delete_account') {
+        modalComponent.value = 'Delete Account';
     }
 }
 
@@ -102,6 +105,18 @@ const toggleMasterPasswordVisibilityConfirm = () => {
             <span class="sr-only">Balance Adjustment</span>
         </Button>
     </Tooltip>
+    <Tooltip content="Delete Account" placement="bottom">
+        <Button
+            type="button"
+            pill
+            class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
+            variant="danger"
+            @click="openTradingModal(tradingListing.id, 'delete_account')"
+        >
+            <Trash03Icon aria-hidden="true" class="w-6 h-6 absolute" />
+            <span class="sr-only">Delete Account</span>
+        </Button>
+    </Tooltip>
 
     <Modal :show="tradingModal" :title="modalComponent" @close="closeModal" max-width="2xl">
         <div v-if="modalComponent === 'View Details'">
@@ -153,6 +168,13 @@ const toggleMasterPasswordVisibilityConfirm = () => {
 
         <template v-if="modalComponent === 'Balance Adjustment'">
             <BalanceAdjustment
+                :tradingListing="tradingListing"
+                @update:tradingModal="tradingModal = $event"
+            />
+        </template>
+
+        <template v-if="modalComponent === 'Delete Account'">
+            <DeleteAccount
                 :tradingListing="tradingListing"
                 @update:tradingModal="tradingModal = $event"
             />
