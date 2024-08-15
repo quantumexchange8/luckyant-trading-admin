@@ -55,7 +55,7 @@ class User extends Authenticatable implements HasMedia
     }
     public function rank(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(SettingRank::class, 'setting_rank_id', 'id');
+        return $this->belongsTo(SettingRank::class, 'display_rank_id', 'id');
     }
 
     public function country(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -179,7 +179,7 @@ class User extends Authenticatable implements HasMedia
                 'leader_status',
                 'referral_code',
                 'role',
-                'setting_rank_id',
+                'display_rank_id',
                 'rank_up_status',
                 'status',
                 'is_public',

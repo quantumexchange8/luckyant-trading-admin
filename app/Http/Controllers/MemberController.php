@@ -117,6 +117,7 @@ class MemberController extends Controller
             'dob' => $request->dob,
             'hierarchyList' => $hierarchyList,
             'setting_rank_id' => $request->ranking,
+            'display_rank_id' => $request->ranking,
             'password' => Hash::make($request->password),
             'identification_number' => $request->identity_number,
             'role' => 'user',
@@ -175,7 +176,7 @@ class MemberController extends Controller
             ->when($request->filled('rank'), function ($query) use ($request) {
                 $rank_id = $request->input('rank');
                 $query->where(function ($innerQuery) use ($rank_id) {
-                    $innerQuery->where('setting_rank_id', $rank_id);
+                    $innerQuery->where('display_rank_id', $rank_id);
                 });
             })
             ->when($request->filled('date'), function ($query) use ($request) {
@@ -368,9 +369,10 @@ class MemberController extends Controller
             ]);
         }
 
-        if ($currentRank != $user->setting_rank_id) {
-            $previous_rank_id = $user->setting_rank_id;
+        if ($currentRank != $user->display_rank_id) {
+            $previous_rank_id = $user->display_rank_id;
 
+            $user->display_rank_id = $currentRank;
             $user->setting_rank_id = $currentRank;
             $user->rank_up_status = 'manual';
             $user->save();
@@ -681,7 +683,7 @@ class MemberController extends Controller
             $query->where('id', $user->id);
         })->get();
 
-        $rank = SettingRank::where('id', $user->setting_rank_id)->first();
+        $rank = SettingRank::where('id', $user->display_rank_id)->first();
 
         // Parse the JSON data in the name column to get translations
         $translations = json_decode($rank->name, true);
@@ -743,7 +745,7 @@ class MemberController extends Controller
 
         $locale = app()->getLocale();
 
-        $rank = SettingRank::where('id', $user->setting_rank_id)->first();
+        $rank = SettingRank::where('id', $user->display_rank_id)->first();
 
         // Parse the JSON data in the name column to get translations
         $translations = json_decode($rank->name, true);

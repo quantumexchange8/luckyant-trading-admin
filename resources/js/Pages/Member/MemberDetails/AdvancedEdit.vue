@@ -48,7 +48,7 @@ function loadUsers(query, setOptions) {
 }
 
 const submit = () => {
-    form.rank = memberInfo.value.setting_rank_id;
+    form.rank = memberInfo.value.display_rank_id;
     form.upline_id = memberUpline.value;
     form.leader_status = memberInfo.value.leader_status;
     form.is_public = memberInfo.value.is_public;
@@ -107,7 +107,7 @@ const groupStatus = [
                 <Label class="text-sm dark:text-white" for="rank" value="Rank" />
                 <div class="md:col-span-3">
                     <BaseListbox
-                        v-model="memberInfo.setting_rank_id"
+                        v-model="memberInfo.display_rank_id"
                         :options="ranks"
                     />
                     <InputError :message="form.errors.rank" class="mt-1 col-span-4" />

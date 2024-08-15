@@ -53,7 +53,7 @@ class AdminController extends Controller
         if ($request->filled('rank')) {
             $rank_id = $request->input('rank');
             $adminQuery->where(function ($innerQuery) use ($rank_id) {
-                $innerQuery->where('setting_rank_id', $rank_id);
+                $innerQuery->where('display_rank_id', $rank_id);
             });
         }
 
