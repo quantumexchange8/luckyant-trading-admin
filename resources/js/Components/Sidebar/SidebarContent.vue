@@ -291,6 +291,11 @@ const { hasRole } = usePermission();
                 title="Leverage Setting"
                 :active="route().current('setting.leverage_setting')"
             />
+            <SidebarCollapsibleItem
+                :href="route('setting.bank_withdrawal_setting')"
+                title="Bank Withdrawal Setting"
+                :active="route().current('setting.bank_withdrawal_setting')"
+            />
         </SidebarCollapsible>
 
 <!--        <SidebarCollapsible-->

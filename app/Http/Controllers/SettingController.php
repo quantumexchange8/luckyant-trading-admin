@@ -13,6 +13,7 @@ use App\Models\SettingLeverage;
 use App\Http\Requests\TermsRequest;
 use App\Models\SettingPaymentMethod;
 use App\Models\CurrencyConversionRate;
+use App\Models\User;
 use App\Http\Requests\LeveragesRequest;
 use Spatie\Activitylog\Models\Activity;
 use App\Http\Requests\PaymentSettingRequest;
@@ -314,4 +315,62 @@ class SettingController extends Controller
         return redirect()->back()->with('title', 'Leverage updated')->with('success', 'The Leverage has been updated successfully.');
     }
 
+    public function bankWithdrawalSetting()
+    {
+        return Inertia::render('Setting/BankWithdrawal/BankWithdrawalSetting');
+    }
+
+    public function getLeaders(Request $request)
+    {
+        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        // Decode the JSON
+        $decodedColumnName = json_decode(urldecode($columnName), true);
+
+        $column = $decodedColumnName ? $decodedColumnName['id'] : 'name';
+        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+
+        $query = User::where('leader_status', 1);
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->input('search') . '%';
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->input('status') == 'Active' ? 1 : 0;
+            $query->where(function ($q) use ($status) {
+                $q->where('enable_bank_withdrawal', $status);
+            });
+        }
+
+        $results = $query
+            ->orderBy($column == null ? 'name' : $column, $sortOrder)
+            ->paginate($request->input('paginate', 10));
+
+        return response()->json($results);
+    }
+
+    public function updateBankWithdrawalSetting(Request $request)
+    {
+
+        $leader = User::find($request->user_id);
+        $leaderHierarchy = $leader->hierarchyList;
+
+        $leader->update([
+            'enable_bank_withdrawal' => $request->bank_status,
+        ]);
+
+        $members = User::where('hierarchyList', 'LIKE', '%' . $leaderHierarchy . $request->user_id . '%' )
+                ->get();
+
+        User::whereIn('id', $members->pluck('id'))
+        ->update([
+            'enable_bank_withdrawal' => $request->bank_status,
+        ]);
+
+        return redirect()->back()->with('title', 'Updated successfully')->with('success', 'The bank withdrawal option for the group has been updated successfully.');
+    }
 }

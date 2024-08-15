@@ -236,6 +236,10 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/addLeverageSetting', [SettingController::class, 'addLeverageSetting'])->name('setting.addLeverageSetting');
         Route::put('/editLeverageSetting/{id}', [SettingController::class, 'editLeverageSetting'])->name('setting.editLeverageSetting');
 
+        // bank withdrawal setting
+        Route::get('/bank_withdrawal_setting', [SettingController::class, 'bankWithdrawalSetting'])->name('setting.bank_withdrawal_setting');
+        Route::get('/getLeaders', [SettingController::class, 'getLeaders'])->name('setting.getLeaders');
+        Route::post('/updateBankWithdrawalSetting', [SettingController::class, 'updateBankWithdrawalSetting'])->name('setting.updateBankWithdrawalSetting');
     });
 
     /**
