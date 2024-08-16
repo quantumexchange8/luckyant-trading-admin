@@ -19,7 +19,9 @@ const memberUpline = ref(props.member_detail.upline ? { value: props.member_deta
 
 const form = useForm({
     user_id: props.member_detail.id,
-    rank: '',
+    setting_rank: '',
+    display_rank: '',
+
     upline_id: '',
     password: '',
     leader_status: '',
@@ -48,7 +50,8 @@ function loadUsers(query, setOptions) {
 }
 
 const submit = () => {
-    form.rank = memberInfo.value.display_rank_id;
+    form.setting_rank = memberInfo.value.setting_rank_id;
+    form.display_rank = memberInfo.value.display_rank_id;
     form.upline_id = memberUpline.value;
     form.leader_status = memberInfo.value.leader_status;
     form.is_public = memberInfo.value.is_public;
@@ -105,6 +108,16 @@ const groupStatus = [
 
             <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="rank" value="Rank" />
+                <div class="md:col-span-3">
+                    <BaseListbox
+                        v-model="memberInfo.setting_rank_id"
+                        :options="ranks"
+                    />
+                    <InputError :message="form.errors.rank" class="mt-1 col-span-4" />
+                </div>
+            </div>
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="rank" value="Displayed Rank" />
                 <div class="md:col-span-3">
                     <BaseListbox
                         v-model="memberInfo.display_rank_id"

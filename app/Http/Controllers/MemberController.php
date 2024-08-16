@@ -361,7 +361,8 @@ class MemberController extends Controller
     {
         $user = User::find($request->user_id);
 
-        $currentRank = $request->rank;
+        $displayRank = $request->display_rank;
+        $settingRank = $request->setting_rank;
 
         if ($request->password) {
             $user->update([
@@ -369,20 +370,25 @@ class MemberController extends Controller
             ]);
         }
 
-        if ($currentRank != $user->display_rank_id) {
-            $previous_rank_id = $user->display_rank_id;
+        if ($displayRank != $user->display_rank_id) {
+            $user->display_rank_id = $displayRank;
+            $user->rank_up_status = 'manual';
+            $user->save();
+        }
 
-            $user->display_rank_id = $currentRank;
-            $user->setting_rank_id = $currentRank;
+        if ($settingRank != $user->setting_rank_id) {
+            $previous_rank_id = $user->setting_rank_id;
+
+            $user->setting_rank_id = $settingRank;
             $user->rank_up_status = 'manual';
             $user->save();
 
-            $rank = SettingRank::find($currentRank);
+            $rank = SettingRank::find($settingRank);
 
             RankingLog::create([
                 'user_id' => $user->id,
                 'old_rank' => $previous_rank_id,
-                'new_rank' => $currentRank,
+                'new_rank' => $settingRank,
                 'user_package_amount' => 0,
                 'target_package_amount' => $rank->package_requirement,
                 'user_direct_referral_amount' => 0,

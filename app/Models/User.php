@@ -179,6 +179,7 @@ class User extends Authenticatable implements HasMedia
                 'leader_status',
                 'referral_code',
                 'role',
+                'setting_rank_id',
                 'display_rank_id',
                 'rank_up_status',
                 'status',
