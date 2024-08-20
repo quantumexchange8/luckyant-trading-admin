@@ -158,6 +158,7 @@ class TransactionController extends Controller
 
                 $transaction->update([
                     'status' => 'Success',
+                    'approval_at' => now(),
                     'handle_by' => Auth::user()->id,
                 ]);
 
@@ -190,6 +191,7 @@ class TransactionController extends Controller
             if ($transaction->transaction_type == 'Deposit') {
                 $transaction->update([
                     'status' => 'Success',
+                    'approval_at' => now(),
                     'handle_by' => Auth::user()->id,
                     'new_wallet_amount' => $wallet->balance,
                 ]);
@@ -205,6 +207,7 @@ class TransactionController extends Controller
 
                 $transaction->update([
                     'status' => 'Success',
+                    'approval_at' => now(),
                     'handle_by' => Auth::user()->id,
                 ]);
 
@@ -229,6 +232,7 @@ class TransactionController extends Controller
                 if ($transaction->status == 'Processing') {
                     $transaction->update([
                         'status' => 'Rejected',
+                        'approval_at' => now(),
                         'remarks' => 'MULTIPLE Reject by admin - ID ' . $transaction->transaction_number,
                         'handle_by' => Auth::user()->id,
                         'new_wallet_amount' => $transaction->new_wallet_amount += $transaction->amount,
@@ -259,6 +263,7 @@ class TransactionController extends Controller
                 $wallet = Wallet::find($transaction->to_wallet_id);
                 $transaction->update([
                     'status' => 'Rejected',
+                    'approval_at' => now(),
                     'remarks'=> $request->remarks,
                     'handle_by' => Auth::user()->id,
                     'new_wallet_amount' => $wallet->balance,
@@ -269,6 +274,7 @@ class TransactionController extends Controller
 
                 $transaction->update([
                     'status' => 'Rejected',
+                    'approval_at' => now(),
                     'remarks'=> $request->remarks,
                     'new_wallet_amount' => $transaction->new_wallet_amount += $transaction->amount,
                     'handle_by' => Auth::user()->id,
@@ -399,8 +405,9 @@ class TransactionController extends Controller
         $successAmount = $totalAmountQuery->where('status', 'Success')->sum('transaction_amount');
         $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('transaction_amount');
 
-        $results->each(function ($user) {
-            $user->first_leader = $user->user->getFirstLeader()->name ?? null;
+        $results->each(function ($transaction) {
+            $transaction->first_leader = $transaction->user->getFirstLeader()->name ?? null;
+            $transaction->created_at = $transaction->transaction_type == 'Withdrawal' ? $transaction->approval_at : $transaction->created_at;
         });
 
         if ($request->input('type') == 'Withdrawal') {

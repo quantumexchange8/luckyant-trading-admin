@@ -36,10 +36,23 @@ class Transaction extends Model implements HasMedia
         'transaction_amount',
         'new_wallet_amount',
         'status',
+        'approval_at',
         'comment',
         'remarks',
         'handle_by',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'approval_at' => 'datetime',
+        ];
+    }
 
     public function from_wallet(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
