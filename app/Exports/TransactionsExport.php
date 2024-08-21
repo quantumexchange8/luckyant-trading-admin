@@ -62,7 +62,7 @@ class TransactionsExport implements FromCollection, WithHeadings
                 'profit' =>  number_format((float)$profit, 2, '.', ''),
                 'bonus' =>  number_format((float)$bonus, 2, '.', ''),
                 'status' => $record->status,
-                'approval_at' => date_format($record->approval_at, 'Y-m-d H:i:s'),
+                'approval_at' => $record->approval_at ? date_format($record->approval_at, 'Y-m-d H:i:s') : null,
                 'remarks' => $record->remarks,
             );
         }
