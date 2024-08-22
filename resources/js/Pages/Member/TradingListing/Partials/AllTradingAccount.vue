@@ -7,6 +7,7 @@ import {computed, onUnmounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import Badge from "@/Components/Badge.vue";
 import Modal from "@/Components/Modal.vue";
+import StatusBadge from "@/Components/StatusBadge.vue";
 import debounce from "lodash/debounce.js";
 import Action from "@/Pages/Member/TradingListing/Partials/Action.vue";
 import {usePage} from "@inertiajs/vue3";
@@ -145,6 +146,9 @@ watchEffect(() => {
                         User
                     </th>
                     <th scope="col" class="p-3">
+                        Status
+                    </th>
+                    <th scope="col" class="p-3">
                         Action
                     </th>
                 </tr>
@@ -194,7 +198,10 @@ watchEffect(() => {
 
                     </td>
                     <td class="p-3">
-                        <Action :tradingListing="tradingListing" :leverageSel="leverageSel"/>
+                        <StatusBadge :value="tradingListing.trading_user.acc_status" />
+                    </td>
+                    <td class="p-3">
+                        <Action :tradingListing="tradingListing" :leverageSel="leverageSel" v-if="tradingListing.trading_user.acc_status === 'Active'"/>
                     </td>
                 </tr>
             </tbody>

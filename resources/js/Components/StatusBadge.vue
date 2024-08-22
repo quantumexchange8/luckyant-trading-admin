@@ -22,7 +22,7 @@ const baseClasses = [
 const variantClasses = computed(() => {
     if (props.value.toLowerCase() === 'success' || props.value.toLowerCase() === 'active' || props.value.toLowerCase() === 'subscribing') {
         return 'bg-success-400 dark:bg-success-500'
-    } else if (props.value.toLowerCase() === 'rejected' || props.value.toLowerCase() === 'terminated' || props.value.toLowerCase() === 'unsubscribed') {
+    } else if (props.value.toLowerCase() === 'rejected' || props.value.toLowerCase() === 'terminated' || props.value.toLowerCase() === 'unsubscribed' || props.value.toLowerCase() === 'deleted') {
         return 'bg-error-400 dark:bg-error-500'
     } else if (props.value.toLowerCase() === 'pending') {
         return 'bg-blue-400 dark:bg-blue-500'

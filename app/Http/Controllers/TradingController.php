@@ -9,6 +9,7 @@ use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
 use App\Models\TradingUser;
 use App\Models\Transaction;
+use App\Models\Mt5DeleteLog;
 use App\Services\dealAction;
 use App\Services\RunningNumberService;
 use Illuminate\Http\Request;
@@ -346,15 +347,23 @@ class TradingController extends Controller
         }
         else{
             $metaService->deleteAccount($request->meta_login);
+            $tradingUser->update([
+                'remarks' => $request->remarks . ' - by ID : ' . \Auth::user()->id,
+                'acc_status' => 'Deleted',
+            ]);
+
+            Mt5DeleteLog::create([
+                'user_id' => $tradingAcc->user_id,
+                'trading_account_id' => $request->id,
+                'meta_login' => $request->meta_login,
+                'type' => 'manual',
+                'account_created_at' => $tradingAcc->created_at,
+                'account_balance' => abs($tradingAcc->demo_fund ?? 0 - $tradingAcc->balance),
+                'remarks' => $request->remarks,
+                'handle_by' => \Auth::user()->id,
+            ]);
+
         }
-
-        $tradingUser->update([
-            'remarks' => $request->remarks . ' - by ID : ' . \Auth::user()->id,
-        ]);
-
-        $tradingAcc->delete();
-        $tradingUser->delete();
-
         
         return redirect()->back()
             ->with('title', 'Success delete')
