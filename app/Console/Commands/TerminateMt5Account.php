@@ -31,7 +31,7 @@ class TerminateMt5Account extends Command
             foreach ($tradingList as $tradingId)
             {
                 $tradingAcc = TradingAccount::find($tradingId);
-                $tradingUser = TradingUser::find($tradingAcc->user_id);
+                $tradingUser = $tradingAcc->tradingUser;
 
                 $metaAccountData = $metaService->getMetaAccount($tradingAcc->meta_login);
                 $accBalance = $metaAccountData['balance'];
@@ -59,7 +59,6 @@ class TerminateMt5Account extends Command
                     continue; 
                 }
 
-                $metaService->deleteAccount($tradingAcc->meta_login);
                 $tradingUser->update([
                     'remarks' => 'Inactive Account',
                     'acc_status' => 'Deleted',
@@ -74,7 +73,7 @@ class TerminateMt5Account extends Command
                     'account_balance' => $accBalance,
                     'remarks' => 'Inactive account',
                 ]);
-
+                $metaService->deleteAccount($tradingAcc->meta_login);
             }
         }
     }
