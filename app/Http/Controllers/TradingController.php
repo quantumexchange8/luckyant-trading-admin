@@ -87,8 +87,18 @@ class TradingController extends Controller
             });
         }
 
-        if ($request->filled('type') && $request->input('type') === 'inactive') {
-            $tradingListing->whereRaw('ABS(IFNULL(demo_fund, 0) - balance) = 0');
+        if ($request->filled('type')) {
+            $filter = $request->input('type');
+            if ($filter === 'inactive'){
+                $tradingListing->whereRaw('ABS(IFNULL(demo_fund, 0) - balance) = 0');
+            }
+            elseif ($filter === 'deleted'){
+                $tradingListing->where(function ($q) use ($filter) {
+                    $q->whereHas('tradingUser', function ($tradingUser) use ($filter) {
+                        $tradingUser->where('acc_status', 'Deleted');
+                    });
+                });
+            }
         }
 
         if ($request->filled('date')) {

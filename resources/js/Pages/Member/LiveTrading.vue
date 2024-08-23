@@ -16,6 +16,7 @@ const props = defineProps({
 const typeFilter = [
     {value: '', label:"All"},
     {value: 'inactive', label:"0 Balance"},
+    {value: 'deleted', label:"Deleted"},
 ];
 
 const search = ref('');
