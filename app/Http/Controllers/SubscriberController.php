@@ -193,10 +193,21 @@ class SubscriberController extends Controller
         $cashWallet = $user->wallets()->where('type', 'cash_wallet')->first();
 
         $checkSubscribingAcc = Subscriber::where('meta_login', $subscriber->meta_login)
+            ->where('master_id', $subscriber->master_id)
             ->where('status', 'Subscribing')
             ->first();
 
-        if ($checkSubscribingAcc) {
+        $checkSubscriptionAcc = Subscription::where('meta_login', $subscriber->meta_login)
+            ->where('master_id', $subscriber->master_id)
+            ->where('status', 'Active')
+            ->first();
+
+        $checkSubscriptionBatchAcc = SubscriptionBatch::where('meta_login', $subscriber->meta_login)
+            ->where('master_id', $subscriber->master_id)
+            ->where('status', 'Active')
+            ->first();
+
+        if ($checkSubscribingAcc || $checkSubscriptionAcc || $checkSubscriptionBatchAcc) {
             return redirect()->back()
                 ->with('title', trans('public.invalid_action'))
                 ->with('warning', trans('public.try_again_later'));
@@ -227,61 +238,7 @@ class SubscriberController extends Controller
             'handle_by' => Auth::user()->id,
         ]);
 
-        $subscription_amount = $subscriber->master->type == 'PAMM' ? $subscriber->initial_meta_balance / 2 : $subscriber->initial_meta_balance;
-        if ($subscriber->master->type == 'PAMM') {
-            $deal = [];
-
-            try {
-                $deal = (new MetaFiveService())->createDeal($subscriber->meta_login, $subscription_amount, $subscriber->meta_login . ' join PAMM Master - ' . $subscriber->master_meta_login, dealAction::WITHDRAW);
-            } catch (\Exception $e) {
-                \Log::error('Balance Out error on: ' . $subscriber->meta_login . ' - ' . $e->getMessage());
-            }
-
-            Transaction::create([
-                'category' => 'trading_account',
-                'user_id' => $subscriber->user_id,
-                'from_meta_login' => $subscriber->meta_login,
-                'ticket' => $deal['deal_Id'],
-                'transaction_number' => RunningNumberService::getID('transaction'),
-                'transaction_type' => 'PurchaseProduct',
-                'fund_type' => 'RealFund',
-                'amount' => $subscription_amount,
-                'transaction_charges' => 0,
-                'transaction_amount' => $subscription_amount,
-                'status' => 'Success',
-                'comment' => $deal['conduct_Deal']['comment'],
-            ]);
-
-            $pamm_master_deal = [];
-
-            try {
-                $pamm_master_deal = (new MetaFiveService())->createDeal($subscriber->master_meta_login, $subscription_amount, 'Deposit PAMM Capital', dealAction::DEPOSIT);
-            } catch (\Exception $e) {
-                \Log::error('Error fetching master: '. $subscriber->master_meta_login . ' - ' . $e->getMessage());
-            }
-
-            Transaction::create([
-                'category' => 'trading_account',
-                'user_id' => $subscriber->master->user_id,
-                'to_meta_login' => $subscriber->master_meta_login,
-                'ticket' => $pamm_master_deal['deal_Id'],
-                'transaction_number' => RunningNumberService::getID('transaction'),
-                'transaction_type' => 'DepositCapital',
-                'fund_type' => 'RealFund',
-                'amount' => $subscription_amount,
-                'transaction_charges' => 0,
-                'transaction_amount' => $subscription_amount,
-                'status' => 'Success',
-                'comment' => $pamm_master_deal['conduct_Deal']['comment'],
-            ]);
-
-            $master = Master::find($subscriber->master->id);
-            $master->total_fund += $subscription_amount;
-            $master->save();
-
-//            $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $master);
-//            \Log::debug($response);
-        }
+        $subscription_amount = $subscriber->initial_meta_balance;
 
         $subscription_number = RunningNumberService::getID('subscription');
 
@@ -302,8 +259,6 @@ class SubscriberController extends Controller
             'status' => 'Active',
             'approval_date' => now(),
         ]);
-//        $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $subscription);
-//        \Log::debug($response);
 
         $subscriber->subscription_id = $subscription->id;
         $subscriber->save();

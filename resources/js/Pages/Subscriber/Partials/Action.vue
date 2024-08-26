@@ -173,6 +173,7 @@ const submitForm = () => {
                 <Button
                     class="px-6 justify-center"
                     @click="openTransactionModal('rejectRemarks')"
+                    :disabled="form.processing"
                 >
                     Confirm
                 </Button>
@@ -191,7 +192,13 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click="openTransactionModal('terminateRemarks')">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click="openTransactionModal('terminateRemarks')"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
@@ -250,7 +257,13 @@ const submitForm = () => {
                 <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
                     Cancel
                 </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
+                <Button
+                    class="px-6 justify-center"
+                    @click.prevent="submitForm"
+                    :disabled="form.processing"
+                >
+                    Confirm
+                </Button>
             </div>
         </div>
 
