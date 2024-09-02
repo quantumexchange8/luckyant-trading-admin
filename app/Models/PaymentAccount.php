@@ -27,6 +27,11 @@ class PaymentAccount extends Model
         'status',
     ];
 
+    public function of_country()
+    {
+        return $this->belongsTo(Country::class, 'country', 'id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         $paymentAccount = $this->fresh();

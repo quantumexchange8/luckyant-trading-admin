@@ -124,6 +124,7 @@ class TransactionController extends Controller
             $transaction->user->first_leader = $transaction->user->getFirstLeader()->name ?? '-';
             $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
             $transaction->receipt_url = $transaction->getFirstMediaUrl('receipt');
+            $transaction->payment_type = strtolower($transaction->payment_method);
 
             $profit = WalletLog::where('user_id', $transaction->user_id)
                 ->where('purpose', 'ProfitSharing')
@@ -134,6 +135,7 @@ class TransactionController extends Controller
                 ->sum('amount');
             $transaction->profit_amount = $profit;
             $transaction->bonus_amount = $bonus;
+            $transaction->currency_symbol = $transaction->payment_account->of_country->currency_symbol ?? null;
         });
 
         return response()->json([
@@ -421,6 +423,8 @@ class TransactionController extends Controller
                     ->sum('amount');
                 $transaction->profit_amount = $profit;
                 $transaction->bonus_amount = $bonus;
+                $transaction->currency_symbol = $transaction->payment_account->of_country->currency_symbol ?? null;
+                $transaction->payment_type = strtolower($transaction->payment_method);
             });
         }
 

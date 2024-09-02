@@ -93,6 +93,16 @@ const closeModal = () => {
                             $ {{ transaction.transaction_amount }}
                         </div>
                     </div>
+                    <div v-if="transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
+                        <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            Conversion Rate
+                        </div>
+                        <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
+                            {{
+                                transaction.conversion_rate > 1 ? transaction.currency_symbol : '$ '
+                            }} {{ formatAmount(transaction.conversion_amount) }}
+                        </div>
+                    </div>
                     <div class="flex items-center justify-between gap-2 self-stretch" v-if="transaction.transaction_type === 'WalletAdjustment'">
                         <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                             {{$t('public.wallet')}}
@@ -128,6 +138,22 @@ const closeModal = () => {
                             </div>
                             <span class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold" v-if="transaction.transaction_type !== 'Transfer' && transaction.transaction_type !== 'Withdrawal'">{{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : transaction.to_meta_login.meta_login }}</span>
                             <span class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold" v-if="transaction.transaction_type === 'Transfer'">{{ transaction.to_wallet ? transaction.to_wallet.wallet_address : transaction.to_meta_login }}</span>
+                        </div>
+                    </div>
+                    <div v-if="transaction.transaction_type === 'Withdrawal'" class="flex items-center justify-between gap-2 self-stretch">
+                        <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            {{ $t(`public.${transaction.payment_type}`) }}
+                        </div>
+                        <div class="text-sm sm:text-base text-gray-800 font-semibold">
+                            {{ transaction.payment_account.payment_platform_name }}
+                        </div>
+                    </div>
+                    <div v-if="transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
+                        <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            Bank Branch
+                        </div>
+                        <div class="text-sm sm:text-base text-gray-800 font-semibold">
+                            {{ transaction.payment_account.bank_sub_branch }}
                         </div>
                     </div>
                     <div v-if="transaction.transaction_type === 'Withdrawal'" class="flex items-center justify-between gap-2 self-stretch">
