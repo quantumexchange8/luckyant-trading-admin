@@ -93,9 +93,19 @@ const closeModal = () => {
                             $ {{ transaction.transaction_amount }}
                         </div>
                     </div>
-                    <div v-if="transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
+                    <div v-if="transaction.transaction_type === 'Withdrawal' && transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
                         <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                             Conversion Rate
+                        </div>
+                        <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
+                            $1 : {{
+                                transaction.conversion_rate > 1 ? transaction.currency_symbol : '$ '
+                            }}{{ transaction.conversion_rate }}
+                        </div>
+                    </div>
+                    <div v-if="transaction.transaction_type === 'Withdrawal' && transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
+                        <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                            Conversion Amount
                         </div>
                         <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
                             {{
@@ -148,7 +158,7 @@ const closeModal = () => {
                             {{ transaction.payment_account.payment_platform_name }}
                         </div>
                     </div>
-                    <div v-if="transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
+                    <div v-if="transaction.transaction_type === 'Withdrawal' && transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">
                         <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                             Bank Branch
                         </div>
