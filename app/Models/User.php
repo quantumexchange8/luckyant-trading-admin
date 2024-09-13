@@ -58,7 +58,7 @@ class User extends Authenticatable implements HasMedia
         return $this->belongsTo(SettingRank::class, 'display_rank_id', 'id');
     }
 
-    public function country(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function ofCountry(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Country::class,'country', 'id');
     }

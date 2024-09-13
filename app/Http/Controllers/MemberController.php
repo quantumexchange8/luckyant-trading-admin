@@ -211,7 +211,7 @@ class MemberController extends Controller
             $members->whereIn('id', []);
         }
 
-        $members = $members->with(['rank:id,name', 'country:id,name', 'tradingAccounts', 'tradingUser'])->latest();
+        $members = $members->with(['rank:id,name', 'ofCountry:id,name', 'tradingAccounts', 'tradingUser'])->latest();
 
         if ($request->has('exportStatus')) {
             return Excel::download(new MemberListingExport($members), Carbon::now() . '-report.xlsx');
@@ -227,6 +227,7 @@ class MemberController extends Controller
             $user->walletBalance = $user->wallets->sum('balance');
             $user->top_leader = $user->top_leader->name ?? null;
             $user->first_leader = $user->getFirstLeader() ?? null;
+            $user->country_name = $user->ofCountry->name ?? null;
         });
 
         return response()->json($members);
