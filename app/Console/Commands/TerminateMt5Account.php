@@ -27,7 +27,12 @@ class TerminateMt5Account extends Command
             $end_date = Carbon::now()->format('Y-m-d H:i:s');
             $start_date = Carbon::now()->subWeeks(3)->format('Y-m-d H:i:s');
 
-            $tradingList = TradingAccount::where('created_at', '<', $start_date)->pluck('id')->toArray();
+            $tradingList = TradingAccount::where('created_at', '<', $start_date)
+                ->whereHas('tradingUser', function ($query) {
+                    $query->where('acc_status', 'Active');
+                })
+                ->pluck('id')
+                ->toArray();
             foreach ($tradingList as $tradingId)
             {
                 $tradingAcc = TradingAccount::find($tradingId);
