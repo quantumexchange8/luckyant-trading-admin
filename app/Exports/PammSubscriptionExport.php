@@ -34,7 +34,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
                 'type' => $record->master->type,
                 'master_trading_account' => $record->master_meta_login,
                 'subscription_number' => $record->subscription_number,
-                'subscription_package' => $record->package->amount,
+                'subscription_package' => $record->package->amount ?? null,
                 'subscription_product' => $record->subscription_package_product,
                 'fund_size' => $record->subscription_amount,
                 'status' => $record->status,
