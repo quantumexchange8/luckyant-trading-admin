@@ -62,7 +62,7 @@ class MemberListingExport implements FromCollection, WithHeadings
                 'cash_wallet_balance' => $record->wallets->where('type', 'cash_wallet')->first()->balance ?? 0,
                 'bonus_wallet_balance' => $record->wallets->where('type', 'bonus_wallet')->first()->balance ?? 0,
                 'e_wallet_balance' => $record->wallets->where('type', 'e_wallet')->first()->balance ?? 0,
-                'country' => Country::find($record->country)->name,
+                'country' => $record->ofCountry->name ?? '',
                 'rank' => $record->rank->name,
                 'kyc_approval' => $record->kyc_approval,
                 'total_deposit' => $total_subcsription + $total_pamm_subscription,
