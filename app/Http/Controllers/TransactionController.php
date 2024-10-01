@@ -338,7 +338,11 @@ class TransactionController extends Controller
             $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
             $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
 
-            $transaction_query->whereBetween('created_at', [$start_date, $end_date]);
+            if ($request->type == 'Withdrawal') {
+                $transaction_query->whereBetween('approval_at', [$start_date, $end_date]);
+            } else {
+                $transaction_query->whereBetween('created_at', [$start_date, $end_date]);
+            }
         }
 
         if ($request->filled('leader')) {
