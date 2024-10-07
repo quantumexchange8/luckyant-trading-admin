@@ -408,8 +408,8 @@ class TransactionController extends Controller
             ->paginate($request->input('paginate', 10));
 
         $totalAmount = $totalAmountQuery->sum('transaction_amount');
-        $successAmount = $totalAmountQuery->where('status', 'Success')->sum('transaction_amount');
-        $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('transaction_amount');
+        $successAmount = $totalAmountQuery->where('status', 'Success')->sum('amount');
+        $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('amount');
 
         $results->each(function ($transaction) {
             $transaction->first_leader = $transaction->user->getFirstLeader()->name ?? null;
