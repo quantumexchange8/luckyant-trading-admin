@@ -33,8 +33,8 @@ class SubscriberExport implements FromCollection, WithHeadings, ShouldQueue
 
             $result[] = array(
                 'date' => Carbon::parse($record->created_at)->format('Y-m-d H:i:s'),
-                'name' => $record->user->name,
-                'email' => $record->user->email,
+                'name' => $record->user?->name,
+                'email' => $record->user?->email,
                 'trading_account' => $record->meta_login,
                 'first_leader' => $first_leader,
                 'master' => $record->master->tradingUser->name ?? 'LuckyAnt Trading',
