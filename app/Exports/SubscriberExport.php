@@ -24,7 +24,12 @@ class SubscriberExport implements FromCollection, WithHeadings, ShouldQueue
         $records = $this->query->get();
         $result = array();
         foreach($records as $record){
-            $first_leader = $record->user->getFirstLeader()->name ?? $record->user->top_leader->name ?? 'LuckyAnt Trading';
+            $first_leader = $record->user && $record->user->getFirstLeader()
+                ? $record->user->getFirstLeader()->name
+                : ($record->user && $record->user->top_leader
+                    ? $record->user->top_leader->name
+                    : 'LuckyAnt Trading'
+                );
 
             $result[] = array(
                 'date' => Carbon::parse($record->created_at)->format('Y-m-d H:i:s'),
