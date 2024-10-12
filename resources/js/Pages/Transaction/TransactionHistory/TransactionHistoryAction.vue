@@ -90,7 +90,7 @@ const closeModal = () => {
                             {{$t('public.amount')}}
                         </div>
                         <div class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">
-                            $ {{ transaction.transaction_amount }}
+                            $ {{ transaction.amount }}
                         </div>
                     </div>
                     <div v-if="transaction.transaction_type === 'Withdrawal' && transaction.payment_method === 'Bank'" class="flex items-center justify-between gap-2 self-stretch">

@@ -407,7 +407,7 @@ class TransactionController extends Controller
             ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
             ->paginate($request->input('paginate', 10));
 
-        $totalAmount = $totalAmountQuery->sum('transaction_amount');
+        $totalAmount = $totalAmountQuery->sum('amount');
         $successAmount = $totalAmountQuery->where('status', 'Success')->sum('amount');
         $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('amount');
 
