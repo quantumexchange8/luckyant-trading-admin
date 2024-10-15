@@ -480,7 +480,7 @@ class MasterController extends Controller
 
         $master = Master::with('masterSubscriptionPackage')->find($request->master_id);
 
-        foreach ($master->masterSubscriptionPackage() as $item) {
+        foreach ($master->masterSubscriptionPackage as $item) {
             $item->delete();
         }
 
