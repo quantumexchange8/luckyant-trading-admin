@@ -36,6 +36,7 @@ use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class MemberController extends Controller
 {
@@ -458,6 +459,34 @@ class MemberController extends Controller
             $user->update([
                 'leader_status' => $request->leader_status,
             ]);
+        }
+
+        if ($user->role != $request->role) {
+            $allRolesInDatabase = Role::all()->pluck('name');
+
+            if (!$allRolesInDatabase->contains('special_demo')) {
+                Role::create(['name' => 'special_demo']);
+            }
+
+            if ($request->role == 'special_demo') {
+                $user->assignRole('special_demo');
+            }
+
+//            $allPermissionsInDatabase = Permission::all()->pluck('name');
+//
+//            if (!$allPermissionsInDatabase->contains('wallet_withdrawal')) {
+//                Permission::create(['name' => 'wallet_withdrawal']);
+//            }
+//
+//            if ($request->role == 'special_demo') {
+//                $user->assignRole('special_demo');
+//                $user->givePermissionTo('wallet_withdrawal');
+//            } else {
+//                $user->revokePermissionTo('wallet_withdrawal');
+//            }
+
+            $user->role = $request->role;
+            $user->save();
         }
 
         return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');

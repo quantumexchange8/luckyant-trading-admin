@@ -21,11 +21,11 @@ const form = useForm({
     user_id: props.member_detail.id,
     setting_rank: '',
     display_rank: '',
-
     upline_id: '',
     password: '',
     leader_status: '',
     is_public:'',
+    role: ''
 })
 
 const showPassword = ref(false)
@@ -55,6 +55,7 @@ const submit = () => {
     form.upline_id = memberUpline.value;
     form.leader_status = memberInfo.value.leader_status;
     form.is_public = memberInfo.value.is_public;
+    form.role = memberInfo.value.role;
     form.patch(route('member.advanceEdit_member'), {
         onSuccess: () => {
             form.reset();
@@ -65,6 +66,11 @@ const submit = () => {
 const leaderStatus = [
     { label: 'Yes', value: 1},
     { label: 'No', value: 0},
+];
+
+const roleSel = [
+    { label: 'User', value: 'user'},
+    { label: 'Special Demo', value: 'special_demo'},
 ];
 
 const groupStatus = [
@@ -159,6 +165,15 @@ const groupStatus = [
                 </div>
             </div>
 
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="leader_status" value="User Role" />
+                <div class="md:col-span-3">
+                    <BaseListbox
+                        v-model="memberInfo.role"
+                        :options="roleSel"
+                    />
+                </div>
+            </div>
         </div>
 
         <div class="mt-5 flex justify-end">
