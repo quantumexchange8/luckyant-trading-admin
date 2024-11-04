@@ -22,7 +22,10 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
         $records = $this->query->get();
         $result = array();
         foreach($records as $record){
-            $first_leader = $record->user->getFirstLeader()->name ?? $record->user->top_leader->name ?? '-';
+            $first_leader = '-';
+            if ($record->user) {
+                $first_leader = $record->user->getFirstLeader()->name ?? $record->user->top_leader->name ?? '-';
+            }
 
             $result[] = array(
                 'approval_date' => Carbon::parse($record->created_at)->format('Y-m-d H:i:s'),
