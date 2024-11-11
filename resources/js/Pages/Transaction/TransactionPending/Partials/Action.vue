@@ -10,6 +10,7 @@ import {useForm} from "@inertiajs/vue3";
 import Label from "@/Components/Label.vue";
 import Input from "@/Components/Input.vue";
 import InputError from "@/Components/InputError.vue";
+import Image from "primevue/image"
 
 const props = defineProps({
     transaction: Object
@@ -245,14 +246,18 @@ const submitForm = () => {
                     <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
                 </div>
 
-                <div v-if="transaction.payment_method === 'Crypto'" class="flex justify-center items-center gap-2 pb-2">
-                    <img v-if="transaction.transaction_type === 'Deposit'"
-                    :src="transaction.receipt_url ? transaction.receipt_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
-                    alt=""
-                    class="pt-5"
-                    />
-
+                <div v-if="transaction.transaction_type === 'Deposit' && transaction.receipt_url" class="grid grid-cols-3 items-start gap-2 pb-2 w-full">
+                    <span class="text-sm font-semibold dark:text-gray-400">Payment Slip</span>
+                    <div class="flex gap-2 col-span-2 items-center self-stretch">
+                        <Image
+                            :src="transaction.receipt_url"
+                            alt="Image"
+                            imageClass="max-w-full h-12 object-contain rounded"
+                            preview
+                        />
+                    </div>
                 </div>
+
             </div>
             <div v-if="transaction.transaction_type === 'Withdrawal'">
                 <div class="grid grid-cols-3 items-center gap-2">

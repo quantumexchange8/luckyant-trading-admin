@@ -1,11 +1,13 @@
 import './bootstrap'
 import '../css/app.css'
+import Aura from '../css/presets/aura'
 
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m'
 import { i18nVue } from 'laravel-vue-i18n'
+import PrimeVue from 'primevue/config';
 
 const appName =
     window.document.getElementsByTagName('title')[0]?.innerText || 'K UI'
@@ -21,6 +23,10 @@ createInertiaApp({
         return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue, Ziggy)
+            .use(PrimeVue, {
+                unstyled: true,
+                pt: Aura
+            })
             .use(i18nVue, {
                 resolve: async lang => {
                     const langs = import.meta.glob('../../lang/*.json');
