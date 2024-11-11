@@ -22,7 +22,7 @@ class UpdateExchangeRateCommand extends Command
 
         foreach ($results as $currency => $rate) {
             $baseCurrency = CurrencyConversionRate::where('base_currency', $currency)->first();
-            $markupRate = $rate * 1.015;
+            $markupRate = $rate * 1.01;
 
             $baseCurrency->update([
                 'deposit_rate' => $markupRate,
