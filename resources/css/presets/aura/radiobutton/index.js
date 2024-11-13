@@ -89,7 +89,7 @@ export default {
 
             // Conditions
             {
-                'bg-surface-0 dark:bg-surface-900': context.checked,
+                'bg-primary-500 dark:bg-white': context.checked,
                 'bg-primary': !context.checked,
                 'backface-hidden invisible scale-[0.1]': !context.checked,
                 'transform visible translate-z-0 scale-[1,1]': context.checked

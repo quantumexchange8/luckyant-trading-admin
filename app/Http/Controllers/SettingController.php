@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentGateway;
+use App\Models\PaymentGatewayToLeader;
 use Auth;
 use Carbon\Carbon;
 use App\Models\Term;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use App\Models\Country;
 use App\Models\Setting;
@@ -244,7 +248,7 @@ class SettingController extends Controller
 
     public function addTnCSetting(TermsRequest $request)
     {
-        
+
         $term = Term::create([
             'type' => $request->type,
             'title' => $request->title,
@@ -258,7 +262,7 @@ class SettingController extends Controller
 
     public function editTnCSetting(TermsRequest $request, $id)
     {
-        
+
         $term = Term::findOrFail($id);
 
         $term->update([
@@ -372,5 +376,154 @@ class SettingController extends Controller
         ]);
 
         return redirect()->back()->with('title', 'Updated successfully')->with('success', 'The bank withdrawal option for the group has been updated successfully.');
+    }
+
+    public function payment_gateway()
+    {
+        return Inertia::render('Setting/PaymentGateway/PaymentGateway', [
+            'payment_gateways_count' => PaymentGateway::count(),
+        ]);
+    }
+
+    public function getLeadersSel()
+    {
+        $leaders = User::select([
+            'id',
+            'name',
+            'email'
+        ])
+            ->where('leader_status', 1)
+            ->get();
+
+        return response()->json($leaders);
+    }
+
+    public function addPaymentGateway(Request $request)
+    {
+        Validator::make($request->all(), [
+            'name' => ['required'],
+            'platform' => ['required'],
+            'payment_url' => ['required'],
+            'payment_app_name' => ['required'],
+            'secret_key' => ['required'],
+            'secondary_key' => ['required'],
+            'leaders' => ['required'],
+        ])->setAttributeNames([
+            'name' => 'Name',
+            'platform' => 'Platform',
+            'payment_url' => 'Payment URL',
+            'payment_app_name' => 'Payment App',
+            'secret_key' => 'Secret Key',
+            'secondary_key' => 'Secondary Key',
+            'leaders' => 'Visible To',
+        ])->validate();
+
+        $payment_gateway = PaymentGateway::create([
+            'name' => $request->name,
+            'platform' => $request->platform,
+            'environment' => App::environment(),
+            'payment_url' => $request->payment_url,
+            'payment_app_name' => $request->payment_app_name,
+            'secret_key' => $request->secret_key,
+            'secondary_key' => $request->secondary_key,
+            'edited_by' => \Auth::id(),
+        ]);
+
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            foreach ($leaders as $leader) {
+                PaymentGatewayToLeader::create([
+                    'payment_gateway_id' => $payment_gateway->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
+        }
+
+        return redirect()->back()
+            ->with('title', 'Added Successfully')
+            ->with('success', 'A payment gateway has been added successfully.');
+    }
+
+    public function getPaymentGateways()
+    {
+        $payment_gateways = PaymentGateway::withSum('successTransactions', 'amount')
+            ->with('visibleLeaders')
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'paymentGateways' => $payment_gateways,
+        ]);
+    }
+
+    public function updatePaymentGateway(Request $request)
+    {
+        Validator::make($request->all(), [
+            'name' => ['required'],
+            'platform' => ['required'],
+            'payment_url' => ['required'],
+            'payment_app_name' => ['required'],
+            'secret_key' => ['required'],
+            'secondary_key' => ['required'],
+            'leaders' => ['required'],
+        ])->setAttributeNames([
+            'name' => 'Name',
+            'platform' => 'Platform',
+            'payment_url' => 'Payment URL',
+            'payment_app_name' => 'Payment App',
+            'secret_key' => 'Secret Key',
+            'secondary_key' => 'Secondary Key',
+            'leaders' => 'Visible To',
+        ])->validate();
+
+        $payment_gateway = PaymentGateway::find($request->payment_gateway_id);
+
+        $payment_gateway->update([
+            'name' => $request->name,
+            'platform' => $request->platform,
+            'environment' => App::environment(),
+            'payment_url' => $request->payment_url,
+            'payment_app_name' => $request->payment_app_name,
+            'secret_key' => $request->secret_key,
+            'secondary_key' => $request->secondary_key,
+            'edited_by' => \Auth::id(),
+        ]);
+
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            $existing_leaders = PaymentGatewayToLeader::where('payment_gateway_id', $payment_gateway->id)->get();
+
+            foreach ($existing_leaders as $existing_leader) {
+                $existing_leader->delete();
+            }
+
+            foreach ($leaders as $leader) {
+                PaymentGatewayToLeader::create([
+                    'payment_gateway_id' => $payment_gateway->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
+        }
+
+        return redirect()->back()
+            ->with('title', 'Updated Successfully')
+            ->with('success', 'A payment gateway has been updated successfully.');
+    }
+
+    public function deletePaymentGateway(Request $request)
+    {
+        $payment_gateway = PaymentGateway::find($request->payment_gateway_id);
+
+        foreach ($payment_gateway->visibleLeaders as $visibleLeader) {
+            $visibleLeader->delete();
+        }
+
+        $payment_gateway->delete();
+
+        return redirect()->back()
+            ->with('title', 'Deleted Successfully')
+            ->with('success', 'A payment gateway has been deleted successfully.');
     }
 }

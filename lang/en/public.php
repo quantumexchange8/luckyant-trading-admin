@@ -478,5 +478,7 @@ return [
     "total_profit_sharing" => "Total Profit Sharing",
     'performance_incentive' => "Performance Incentive",
     'settlement' => "Settlement",
-    'package' => 'Package'
+    'package' => 'Package',
+    'edit' => 'Edit',
+    'delete' => 'Delete',
 ];

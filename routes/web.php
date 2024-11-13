@@ -220,6 +220,14 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/getPaymentHistory', [SettingController::class, 'getPaymentHistory'])->name('setting.getPaymentHistory');
         Route::get('/getPaymentActivity', [SettingController::class, 'getPaymentActivity'])->name('setting.getPaymentActivity');
 
+        //payment gateway
+        Route::get('/payment_gateway', [SettingController::class, 'payment_gateway'])->name('setting.payment_gateway');
+        Route::get('/getLeadersSel', [SettingController::class, 'getLeadersSel'])->name('setting.getLeadersSel');
+        Route::get('/getPaymentGateways', [SettingController::class, 'getPaymentGateways'])->name('setting.getPaymentGateways');
+        Route::post('/addPaymentGateway', [SettingController::class, 'addPaymentGateway'])->name('setting.addPaymentGateway');
+        Route::post('/updatePaymentGateway', [SettingController::class, 'updatePaymentGateway'])->name('setting.updatePaymentGateway');
+        Route::delete('/deletePaymentGateway', [SettingController::class, 'deletePaymentGateway'])->name('setting.deletePaymentGateway');
+
         //master setting
         Route::get('/master_setting', [SettingController::class, 'masterSetting'])->name('setting.master_setting');
         Route::post('/updateMasterSetting', [SettingController::class, 'updateMasterSetting'])->name('setting.updateMasterSetting');

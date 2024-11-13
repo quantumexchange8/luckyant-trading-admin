@@ -282,6 +282,11 @@ const { hasRole } = usePermission();
                 :active="route().current('setting.payment_setting')"
             />
             <SidebarCollapsibleItem
+                :href="route('setting.payment_gateway')"
+                title="Payment Gateway"
+                :active="route().current('setting.payment_gateway')"
+            />
+            <SidebarCollapsibleItem
                 :href="route('setting.tnc_setting')"
                 title="T&C Setting"
                 :active="route().current('setting.tnc_setting')"

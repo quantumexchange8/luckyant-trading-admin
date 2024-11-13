@@ -9,8 +9,8 @@ export default {
             'shadow-toast',
 
             //Color
-            'bg-surface-0 dark:bg-surface-900',
-            'text-gray-950 dark:text-surface-0'
+            'bg-white dark:bg-gray-900',
+            'text-gray-950 dark:text-gray-0'
         ]
     },
     body: {
@@ -41,7 +41,7 @@ export default {
             'mb-0',
 
             //Color
-            'text-surface-600 dark:text-surface-0/60'
+            'text-gray-600 dark:text-gray-0/60'
         ]
     },
     content: {

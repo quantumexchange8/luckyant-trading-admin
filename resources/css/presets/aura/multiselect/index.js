@@ -9,12 +9,12 @@ export default {
             'relative',
 
             // Shape
-            'rounded-md',
+            'rounded-lg',
 
             // Color and Background
-            { 'bg-surface-0 dark:bg-surface-950': !props.disabled },
+            { 'bg-white dark:bg-gray-800': !props.disabled },
             'border',
-            { 'border-surface-300 dark:border-surface-600': !props.invalid },
+            { 'border-gray-300 dark:border-gray-800': !props.invalid },
 
             // Invalid State
             'invalid:focus:ring-red-200',
@@ -26,29 +26,29 @@ export default {
             'duration-200',
 
             // States
-            { 'hover:border-surface-400 dark:hover:border-surface-700': !props.invalid },
+            { 'hover:border-gray-400 dark:hover:border-gray-700': !props.invalid },
             { 'outline-none outline-offset-0 z-10 ring-1 ring-primary-500 dark:ring-primary-400': state.focused },
 
             // Misc
             'cursor-pointer',
             'select-none',
-            { 'bg-surface-200 dark:bg-surface-700 select-none pointer-events-none cursor-default': props.disabled }
+            { 'bg-gray-200 dark:bg-gray-700 select-none pointer-events-none cursor-default': props.disabled }
         ]
     }),
     labelContainer: 'overflow-hidden flex flex-auto cursor-pointer',
     label: ({ props }) => ({
         class: [
-            'text-sm leading-2',
+            'text-base',
 
             // Spacing
             {
-                'py-2 px-3': props.display === 'comma' || (props.display === 'chip' && !props?.modelValue?.length),
+                'py-3.5 px-4': props.display === 'comma' || (props.display === 'chip' && !props?.modelValue?.length),
                 'py-1 px-1': props.display === 'chip' && props?.modelValue?.length > 0
             },
 
             // Color
-            { 'text-surface-800 dark:text-white/80': props.modelValue?.length, 'text-surface-400 dark:text-surface-500': !props.modelValue?.length },
-            'placeholder:text-surface-400 dark:placeholder:text-surface-500',
+            { 'text-gray-800 dark:text-white/80': props.modelValue?.length, 'text-gray-400 dark:text-gray-500': !props.modelValue?.length },
+            'placeholder:text-gray-400 dark:placeholder:text-gray-500',
 
             // Transitions
             'transition duration-200',
@@ -65,24 +65,24 @@ export default {
 
             // Color and Background
             'bg-transparent',
-            'text-surface-500',
+            'text-gray-500',
 
             // Size
             'w-12',
 
             // Shape
-            'rounded-r-md'
+            'rounded-r-lg'
         ]
     },
     overlay: {
         class: [
             // Colors
-            'bg-surface-0 dark:bg-surface-900',
-            'text-surface-700 dark:text-white/80',
+            'bg-white dark:bg-gray-900',
+            'text-gray-700 dark:text-white/80',
 
             // Shape
-            'border border-surface-300 dark:border-surface-700',
-            'rounded-md',
+            'border border-gray-300 dark:border-gray-700',
+            'rounded-lg',
             'shadow-md',
             'mt-[2px]'
         ]
@@ -98,13 +98,13 @@ export default {
 
             //Shape
             'border-b-0',
-            'rounded-tl-md',
-            'rounded-tr-md',
+            'rounded-tl-lg',
+            'rounded-tr-lg',
 
             // Color
-            'text-surface-700 dark:text-white/80',
-            'bg-surface-0 dark:bg-surface-900',
-            'border-surface-300 dark:border-surface-700',
+            'text-gray-700 dark:text-white/80',
+            'bg-white dark:bg-gray-900',
+            'border-gray-300 dark:border-gray-700',
 
             '[&_[data-pc-name=pcfiltercontainer]]:!flex-auto',
             '[&_[data-pc-name=pcfilter]]:w-full'
@@ -140,16 +140,16 @@ export default {
 
             // Colors
             {
-                'text-surface-700 dark:text-white/80': !context.focused && !context.selected,
-                'bg-surface-200 dark:bg-surface-600/60': context.focused && !context.selected,
-                'text-surface-700 dark:text-white/80': context.focused && !context.selected,
-                'bg-primary-100 dark:bg-surface-600/40': context.selected
+                'text-gray-700 dark:text-white/80': !context.focused && !context.selected,
+                'bg-gray-200 dark:bg-gray-600/60': context.focused && !context.selected,
+                'text-gray-700 dark:text-white/80': context.focused && !context.selected,
+                'bg-primary-100 dark:bg-gray-600/40': context.selected
             },
 
             //States
-            { 'hover:bg-surface-100 dark:hover:bg-[rgba(255,255,255,0.03)]': !context.focused && !context.selected },
+            { 'hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.03)]': !context.focused && !context.selected },
             { 'hover:bg-highlight-emphasis': context.selected },
-            { 'hover:text-surface-700 hover:bg-surface-100 dark:hover:text-white dark:hover:bg-[rgba(255,255,255,0.03)]': context.focused && !context.selected },
+            { 'hover:text-gray-700 hover:bg-gray-100 dark:hover:text-white dark:hover:bg-[rgba(255,255,255,0.03)]': context.focused && !context.selected },
 
             // Transition
             'transition-shadow duration-200',
@@ -166,7 +166,7 @@ export default {
             'm-0 py-2 px-3',
 
             // Colors
-            'text-surface-400 dark:text-surface-500',
+            'text-gray-400 dark:text-gray-500',
 
             // Misc
             'cursor-auto'
@@ -182,12 +182,12 @@ export default {
             'py-2 px-3',
 
             // Color
-            'text-surface-800 dark:text-white/80',
+            'text-gray-800 dark:text-white/80',
             'bg-transparent'
         ]
     },
     loadingIcon: {
-        class: 'text-surface-400 dark:text-surface-500 animate-spin'
+        class: 'text-gray-400 dark:text-gray-500 animate-spin'
     },
     transition: {
         enterFromClass: 'opacity-0 scale-y-[0.8]',
