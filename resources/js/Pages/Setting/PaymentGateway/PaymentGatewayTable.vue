@@ -110,6 +110,7 @@ watchEffect(() => {
             <template v-if="paymentGateways.length">
                 <Column
                     field="name"
+                    sortable
                     class="table-cell"
                 >
                     <template #header>
@@ -137,6 +138,7 @@ watchEffect(() => {
                 </Column>
                 <Column
                     field="success_transactions_sum_amount"
+                    sortable
                     class="table-cell"
                 >
                     <template #header>
