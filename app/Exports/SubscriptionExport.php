@@ -19,15 +19,21 @@ class SubscriptionExport implements FromCollection, WithHeadings
      */
     public function collection(): \Illuminate\Support\Collection
     {
-        $records = $this->query->get();
+        $records = $this->query->latest()->get();
         $result = array();
         foreach($records as $record){
-            $first_leader = $record->user->getFirstLeader()->name ?? $record->user->top_leader->name ?? '-';
+            if ($record->user && $record->user->getFirstLeader()) {
+                $first_leader = $record->user->getFirstLeader()->name;
+            } elseif ($record->user && $record->user->top_leader) {
+                $first_leader = $record->user->top_leader->name;
+            } else {
+                $first_leader = '-';
+            }
 
             $result[] = array(
                 'approval_date' => Carbon::parse($record->created_at)->format('Y-m-d H:i:s'),
-                'name' => $record->user->name,
-                'email' => $record->user->email,
+                'name' => $record->user->name ?? '-',
+                'email' => $record->user->email ?? '-',
                 'first_leader' => $first_leader,
                 'trading_account' => $record->meta_login,
                 'master' => $record->master->tradingUser->name ?? '-',

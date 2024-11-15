@@ -116,7 +116,7 @@ export default {
                 context?.size === 'small' ? 'py-[0.375rem] px-2' : context?.size === 'large' ? 'py-[0.9375rem] px-5' : 'py-3 px-4',
 
                 // Color
-                (props.sortable === '' || props.sortable) && context.sorted ? 'bg-highlight' : 'bg-gray-50 text-gray-700 dark:text-white/80 dark:bg-gray-800',
+                (props.sortable === '' || props.sortable) && context.sorted ? 'bg-gray-200 dark:bg-gray-600 dark:text-white' : 'bg-gray-50 text-gray-700 dark:text-white/80 dark:bg-gray-800',
                 'border-gray-200 dark:border-gray-700 ',
 
                 // States

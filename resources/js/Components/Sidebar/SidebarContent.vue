@@ -1,7 +1,17 @@
 <script setup>
 import PerfectScrollbar from '@/Components/PerfectScrollbar.vue'
 import SidebarLink from '@/Components/Sidebar/SidebarLink.vue'
-import { DashboardIcon, Setting, Users01Icon, UsersSquareIcon, UsersCheckIcon, File06Icon, UserUp01Icon, FileCheck02Icon } from '@/Components/Icons/outline'
+import {
+    DashboardIcon,
+    Setting,
+    Users01Icon,
+    UsersSquareIcon,
+    UsersCheckIcon,
+    File06Icon,
+    UserUp01Icon,
+    FileCheck02Icon,
+    ScalesTwoIcon
+} from '@/Components/Icons/outline'
 import SidebarCollapsible from '@/Components/Sidebar/SidebarCollapsible.vue'
 import SidebarCollapsibleItem from '@/Components/Sidebar/SidebarCollapsibleItem.vue'
 import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
@@ -165,6 +175,25 @@ const { hasRole } = usePermission();
                 :href="route('subscription.termination_fee')"
                 title="Termination Fee"
                 :active="route().current('subscription.termination_fee')"
+            />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
+            title="Copy Trading"
+            :active="route().current('copy_trading.*')"
+            :pending-counts="pendingPammCount"
+        >
+            <template #icon>
+                <ScalesTwoIcon
+                    class="flex-shrink-0 w-6 h-6"
+                    aria-hidden="true"
+                />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('copy_trading.listing')"
+                title="Listing"
+                :active="route().current('copy_trading.listing')"
             />
         </SidebarCollapsible>
 

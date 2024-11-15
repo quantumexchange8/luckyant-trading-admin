@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\CopyTradingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PammController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SelectOptionController;
 use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ProfileController;
@@ -36,6 +38,9 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/getTopGroups', [DashboardController::class, 'getTopGroups'])->name('getTopGroups');
     Route::get('/getTotalDepositByDays', [DashboardController::class, 'getTotalDepositByDays'])->name('getTotalDepositByDays');
+
+    Route::get('getMasters', [SelectOptionController::class, 'getMasters']);
+    Route::get('getLeaders', [SelectOptionController::class, 'getLeaders']);
 
     /**
      * ==============================
@@ -174,6 +179,17 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         // subscription renewal
         Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
         Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
+    });
+
+    /**
+     * ==============================
+     *         Copy Trading
+     * ==============================
+     */
+    Route::prefix('copy_trading')->group(function () {
+        Route::get('/listing', [CopyTradingController::class, 'index'])->name('copy_trading.listing');
+        Route::get('/getSubscriptionOverview', [CopyTradingController::class, 'getSubscriptionOverview'])->name('copy_trading.getSubscriptionOverview');
+        Route::get('/getSubscriptionsData', [CopyTradingController::class, 'getSubscriptionsData'])->name('copy_trading.getSubscriptionsData');
     });
 
     /**
