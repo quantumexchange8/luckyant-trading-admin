@@ -21,6 +21,7 @@ import Tag from "primevue/tag";
 import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
+import RadioButton from "primevue/radiobutton"
 
 const props = defineProps({
     subscriptionBatchesCount: Number
@@ -31,7 +32,7 @@ const subscriptions = ref([]);
 const exportTable = ref('no');
 const {formatAmount} = transactionFormat();
 
-const getResults = async (filterJoinDate = null, filterTerminationDate = null) => {
+const getResults = async (filterJoinDate = null, filterTerminationDate = null, filterFundType = null) => {
     isLoading.value = true;
     try {
         let url = `/copy_trading/getSubscriptionsData?export=${exportTable.value}`;
@@ -44,6 +45,10 @@ const getResults = async (filterJoinDate = null, filterTerminationDate = null) =
         if (filterTerminationDate?.length > 0) {
             const [startDate, endDate] = filterTerminationDate;
             url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+        }
+
+        if (filterFundType) {
+            url += `&fundType=${filterFundType}`;
         }
 
         const response = await axios.get(url);
@@ -63,6 +68,7 @@ const filters = ref({
     global: {value: null, matchMode: FilterMatchMode.CONTAINS},
     master_meta_login: {value: null, matchMode: FilterMatchMode.EQUALS},
     "first_leader.id": {value: null, matchMode: FilterMatchMode.EQUALS},
+    status: {value: null, matchMode: FilterMatchMode.EQUALS},
 });
 
 const clearFilterGlobal = () => {
@@ -151,9 +157,9 @@ watch(joinDatePicker, (newDateRange) => {
         const [startDate, endDate] = newDateRange;
 
         if (startDate && endDate) {
-            getResults([startDate, endDate]);
+            getResults([startDate, endDate], terminateDatePicker.value, selectedFundType.value);
         } else if (startDate || endDate) {
-            getResults([startDate || endDate, endDate || startDate]);
+            getResults([startDate || endDate, endDate || startDate], terminateDatePicker.value, selectedFundType.value);
         } else {
             getResults();
         }
@@ -171,9 +177,9 @@ watch(terminateDatePicker, (newDateRange) => {
         const [startDate, endDate] = newDateRange;
 
         if (startDate && endDate) {
-            getResults(null, [startDate, endDate]);
+            getResults(null, [startDate, endDate], selectedFundType.value);
         } else if (startDate || endDate) {
-            getResults(null, [startDate || endDate, endDate || startDate]);
+            getResults(null, [startDate || endDate, endDate || startDate], selectedFundType.value);
         } else {
             getResults();
         }
@@ -182,24 +188,32 @@ watch(terminateDatePicker, (newDateRange) => {
     }
 })
 
+const selectedFundType = ref('');
+
+watch(selectedFundType, (newFundType) => {
+    getResults(joinDatePicker.value, terminateDatePicker.value, newFundType);
+})
+
 const clearAll = () => {
     filters.value['master_meta_login'].value = null;
     filters.value['first_leader.id'].value = null;
+    filters.value['status'].value = null;
     selectedMaster.value = null;
     selectedLeader.value = null;
     joinDatePicker.value = [];
     terminateDatePicker.value = [];
+    selectedFundType.value = '';
 }
 
 const exportReport = () => {
     let url = `/copy_trading/getSubscriptionsData?export=yes`;
 
-    if (joinDatePicker.value) {
+    if (joinDatePicker.value?.length > 0) {
         const [startDate, endDate] = joinDatePicker.value;
         url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
     }
 
-    if (terminateDatePicker.value) {
+    if (terminateDatePicker.value?.length > 0) {
         const [startDate, endDate] = terminateDatePicker.value;
         url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
     }
@@ -210,6 +224,14 @@ const exportReport = () => {
 
     if (selectedLeader.value) {
         url += `&first_leader_id=${selectedLeader.value.id}`;
+    }
+
+    if (selectedFundType.value) {
+        url += `&fundType=${selectedFundType.value}`;
+    }
+
+    if (filters.value['status'].value) {
+        url += `&status=${filters.value['status'].value}`;
     }
 
     window.location.href = url;
@@ -325,7 +347,7 @@ const exportReport = () => {
                                         <span class="font-semibold">{{ slotProps.data.user.name }}</span>
                                         <span class="text-gray-400">{{ slotProps.data.user.email }}</span>
                                     </div>
-                                    <div v-else>
+                                    <div v-else class="h-[37px] flex items-center self-stretch">
                                         -
                                     </div>
                                 </div>
@@ -346,7 +368,7 @@ const exportReport = () => {
                                         <span class="font-semibold">{{ slotProps.data.first_leader.name }}</span>
                                         <span class="text-gray-400">{{ slotProps.data.first_leader.email }}</span>
                                     </div>
-                                    <div v-else>
+                                    <div v-else class="h-[37px] flex items-center self-stretch">
                                         -
                                     </div>
                                 </div>
@@ -378,7 +400,7 @@ const exportReport = () => {
                                         <span class="font-semibold">{{ slotProps.data.master.trading_user.name }}</span>
                                         <span class="text-gray-400">{{ slotProps.data.master_meta_login }}</span>
                                     </div>
-                                    <div v-else>
+                                    <div v-else class="h-[37px] flex items-center self-stretch">
                                         -
                                     </div>
                                 </div>
@@ -465,7 +487,7 @@ const exportReport = () => {
     </Card>
 
     <Popover ref="op">
-        <div class="flex flex-col gap-8 w-60">
+        <div class="flex flex-col gap-6 w-60">
             <!-- Filter Role-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
@@ -567,6 +589,40 @@ const exportReport = () => {
                         @click="clearTerminateDate"
                     >
                         <XIcon class="w-4 h-4" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Fund -->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    Filter by fund
+                </div>
+                <div class="flex flex-col gap-1 self-stretch">
+                    <div class="flex items-center gap-2 text-sm text-gray-950">
+                        <RadioButton v-model="selectedFundType" inputId="demo_fund" value="demo_fund" class="w-4 h-4" />
+                        <label for="demo_fund">Demo</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950">
+                        <RadioButton v-model="selectedFundType" inputId="real_fund" value="real_fund" class="w-4 h-4" />
+                        <label for="real_fund">Real</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Status -->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    Filter by status
+                </div>
+                <div class="flex flex-col gap-1 self-stretch">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['status'].value" inputId="status_active" value="Active" class="w-4 h-4" />
+                        <label for="status_active">Active</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['status'].value" inputId="status_terminated" value="Terminated" class="w-4 h-4" />
+                        <label for="status_terminated">Terminated</label>
                     </div>
                 </div>
             </div>

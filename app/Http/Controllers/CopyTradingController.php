@@ -114,6 +114,18 @@ class CopyTradingController extends Controller
             $subscriptionQuery->whereBetween('termination_date', [$start_date, $end_date]);
         }
 
+        if ($request->fundType) {
+            switch ($request->fundType) {
+                case 'demo_fund':
+                    $subscriptionQuery->where('demo_fund', '>', 0);
+                    break;
+
+                case 'real_fund':
+                    $subscriptionQuery->where('real_fund', '>', 0);
+                    break;
+            }
+        }
+
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
@@ -132,10 +144,15 @@ class CopyTradingController extends Controller
             if ($request->master_meta_login) {
                 $subscriptionQuery->where('master_meta_login', $request->master_meta_login);
             }
+
             if ($request->first_leader_id) {
                 $first_leader = User::find($request->first_leader_id);
                 $childrenIds = $first_leader->getChildrenIds();
                 $subscriptionQuery->whereIn('user_id', $childrenIds);
+            }
+
+            if ($request->status) {
+                $subscriptionQuery->where('status', $request->status);
             }
 
             return Excel::download(new SubscriptionExport($subscriptionQuery), Carbon::now() . '-copy-trading-report.xlsx');
