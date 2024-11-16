@@ -67,7 +67,7 @@ onMounted(() => {
 const filters = ref({
     global: {value: null, matchMode: FilterMatchMode.CONTAINS},
     master_meta_login: {value: null, matchMode: FilterMatchMode.EQUALS},
-    "first_leader.id": {value: null, matchMode: FilterMatchMode.EQUALS},
+    "first_leader_id": {value: null, matchMode: FilterMatchMode.EQUALS},
     status: {value: null, matchMode: FilterMatchMode.EQUALS},
 });
 
@@ -144,7 +144,7 @@ watch([selectedMaster, selectedLeader], ([newMaster, newLeader]) => {
     }
 
     if (newLeader) {
-        filters.value['first_leader.id'].value = newLeader.id
+        filters.value['first_leader_id'].value = newLeader.id
     }
 });
 
@@ -196,7 +196,7 @@ watch(selectedFundType, (newFundType) => {
 
 const clearAll = () => {
     filters.value['master_meta_login'].value = null;
-    filters.value['first_leader.id'].value = null;
+    filters.value['first_leader_id'].value = null;
     filters.value['status'].value = null;
     selectedMaster.value = null;
     selectedLeader.value = null;
@@ -343,7 +343,7 @@ const exportReport = () => {
                             </template>
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <div v-if="slotProps.data.first_leader" class="flex flex-col">
+                                    <div v-if="slotProps.data.user" class="flex flex-col">
                                         <span class="font-semibold">{{ slotProps.data.user.name }}</span>
                                         <span class="text-gray-400">{{ slotProps.data.user.email }}</span>
                                     </div>
@@ -354,8 +354,7 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="first_leader"
-                            filter-field="first_leader.id"
+                            field="first_leader_id"
                             show-filter-menu
                             class="table-cell"
                         >
@@ -364,9 +363,9 @@ const exportReport = () => {
                             </template>
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <div v-if="slotProps.data.first_leader" class="flex flex-col">
-                                        <span class="font-semibold">{{ slotProps.data.first_leader.name }}</span>
-                                        <span class="text-gray-400">{{ slotProps.data.first_leader.email }}</span>
+                                    <div v-if="slotProps.data.first_leader_name" class="flex flex-col">
+                                        <span class="font-semibold">{{ slotProps.data.first_leader_name }}</span>
+                                        <span class="text-gray-400">{{ slotProps.data.first_leader_email }}</span>
                                     </div>
                                     <div v-else class="h-[37px] flex items-center self-stretch">
                                         -

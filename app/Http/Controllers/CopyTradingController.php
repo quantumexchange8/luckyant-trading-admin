@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Exports\SubscriptionExport;
-use App\Jobs\ExportCopyTradingJob;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
 use App\Models\User;
+use App\Services\UserService;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -84,7 +84,7 @@ class CopyTradingController extends Controller
         ]);
     }
 
-    public function getSubscriptionsData(Request $request)
+    public function getSubscriptionsData(Request $request, UserService $userService)
     {
         $subscriptionQuery = SubscriptionBatch::with([
             'user:id,name,email,hierarchyList',
@@ -158,13 +158,46 @@ class CopyTradingController extends Controller
             return Excel::download(new SubscriptionExport($subscriptionQuery), Carbon::now() . '-copy-trading-report.xlsx');
         }
 
-        $subscription = $subscriptionQuery->latest()
-            ->get()
-            ->map(function ($subscriptionQuery) {
-                $subscriptionQuery->first_leader = $subscriptionQuery->user?->getFirstLeader();
+        $subscription = $subscriptionQuery->select([
+            'id',
+            'user_id',
+            'trading_account_id',
+            'meta_login',
+            'meta_balance',
+            'real_fund',
+            'demo_fund',
+            'master_id',
+            'master_meta_login',
+            'type',
+            'approval_date',
+            'termination_date',
+            'status',
+        ])
+            ->orderByDesc('approval_date')
+            ->get();
 
-                return $subscriptionQuery;
-            });
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $subscription->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $subscription->each(function ($subscriptionQuery) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+            $subscriptionQuery->first_leader_id = $firstLeader?->id;
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+            $subscriptionQuery->first_leader_email = $firstLeader?->email;
+        });
+
 
         return response()->json([
             'subscriptions' => $subscription
