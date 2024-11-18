@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -73,6 +74,18 @@ class Master extends Model implements HasMedia
     public function masterSubscriptionPackage(): \Illuminate\Database\Eloquent\Relations\hasMany
     {
         return $this->hasMany(MasterSubscriptionPackage::class, 'master_id', 'id');
+    }
+
+    public function active_copy_trades(): HasMany
+    {
+        return $this->hasMany(Subscriber::class, 'master_id', 'id')
+            ->where('status', 'Subscribing');
+    }
+
+    public function active_pamm(): HasMany
+    {
+        return $this->hasMany(PammSubscription::class, 'master_id', 'id')
+            ->where('status', 'Active');
     }
 
     public function getActivitylogOptions(): LogOptions

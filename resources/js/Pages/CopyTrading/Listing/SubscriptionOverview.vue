@@ -2,13 +2,6 @@
 import Card from "primevue/card";
 import Skeleton from "primevue/skeleton";
 import {onMounted, ref} from "vue";
-// import {
-//     IconCurrencyDollar,
-//     IconCurrencyDollarOff,
-//     IconTriangleFilled,
-//     IconTriangleInvertedFilled
-// } from "@tabler/icons-vue";
-// import DefaultProfilePhoto from "@/Components/DefaultProfilePhoto.vue";
 import { ArrowCircleUpIcon, ArrowCircleDownIcon } from '@heroicons/vue/solid'
 import {
     UsersCheckIcon,

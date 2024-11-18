@@ -40,8 +40,8 @@ export default {
     label: ({ props, parent }) => ({
         class: [
             //Font
-            'leading-[normal]',
-            'text-sm',
+            'leading-2',
+            'text-base',
 
             // Display
             'block',
@@ -55,7 +55,7 @@ export default {
 
             // Sizing and Spacing
             'w-[1%]',
-            'py-2 px-3',
+            'py-2.5 px-3',
             { 'pr-7': props.showClear },
 
             //Shape

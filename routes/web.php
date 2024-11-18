@@ -130,6 +130,12 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
         Route::post('/updateMasterSubscriptionPackage', [MasterController::class, 'updateMasterSubscriptionPackage'])->name('master.updateMasterSubscriptionPackage');
         Route::post('/addVisibleToLeaders', [MasterController::class, 'addVisibleToLeaders'])->name('master.addVisibleToLeaders');
+
+
+
+        // New Master Listing
+        Route::get('/master_listing', [MasterController::class, 'master_listing'])->name('master.master_listing');
+        Route::get('/getMasters', [MasterController::class, 'getMasters'])->name('master.getMasters');
     });
 
     /**

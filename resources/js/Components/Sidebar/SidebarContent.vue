@@ -92,10 +92,10 @@ const { hasRole } = usePermission();
             />
         </SidebarCollapsible>
 
-        <SidebarCollapsible
-            title="Master"
-            :active="route().current('master.*')"
-            :pending-counts="pendingMasterCount"
+        <SidebarLink
+            :title="$t('public.master')"
+            :href="route('master.master_listing')"
+            :active="route().current('master.master_listing') || route().current('master.*')"
         >
             <template #icon>
                 <UsersSquareIcon
@@ -103,19 +103,7 @@ const { hasRole } = usePermission();
                     aria-hidden="true"
                 />
             </template>
-
-            <SidebarCollapsibleItem
-                :href="route('master.master_request')"
-                title="Master Request"
-                :active="route().current('master.master_request')"
-                :pending-counts="pendingMasterCount"
-            />
-            <SidebarCollapsibleItem
-                :href="route('master.getMasterListing')"
-                title="Master Listing"
-                :active="route().current('master.getMasterListing')"
-            />
-        </SidebarCollapsible>
+        </SidebarLink>
 
         <SidebarCollapsible
             title="Subscribers"

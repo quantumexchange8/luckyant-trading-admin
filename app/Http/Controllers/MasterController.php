@@ -24,7 +24,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class MasterController extends Controller
 {
-    //
     public function index()
     {
         return Inertia::render('Master/Master');
@@ -532,5 +531,147 @@ class MasterController extends Controller
                 ->with('title', 'Success update')
                 ->with('success', 'Successfully updated visible to leaders');
         }
+    }
+
+    public function master_listing()
+    {
+        return Inertia::render('Master/MasterListing/MasterListing', [
+            'mastersCount' => Master::count(),
+        ]);
+    }
+
+    public function getMasters(Request $request)
+    {
+        // fetch limit with default
+        $limit = $request->input('limit', 12);
+
+        // Fetch parameter from request
+        $search = $request->input('search', '');
+        $sortType = $request->input('sortType');
+        $groups = $request->input('groups');
+        $adminUser = $request->input('adminUser', '');
+        $tag = $request->input('tag', '');
+        $status = $request->input('status', '');
+
+        // Fetch paginated masters
+        $mastersQuery = Master::query()
+            ->with([
+                'tradingUser:id,meta_login,name',
+            ])
+            ->withCount([
+                'active_copy_trades',
+                'active_pamm'
+            ])
+            ->withSum('active_copy_trades', 'subscribe_amount')
+            ->withSum('active_pamm', 'subscription_amount');
+
+        // Apply search parameter to multiple fields
+        if (!empty($search)) {
+            $mastersQuery->where(function($query) use ($search) {
+                $query->where('master_name', 'LIKE', "%$search%");
+            });
+        }
+
+        // Apply sorting dynamically
+        if (in_array($sortType, ['latest', 'popular', 'largest_fund', 'most_investors'])) {
+            switch ($request->sortType) {
+                case 'latest':
+                    $mastersQuery->orderBy('created_at', 'desc');
+                    break;
+
+                case 'popular':
+                    $mastersQuery->leftJoin('asset_master_user_favourites', 'asset_masters.id', '=', 'asset_master_user_favourites.asset_master_id')
+                        ->select('asset_masters.*', \Illuminate\Support\Facades\DB::raw('COUNT(asset_master_user_favourites.id) as total_like_count'))
+                        ->groupBy('asset_masters.id')
+                        ->orderByDesc('total_likes_count');
+                    break;
+
+                case 'largest_fund':
+                    $mastersQuery->leftJoin('asset_subscriptions', function ($join) {
+                        $join->on('asset_masters.id', '=', 'asset_subscriptions.asset_master_id')
+                            ->where('asset_subscriptions.status', 'ongoing');
+                    })
+                        ->select('asset_masters.*',
+                            DB::raw('total_fund + COALESCE(SUM(asset_subscriptions.investment_amount), 0) AS total_fund_combined')
+                        )
+                        ->groupBy('asset_masters.id', 'total_fund')
+                        ->orderBy(DB::raw('total_fund + COALESCE(SUM(asset_subscriptions.investment_amount), 0)'), 'desc');
+                    break;
+
+                case 'most_investors':
+                    $mastersQuery->leftJoin('asset_subscriptions', function ($join) {
+                        $join->on('asset_masters.id', '=', 'asset_subscriptions.asset_master_id')
+                            ->where('asset_subscriptions.status', 'ongoing');
+                    })
+                        ->select('asset_masters.*',
+                            DB::raw('total_investors + COALESCE(COUNT(asset_subscriptions.id), 0) AS total_investors_combined')
+                        )
+                        ->groupBy('asset_masters.id', 'total_investors')
+                        ->orderBy(DB::raw('total_investors + COALESCE(COUNT(asset_subscriptions.id), 0)'), 'desc');
+                    break;
+
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
+            }
+        }
+
+        // // Apply groups filter
+        if (!empty($groups)) {
+            if ($groups == 'public') {
+                $mastersQuery->where('type', 'public');
+            } else {
+                $mastersQuery->whereHas('visible_to_groups', function ($query) use ($groups) {
+                    $query->whereIn('group_id', [$groups]);
+                });
+            }
+        }
+
+        // // Apply adminUser filter
+        // if (!empty($adminUser)) {
+        //     dd($request->all());
+        // }
+
+        // // Apply tag filter
+        if (!empty($tag)) {
+            switch ($tag) {
+                case 'no_min_investment':
+                    $mastersQuery->where('minimum_investment', 0);
+                    break;
+
+                case 'lock_free':
+                    $mastersQuery->where('minimum_investment_period', 0);
+                    break;
+
+                case 'zero_fee':
+                    $mastersQuery->where('performance_fee', 0);
+                    break;
+
+                default:
+                    return response()->json(['error' => 'Invalid filter'], 400);
+            }
+        }
+
+        // Apply status filter
+        if (!empty($status)) {
+            $mastersQuery->where('status', $status);
+        }
+
+        // Get total count of masters
+        $totalRecords = $mastersQuery->count();
+
+        // Fetch paginated results
+        $masters = $mastersQuery->paginate($limit);
+
+        // Format masters
+        $formattedMasters = $masters->map(function($master) {
+
+            return $master;
+        });
+
+        return response()->json([
+            'masters' => $formattedMasters,
+            'totalRecords' => $totalRecords,
+            'currentPage' => $masters->currentPage(),
+        ]);
     }
 }

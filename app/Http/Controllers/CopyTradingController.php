@@ -198,7 +198,6 @@ class CopyTradingController extends Controller
             $subscriptionQuery->first_leader_email = $firstLeader?->email;
         });
 
-
         return response()->json([
             'subscriptions' => $subscription
         ]);

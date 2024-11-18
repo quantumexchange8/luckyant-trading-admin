@@ -60,7 +60,7 @@ export default {
             // Secondary Button
             {
                 'text-gray-900 dark:text-white': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain,
-                'bg-gray-100 dark:bg-gray-700': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain,
+                'bg-gray-300 dark:bg-gray-700': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain,
                 'border border-gray-100 dark:border-gray-700': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain
             },
             // Secondary Text Button
