@@ -286,15 +286,15 @@ const submitForm = () => {
                 </div>
                 <div class="grid grid-cols-3 items-center gap-2">
                     <span class="text-sm font-semibold dark:text-gray-400">{{ $t(`public.${transaction.payment_type}`) }}</span>
-                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.payment_platform_name }}</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account?.payment_platform_name }}</span>
                 </div>
                 <div v-if="transaction.payment_method === 'Bank'" class="grid grid-cols-3 items-center gap-2">
                     <span class="text-sm font-semibold dark:text-gray-400">Bank Branch</span>
-                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.bank_sub_branch }}</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account?.bank_sub_branch }}</span>
                 </div>
                 <div v-if="transaction.payment_account != null" class="grid grid-cols-3 items-center gap-2">
                     <span class="text-sm font-semibold dark:text-gray-400">To Account </span>
-                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account.payment_account_name }} - {{ transaction.payment_account.account_no }}</span>
+                    <span class="col-span-2 text-black dark:text-white py-2 break-all">{{ transaction.payment_account?.payment_account_name }} - {{ transaction.payment_account?.account_no }}</span>
                 </div>
                 <div class="grid grid-cols-3 items-center gap-2">
                     <span class="text-sm font-semibold dark:text-gray-400">Amount</span>
