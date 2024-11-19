@@ -10,7 +10,7 @@ export default {
             // Sizes & Spacing
             'leading-2',
             {
-                'px-3 py-2.5': props.size === null,
+                'p-2.5': props.size === null,
                 'text-sm py-1.5 px-3': props.size === 'small',
                 'text-xl py-3 px-4': props.size === 'large'
             },
@@ -25,7 +25,7 @@ export default {
 
             // Shapes
             { 'shadow-lg': props.raised },
-            { 'rounded-md': !props.rounded, 'rounded-full': props.rounded },
+            { 'rounded-md': !props.rounded, 'rounded-full grow-0 shrink-0': props.rounded },
             { 'rounded-none first:rounded-l-md last:rounded-r-md': parent.instance.$name == 'InputGroup' },
 
             // Link Button
@@ -48,19 +48,19 @@ export default {
 
             // Primary Button
             {
-                'text-primary-contrast': !props.link && props.severity === null && !props.text && !props.outlined && !props.plain,
-                'bg-primary': !props.link && props.severity === null && !props.text && !props.outlined && !props.plain,
-                'border border-primary': !props.link && props.severity === null && !props.text && !props.outlined && !props.plain
+                'text-white dark:text-primary-950': !props.link && props.severity === null && !props.text && !props.outlined && !props.plain,
+                'bg-primary-500 hover:bg-primary-600': !props.link && props.severity === null && !props.text && !props.outlined && !props.plain,
+                'border border-primary-500': !props.link && props.severity === null && !props.text && !props.outlined && !props.plain
             },
             // Primary Text Button
-            { 'text-primary': props.text && props.severity === null && !props.plain },
+            { 'text-white': props.text && props.severity === null && !props.plain },
             // Primary Outlined Button
-            { 'text-primary border border-primary': props.outlined && props.severity === null && !props.plain },
+            { 'text-white border border-primary': props.outlined && props.severity === null && !props.plain },
 
             // Secondary Button
             {
                 'text-gray-900 dark:text-white': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain,
-                'bg-gray-300 dark:bg-gray-700': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain,
+                'bg-gray-200 dark:bg-gray-700': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain,
                 'border border-gray-100 dark:border-gray-700': props.severity === 'secondary' && !props.text && !props.outlined && !props.plain
             },
             // Secondary Text Button

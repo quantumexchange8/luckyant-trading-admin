@@ -41,6 +41,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
 
     Route::get('getMasters', [SelectOptionController::class, 'getMasters']);
     Route::get('getLeaders', [SelectOptionController::class, 'getLeaders']);
+    Route::get('getSettlementPeriods', [SelectOptionController::class, 'getSettlementPeriods']);
 
     /**
      * ==============================
@@ -136,6 +137,8 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         // New Master Listing
         Route::get('/master_listing', [MasterController::class, 'master_listing'])->name('master.master_listing');
         Route::get('/getMasters', [MasterController::class, 'getMasters'])->name('master.getMasters');
+
+        Route::post('/updateMaster', [MasterController::class, 'updateMaster'])->name('master.updateMaster');
     });
 
     /**

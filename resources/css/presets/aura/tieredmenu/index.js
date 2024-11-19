@@ -9,8 +9,8 @@ export default {
             'py-1',
 
             // Colors
-            'bg-surface-0 dark:bg-surface-900',
-            'border border-surface-200 dark:border-surface-700'
+            'bg-white dark:bg-gray-900',
+            'border border-gray-200 dark:border-gray-700'
         ]
     },
     rootList: {
@@ -28,10 +28,10 @@ export default {
     itemContent: ({ context }) => ({
         class: [
             // Colors
-            'text-surface-700 dark:text-white/80',
+            'text-gray-700 dark:text-white/80',
             {
-                'text-surface-500 dark:text-white/70': !context.focused && !context.active,
-                'text-surface-500 dark:text-white/70 bg-surface-200': context.focused && !context.active,
+                'text-gray-500 dark:text-white/70': !context.focused && !context.active,
+                'text-gray-500 dark:text-white/70 bg-gray-200': context.focused && !context.active,
                 'bg-highlight': (context.focused && context.active) || context.active || (!context.focused && context.active)
             },
 
@@ -41,7 +41,7 @@ export default {
 
             // States
             {
-                'hover:bg-surface-100 dark:hover:bg-[rgba(255,255,255,0.03)]': !context.active,
+                'hover:bg-gray-100 dark:hover:bg-[rgba(255,255,255,0.03)]': !context.active,
                 'hover:bg-highlight-emphasis': context.active
             },
 
@@ -62,7 +62,7 @@ export default {
             'px-3',
 
             // Color
-            'text-surface-700 dark:text-white/80',
+            'text-gray-700 dark:text-white/80',
 
             // Font
             'text-sm',
@@ -80,7 +80,7 @@ export default {
             'mr-2',
 
             // Color
-            'text-surface-600 dark:text-white/70'
+            'text-gray-600 dark:text-white/70'
         ]
     },
     itemLabel: {
@@ -106,18 +106,18 @@ export default {
 
             // Shape
             'shadow-dropdown',
-            'border border-surface-200 dark:border-surface-700',
+            'border border-gray-200 dark:border-gray-700',
 
             // Position
             'static sm:absolute',
             'z-10',
 
             // Color
-            'bg-surface-0 dark:bg-surface-900'
+            'bg-white dark:bg-gray-900'
         ]
     },
     separator: {
-        class: 'border-t border-surface-200 dark:border-surface-600 my-[2px]'
+        class: 'border-t border-gray-200 dark:border-gray-600 my-[2px]'
     },
     transition: {
         enterFromClass: 'opacity-0',

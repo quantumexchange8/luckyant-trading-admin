@@ -80,3 +80,37 @@
     --p-text-muted-color: var(--p-surface-400);
     --p-text-hover-muted-color: var(--p-surface-300);
 }
+
+@layer components {
+    /* Dialog */
+    .dialog-xs {
+        width: 90vw;
+        max-height: 76vh !important;
+    }
+
+    .dialog-sm {
+        @media (min-width: 768px) {
+            width: 400px;
+            max-height: 70vh !important;
+        }
+    }
+
+    .dialog-md {
+        @media (min-width: 768px) {
+            width: 600px;
+            max-height: 80vh !important;
+        }
+    }
+
+    .dialog-lg {
+        @media (min-width: 768px) {
+            width: 700px;
+            max-height: 80vh !important;
+
+        }
+        @media (min-width: 1024px) {
+            width: 800px;
+            max-height: 80vh !important;
+        }
+    }
+}

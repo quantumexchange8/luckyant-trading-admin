@@ -11,14 +11,16 @@ class MasterConfigurationRequest extends FormRequest
         return [
             'category' => ['required'],
             'type' => ['required_if:category,pamm'],
-            'min_join_equity' => ['required', 'numeric'],
+            'strategy_type' => ['required'],
+            'max_fund_percentage' => ['required_if:strategy_type,Alpha'],
+            'min_investment' => ['required', 'numeric'],
             'sharing_profit' => ['required', 'numeric'],
             'market_profit' => ['required', 'numeric'],
             'company_profit' => ['required', 'numeric'],
 //            'subscription_fee' => ['required', 'numeric'],
 //            'signal_status' => ['required'],
-            'eta_montly_return' => ['required'],
-            'eta_lot_size' => ['required'],
+            'estimated_monthly_returns' => ['required'],
+            'estimated_lot_size' => ['required'],
             'join_period' => ['required'],
             'total_fund' => ['required'],
         ];
@@ -53,18 +55,20 @@ class MasterConfigurationRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'category' => 'Master Type',
-            'type' => 'PAMM Type',
-            'min_join_equity' => 'Minimum Equity',
-            'sharing_profit' => 'Sharing Profit (%)',
-            'market_profit' => 'Market Profit (%)',
-            'company_profit' => 'Company Profit (%)',
+            'category' => trans('public.type'),
+            'type' => trans('public.pamm_type'),
+            'strategy_type' => trans('public.pamm_strategy_type'),
+            'max_fund_percentage' => trans('public.pamm_max_fund_percentage'),
+            'min_investment' => trans('public.min_investment'),
+            'sharing_profit' => trans('public.shared'),
+            'market_profit' => trans('public.market'),
+            'company_profit' => trans('public.company'),
 //            'subscription_fee' => 'Subscription Fee (Month)',
 //            'signal_status' => 'Trade Signal Status',
-            'eta_montly_return' => 'Estimated Monthly Return',
-            'eta_lot_size' => 'Estimated Lot Size',
-            'join_period' => 'Join Period (Days)',
-            'total_fund' => 'Total Fund',
+            'estimated_monthly_returns' => trans('public.estimated_monthly_returns'),
+            'estimated_lot_size' => trans('public.estimated_lot_size'),
+            'join_period' => trans('public.join_period'),
+            'total_fund' => trans('public.total_fund'),
         ];
     }
 }

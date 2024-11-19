@@ -27,7 +27,7 @@ export default {
             // Colors
             'text-gray-800 dark:text-white/80',
             'placeholder:text-gray-400 dark:placeholder:text-gray-500',
-            { 'bg-white dark:bg-gray-800': !context.disabled },
+            { 'bg-white dark:bg-gray-950': !context.disabled },
             'border',
             { 'border-gray-300 dark:border-gray-700': !props.invalid },
 

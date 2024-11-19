@@ -12,9 +12,9 @@ export default {
             'rounded-lg',
 
             // Color and Background
-            { 'bg-white dark:bg-gray-800': !props.disabled },
+            { 'bg-white dark:bg-gray-950': !props.disabled },
             'border',
-            { 'border-gray-300 dark:border-gray-800': !props.invalid },
+            { 'border-gray-300 dark:border-gray-700': !props.invalid },
 
             // Invalid State
             'invalid:focus:ring-red-200',
@@ -26,7 +26,7 @@ export default {
             'duration-200',
 
             // States
-            { 'hover:border-gray-400 dark:hover:border-gray-700': !props.invalid },
+            { 'hover:border-gray-400 dark:hover:border-gray-600': !props.invalid },
             { 'outline-none outline-offset-0 z-10 ring-1 ring-primary-500 dark:ring-primary-400': state.focused },
 
             // Misc
@@ -42,7 +42,7 @@ export default {
 
             // Spacing
             {
-                'py-3.5 px-4': props.display === 'comma' || (props.display === 'chip' && !props?.modelValue?.length),
+                'py-2.5 px-4': props.display === 'comma' || (props.display === 'chip' && !props?.modelValue?.length),
                 'py-1 px-1': props.display === 'chip' && props?.modelValue?.length > 0
             },
 

@@ -7,10 +7,12 @@ use App\Models\Master;
 use App\Models\MasterLeader;
 use App\Models\MasterManagementFee;
 use App\Models\MasterSubscriptionPackage;
+use App\Models\MasterToLeader;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\TradingAccount;
 use App\Services\SelectOptionService;
+use DB;
 use Illuminate\Http\Request;
 use App\Models\MasterRequest;
 use App\Models\User;
@@ -513,8 +515,8 @@ class MasterController extends Controller
         } else {
             $leaders = $request->leader_ids;
 
+            MasterLeader::where('master_id', $request->master_id)->delete();
             if ($leaders) {
-                MasterLeader::where('master_id', $request->master_id)->delete();
 
                 foreach ($leaders as $leader) {
 
@@ -523,8 +525,6 @@ class MasterController extends Controller
                         'leader_id' => $leader['value'],
                     ]);
                 }
-            } else {
-                MasterLeader::where('master_id', $request->master_id)->delete();
             }
 
             return redirect()->route('master.getMasterListing')
@@ -548,66 +548,58 @@ class MasterController extends Controller
         // Fetch parameter from request
         $search = $request->input('search', '');
         $sortType = $request->input('sortType');
-        $groups = $request->input('groups');
-        $adminUser = $request->input('adminUser', '');
+        $leaders = $request->input('leaders');
         $tag = $request->input('tag', '');
+        $strategy_type = $request->input('strategy_type', '');
         $status = $request->input('status', '');
 
         // Fetch paginated masters
         $mastersQuery = Master::query()
             ->with([
                 'tradingUser:id,meta_login,name',
+                'leaders:user_id,name',
+                'media'
             ])
             ->withCount([
                 'active_copy_trades',
                 'active_pamm'
             ])
             ->withSum('active_copy_trades', 'subscribe_amount')
-            ->withSum('active_pamm', 'subscription_amount');
+            ->withSum('active_pamm', 'subscription_amount')
+            ->withSum('close_trades', 'trade_profit')
+            ->addSelect([
+                'latest_profit' => DB::table('trade_histories')
+                    ->select('trade_profit')
+                    ->whereColumn('trade_histories.meta_login','masters.meta_login')
+                    ->latest('created_at')
+                    ->limit(1),
+            ]);
 
         // Apply search parameter to multiple fields
         if (!empty($search)) {
-            $mastersQuery->where(function($query) use ($search) {
-                $query->where('master_name', 'LIKE', "%$search%");
+            $keyword = '%' . $search . '%';
+            $mastersQuery->where(function ($q) use ($keyword) {
+                $q->whereHas('tradingUser', function ($account) use ($keyword) {
+                    $account->where('meta_login', 'like', $keyword)
+                        ->orWhere('name', 'like', $keyword)
+                        ->orWhere('company', 'like', $keyword);
+                });
             });
         }
 
         // Apply sorting dynamically
-        if (in_array($sortType, ['latest', 'popular', 'largest_fund', 'most_investors'])) {
-            switch ($request->sortType) {
+        if (in_array($sortType, ['latest', 'largest_fund', 'most_investors'])) {
+            switch ($sortType) {
                 case 'latest':
                     $mastersQuery->orderBy('created_at', 'desc');
                     break;
 
-                case 'popular':
-                    $mastersQuery->leftJoin('asset_master_user_favourites', 'asset_masters.id', '=', 'asset_master_user_favourites.asset_master_id')
-                        ->select('asset_masters.*', \Illuminate\Support\Facades\DB::raw('COUNT(asset_master_user_favourites.id) as total_like_count'))
-                        ->groupBy('asset_masters.id')
-                        ->orderByDesc('total_likes_count');
-                    break;
-
                 case 'largest_fund':
-                    $mastersQuery->leftJoin('asset_subscriptions', function ($join) {
-                        $join->on('asset_masters.id', '=', 'asset_subscriptions.asset_master_id')
-                            ->where('asset_subscriptions.status', 'ongoing');
-                    })
-                        ->select('asset_masters.*',
-                            DB::raw('total_fund + COALESCE(SUM(asset_subscriptions.investment_amount), 0) AS total_fund_combined')
-                        )
-                        ->groupBy('asset_masters.id', 'total_fund')
-                        ->orderBy(DB::raw('total_fund + COALESCE(SUM(asset_subscriptions.investment_amount), 0)'), 'desc');
+                    $mastersQuery->orderByDesc(DB::raw('COALESCE(active_copy_trades_sum_subscribe_amount, 0) + COALESCE(active_pamm_sum_subscription_amount, 0)'));
                     break;
 
                 case 'most_investors':
-                    $mastersQuery->leftJoin('asset_subscriptions', function ($join) {
-                        $join->on('asset_masters.id', '=', 'asset_subscriptions.asset_master_id')
-                            ->where('asset_subscriptions.status', 'ongoing');
-                    })
-                        ->select('asset_masters.*',
-                            DB::raw('total_investors + COALESCE(COUNT(asset_subscriptions.id), 0) AS total_investors_combined')
-                        )
-                        ->groupBy('asset_masters.id', 'total_investors')
-                        ->orderBy(DB::raw('total_investors + COALESCE(COUNT(asset_subscriptions.id), 0)'), 'desc');
+                    $mastersQuery->orderByDesc(DB::raw('COALESCE(active_copy_trades_count, 0) + COALESCE(active_pamm_count, 0)'));
                     break;
 
                 default:
@@ -615,15 +607,11 @@ class MasterController extends Controller
             }
         }
 
-        // // Apply groups filter
-        if (!empty($groups)) {
-            if ($groups == 'public') {
-                $mastersQuery->where('type', 'public');
-            } else {
-                $mastersQuery->whereHas('visible_to_groups', function ($query) use ($groups) {
-                    $query->whereIn('group_id', [$groups]);
-                });
-            }
+        // // Apply leaders filter
+        if (!empty($leaders)) {
+            $mastersQuery->whereHas('leaders', function ($query) use ($leaders) {
+                $query->whereIn('user_id', [$leaders]);
+            });
         }
 
         // // Apply adminUser filter
@@ -631,24 +619,32 @@ class MasterController extends Controller
         //     dd($request->all());
         // }
 
-        // // Apply tag filter
+        // Apply tag filter
         if (!empty($tag)) {
-            switch ($tag) {
-                case 'no_min_investment':
-                    $mastersQuery->where('minimum_investment', 0);
-                    break;
+            $tags = explode(',', $tag);
 
-                case 'lock_free':
-                    $mastersQuery->where('minimum_investment_period', 0);
-                    break;
-
-                case 'zero_fee':
-                    $mastersQuery->where('performance_fee', 0);
-                    break;
-
-                default:
+            foreach ($tags as $tag) {
+                if ($tag == 'no_min_investment') {
+                    $mastersQuery->where('min_join_equity', 0);
+                } elseif ($tag == 'lock_free') {
+                    $mastersQuery->where(function ($query) {
+                        $query->where('join_period', 0)
+                            ->orWhereNull('join_period');
+                    });
+                } elseif ($tag == 'zero_fee') {
+                    $mastersQuery->where(function ($query) {
+                        $query->where('sharing_profit', 0)
+                            ->orWhereNull('sharing_profit');
+                    });
+                } else {
                     return response()->json(['error' => 'Invalid filter'], 400);
+                }
             }
+        }
+
+        // Apply strategy type filter
+        if (!empty($strategy_type)) {
+            $mastersQuery->where('strategy_type', $strategy_type);
         }
 
         // Apply status filter
@@ -663,8 +659,8 @@ class MasterController extends Controller
         $masters = $mastersQuery->paginate($limit);
 
         // Format masters
-        $formattedMasters = $masters->map(function($master) {
-
+        $formattedMasters = $masters->map(function ($master) {
+            $master->leaders_names = $master->leaders->pluck('name')->join(', ');
             return $master;
         });
 
@@ -672,6 +668,68 @@ class MasterController extends Controller
             'masters' => $formattedMasters,
             'totalRecords' => $totalRecords,
             'currentPage' => $masters->currentPage(),
+        ]);
+    }
+
+    public function updateMaster(MasterConfigurationRequest $request)
+    {
+        $master = Master::find($request->master_id);
+
+        $master->update([
+            'category' => $request->category,
+            'type' => $request->type,
+            'strategy_type' => $request->strategy_type,
+            'min_join_equity' => $request->min_investment,
+            'sharing_profit' => $request->sharing_profit,
+            'market_profit' => $request->market_profit,
+            'company_profit' => $request->company_profit,
+            'subscription_fee' => $request->subscription_fee ?? 0,
+            'signal_status' => $request->signal_status ?? 1,
+            'estimated_monthly_returns' => $request->estimated_monthly_returns,
+            'estimated_lot_size' => $request->estimated_lot_size,
+            'join_period' => $request->join_period,
+            'roi_period' => $request->roi_period,
+            'total_subscribers' => $request->total_subscribers,
+            'max_drawdown' => $request->max_drawdown,
+            'is_public' => $request->is_public,
+            'delivery_requirement' => $request->delivery_requirement,
+        ]);
+
+        if ($master->category == 'copy_trade') {
+            $master->total_fund = $request->total_fund;
+            $master->save();
+        }
+
+        if ($master->strategy_type == 'Alpha') {
+            $master->max_fund_percentage = $request->max_fund_percentage;
+            $master->save();
+        }
+
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            $existingLeaders = MasterToLeader::where('master_id', $master->id)
+                ->pluck('user_id')
+                ->toArray();
+
+            $incomingLeaderIds = collect($leaders)->pluck('id')->toArray();
+
+            if (!empty(array_diff($existingLeaders, $incomingLeaderIds)) || !empty(array_diff($incomingLeaderIds, $existingLeaders))) {
+                MasterToLeader::where('master_id', $master->id)->delete();
+
+                foreach ($leaders as $leader) {
+                    MasterToLeader::create([
+                        'master_id' => $master->id,
+                        'user_id' => $leader['id'],
+                    ]);
+                }
+            }
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_master_message"),
+            'type' => 'success',
         ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Master;
+use App\Models\SettingSettlementPeriod;
 use App\Models\User;
 
 class SelectOptionController extends Controller
@@ -28,5 +29,14 @@ class SelectOptionController extends Controller
             ->get();
 
         return response()->json($leaders);
+    }
+
+    public function getSettlementPeriods()
+    {
+        $periods = SettingSettlementPeriod::where('status', 'Active')
+            ->select('label', 'value')
+            ->get();
+
+        return response()->json($periods);
     }
 }
