@@ -519,7 +519,7 @@ class MemberController extends Controller
         }
 
         $transactionData['from_wallet_id'] = $wallet->id;
-        $transactionData['transaction_type'] = 'WalletAdjustment';
+        $transactionData['transaction_type'] = $request->type;
 
         if ($transactionData['new_wallet_amount'] < 0) {
             throw ValidationException::withMessages(['amount' => 'Insufficient balance']);

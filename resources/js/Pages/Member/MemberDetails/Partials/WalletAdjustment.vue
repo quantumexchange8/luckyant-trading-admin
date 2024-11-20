@@ -9,6 +9,7 @@ import {ref} from "vue";
 import {Wallet} from "@/Components/Icons/outline.jsx";
 import {transactionFormat} from "@/Composables/index.js";
 import {RadioGroup, RadioGroupLabel, RadioGroupOption} from "@headlessui/vue";
+import RadioButton from "primevue/radiobutton";
 
 const transactionTypes = [
     {
@@ -32,6 +33,7 @@ const { formatAmount } = transactionFormat();
 const form = useForm({
     user_id: props.member_detail.id,
     wallet_id: props.wallet.id,
+    type: '',
     transaction_type: '',
     amount: '',
     description: '',
@@ -112,6 +114,22 @@ const closeModal = () => {
                     <InputError :message="form.errors.transaction_type" class="mt-1 col-span-4" />
                 </div>
             </div>
+
+            <div class="space-y-2">
+                <Label class="text-sm dark:text-white" for="amount" value="Type" />
+                <div class="flex flex-wrap gap-4">
+                    <div class="flex items-center">
+                        <RadioButton v-model="form.type" inputId="type_wallet_adjustment" value="WalletAdjustment" />
+                        <Label for="type_wallet_adjustment" class="ml-2">Adjustment</Label>
+                    </div>
+                    <div class="flex items-center">
+                        <RadioButton v-model="form.type" inputId="type_wallet_redemption" value="WalletRedemption" />
+                        <Label for="type_wallet_redemption" class="ml-2">Redemption</Label>
+                    </div>
+                </div>
+                <InputError :message="form.errors.type" class="mt-1" />
+            </div>
+
             <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="amount" value="Amount" />
                 <Input
