@@ -314,7 +314,7 @@ const closeDialog = () => {
                     <div class="flex flex-col items-start gap-1 self-stretch">
                         <InputLabel
                             for="leaders"
-                            value="Visible To"
+                            :value="$t('public.visible_to')"
                         />
                         <MultiSelect
                             v-model="selectedLeaders"

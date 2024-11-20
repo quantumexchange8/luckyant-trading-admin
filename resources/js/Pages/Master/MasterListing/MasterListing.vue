@@ -3,6 +3,7 @@ import AuthenticatedLayout from "@/Layouts/Authenticated.vue";
 import Button from "primevue/button";
 import MasterOverview from "@/Pages/Master/MasterListing/MasterOverview.vue";
 import MasterListView from "@/Pages/Master/MasterListing/MasterListView.vue";
+import AddMaster from "@/Pages/Master/MasterListing/Partials/AddMaster.vue";
 
 defineProps({
     mastersCount: Number
@@ -16,12 +17,8 @@ defineProps({
                 <h2 class="text-2xl font-semibold leading-tight">
                     {{ $t('public.master') }}
                 </h2>
-                <Button
-                    severity="info"
-                    class="text-base"
-                >
-                    {{ $t('public.add_master') }}
-                </Button>
+
+                <AddMaster />
             </div>
         </template>
 

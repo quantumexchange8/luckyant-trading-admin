@@ -33,7 +33,9 @@ const search = ref('');
 const selectedSort = ref('latest');
 const isLoading = ref(false);
 const tag = ref();
+const masterType = ref();
 const strategyType = ref();
+const pammType= ref();
 const status = ref();
 const currentPage = ref(1);
 const rowsPerPage = ref(12);
@@ -87,8 +89,16 @@ const getResults = async (page = 1, rowsPerPage = 12) => {
             url += `&tag=${tag.value}`;
         }
 
+        if (masterType.value) {
+            url += `&category=${masterType.value}`;
+        }
+
         if (strategyType.value) {
             url += `&strategy_type=${strategyType.value}`;
+        }
+
+        if (pammType.value) {
+            url += `&pamm_type=${pammType.value}`;
         }
 
         if (status.value) {
@@ -122,7 +132,7 @@ watch(search, debounce(() => {
     getResults(currentPage.value, rowsPerPage.value);
 }, 300));
 
-watch([selectedSort, selectedLeaders, tag, strategyType, status], () => {
+watch([selectedSort, selectedLeaders, tag, masterType, strategyType, pammType, status], () => {
     getResults(currentPage.value, rowsPerPage.value);
 });
 
@@ -164,7 +174,7 @@ watchEffect(() => {
                 class="w-full md:w-28 flex gap-2"
                 severity="secondary"
                 @click="toggle"
-                :disabled="isLoading || masters.length === 0"
+                :disabled="isLoading && masters.length === 0"
             >
                 <SlidersOneIcon class="w-4 h-4" />
                 Filter
@@ -341,7 +351,7 @@ watchEffect(() => {
                                 </div>
                                 <div class="w-full flex flex-col items-center">
                                     <div class="self-stretch text-gray-950 dark:text-white text-center font-semibold">
-                                        $ {{ formatAmount(master.close_trades_sum_trade_profit) }}
+                                        $ {{ formatAmount(master.close_trades_sum_trade_profit ?? 0) }}
                                     </div>
                                     <div class="self-stretch text-gray-500 text-center text-xs">
                                         {{ $t('public.total_pnl') }}
@@ -350,10 +360,10 @@ watchEffect(() => {
                                 <div class="w-full flex flex-col items-center">
                                     <div class="self-stretch text-center font-semibold">
                                         <div
-                                            v-if="master.latest_profit !== 0"
+                                            v-if="master.latest_profit"
                                             :class="(master.latest_profit < 0) ? 'text-error-500' : 'text-success-500'"
                                         >
-                                            $ {{ formatAmount(master.latest_profit) }}
+                                            $ {{ formatAmount(master.latest_profit ?? 0) }}
                                         </div>
                                         <div
                                             v-else
@@ -447,8 +457,28 @@ watchEffect(() => {
                 </div>
             </div>
 
-            <!-- Filter strategy -->
+            <!-- Filter type -->
             <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_by_type')}}
+                </div>
+                <div class="flex flex-col gap-1 self-stretch">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="masterType" inputId="master_type_copy_trade" value="copy_trade" class="w-4 h-4" />
+                        <label for="master_type_copy_trade">{{ $t('public.copy_trade') }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="masterType" inputId="master_type_pamm" value="pamm" class="w-4 h-4" />
+                        <label for="master_type_pamm">PAMM</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter strategy -->
+            <div
+                v-if="masterType === 'copy_trade'"
+                class="flex flex-col gap-2 items-center self-stretch"
+            >
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
                     {{ $t('public.filter_by_strategy')}}
                 </div>
@@ -460,6 +490,26 @@ watchEffect(() => {
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
                         <RadioButton v-model="strategyType" inputId="strategy_type_alpha" value="Alpha" class="w-4 h-4" />
                         <label for="strategy_type_alpha">Alpha</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter pamm -->
+            <div
+                v-if="masterType === 'pamm'"
+                class="flex flex-col gap-2 items-center self-stretch"
+            >
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_by_pamm')}}
+                </div>
+                <div class="flex flex-col gap-1 self-stretch">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="pammType" inputId="pamm_type_esg" value="ESG" class="w-4 h-4" />
+                        <label for="pamm_type_esg">{{ $t('public.esg') }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="pammType" inputId="pamm_type_standard" value="StandardGroup" class="w-4 h-4" />
+                        <label for="pamm_type_standard">{{ $t('public.standard') }}</label>
                     </div>
                 </div>
             </div>

@@ -11,6 +11,7 @@ use App\Models\MasterToLeader;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\TradingAccount;
+use App\Services\MetaFiveService;
 use App\Services\SelectOptionService;
 use DB;
 use Illuminate\Http\Request;
@@ -550,7 +551,9 @@ class MasterController extends Controller
         $sortType = $request->input('sortType');
         $leaders = $request->input('leaders');
         $tag = $request->input('tag', '');
+        $masterType = $request->input('category', '');
         $strategy_type = $request->input('strategy_type', '');
+        $pamm_type = $request->input('pamm_type', '');
         $status = $request->input('status', '');
 
         // Fetch paginated masters
@@ -642,9 +645,19 @@ class MasterController extends Controller
             }
         }
 
+        // Apply master type filter
+        if (!empty($masterType)) {
+            $mastersQuery->where('category', $masterType);
+        }
+
         // Apply strategy type filter
         if (!empty($strategy_type)) {
             $mastersQuery->where('strategy_type', $strategy_type);
+        }
+
+        // Apply pamm type filter
+        if (!empty($pamm_type)) {
+            $mastersQuery->where('type', $pamm_type);
         }
 
         // Apply status filter
@@ -668,6 +681,133 @@ class MasterController extends Controller
             'masters' => $formattedMasters,
             'totalRecords' => $totalRecords,
             'currentPage' => $masters->currentPage(),
+        ]);
+    }
+
+    public function addMaster(Request $request)
+    {
+        $form_step = $request->step;
+
+        $rules = [
+            'leader' => ['required'],
+            'category' => ['required'],
+            'type' => ['required_if:category,pamm'],
+            'strategy_type' => ['required'],
+            'max_fund_percentage' => ['required_if:strategy_type,Alpha'],
+            'estimated_monthly_return' => ['required'],
+            'estimated_lot_size' => ['required'],
+            'max_drawdown' => ['required'],
+            'total_fund' => ['required'],
+            'total_subscribers' => ['nullable'],
+        ];
+
+        $attributeNames = [
+            'leader' => trans('public.leader'),
+            'category' => trans('public.type'),
+            'type' => trans('public.pamm_type'),
+            'strategy_type' => trans('public.strategy_type'),
+            'max_fund_percentage' => trans('public.max_fund_percentage'),
+            'estimated_monthly_return' => trans('public.estimated_monthly_returns'),
+            'estimated_lot_size' => trans('public.estimated_lot_size'),
+            'max_drawdown' => trans('public.max_drawdown'),
+            'total_fund' => trans('public.total_fund'),
+            'total_subscribers' => trans('public.total_subscribers'),
+        ];
+
+        if ($form_step == 2) {
+            $rules = array_merge($rules, [
+                'min_investment' => ['required'],
+                'sharing_profit' => ['required'],
+                'market_profit' => ['required'],
+                'company_profit' => ['required'],
+                'join_period' => ['nullable'],
+                'roi_period' => ['nullable'],
+                'delivery_requirement' => ['required_if:type,ESG'],
+                'is_public' => ['required'],
+                'leaders' => ['required'],
+            ]);
+
+            $attributeNames = array_merge($attributeNames, [
+                'min_investment' => trans('public.min_investment'),
+                'sharing_profit' => trans('public.shared'),
+                'market_profit' => trans('public.market'),
+                'company_profit' => trans('public.company'),
+                'join_period' => trans('public.join_period'),
+                'roi_period' => trans('public.roi_period'),
+                'delivery_requirement' => trans('public.delivery_requirement'),
+                'is_public' => trans('public.public_status'),
+                'leaders' => trans('public.visible_to'),
+            ]);
+        } elseif ($form_step == 3) {
+            $rules['management_fee'] = ['nullable'];
+            $attributeNames['management_fee'] = trans('public.management_fee');
+        }
+
+        Validator::make($request->all(), $rules)
+            ->setAttributeNames($attributeNames)
+            ->validate();
+
+        $user = $request->leader;
+
+        $master = Master::create([
+            'user_id' => $user['id'],
+            'category' => $request->category,
+            'type' => $request->type ?? 'CopyTrade',
+            'strategy_type' => $request->strategy_type,
+            'min_join_equity' => $request->min_investment,
+            'sharing_profit' => $request->sharing_profit,
+            'market_profit' => $request->market_profit,
+            'company_profit' => $request->company_profit,
+            'subscription_fee' => $request->subscription_fee ?? 0,
+            'signal_status' => $request->signal_status ?? 1,
+            'estimated_monthly_returns' => $request->estimated_monthly_returns,
+            'estimated_lot_size' => $request->estimated_lot_size,
+            'join_period' => $request->join_period,
+            'roi_period' => $request->roi_period,
+            'total_subscribers' => $request->total_subscribers,
+            'total_fund' => $request->total_fund,
+            'max_drawdown' => $request->max_drawdown,
+            'is_public' => $request->is_public,
+            'delivery_requirement' => $request->delivery_requirement,
+        ]);
+
+        if ($master->strategy_type == 'Alpha') {
+            $master->max_fund_percentage = $request->max_fund_percentage;
+        }
+
+        //TODO::Add management fee
+
+        $metaService = new MetaFiveService();
+        $connection = $metaService->getConnectionStatus();
+
+        if ($connection != 0) {
+            return back()->with('toast', [
+                'title' => trans('public.connection_error'),
+                'message' => trans('public.meta_trader_connection_error'),
+                'type' => 'error',
+            ]);
+        }
+
+        $userModel = User::find($user['id']);
+        $metaAccount = $metaService->createUser($userModel, 'JS', 500);
+
+        $master->meta_login = $metaAccount['login'];
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            foreach ($leaders as $leader) {
+                MasterToLeader::create([
+                    'master_id' => $master->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
+        }
+        $master->save();
+
+        return back()->with('toast', [
+            'title' => trans('public.success'),
+            'message' => trans('public.toast_create_deposit_profile_success'),
+            'type' => 'success',
         ]);
     }
 
