@@ -126,6 +126,34 @@ const closeDialog = () => {
                         <InputError :message="form.errors.category" />
                     </div>
 
+                    <!-- Strategy Type -->
+                    <div class="flex flex-col items-start gap-1 self-stretch">
+                        <InputLabel
+                            for="strategy_type"
+                            :value="$t('public.strategy_type')"
+                            :invalid="!!form.errors.strategy_type"
+                        />
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center">
+                                <RadioButton
+                                    v-model="form.strategy_type"
+                                    inputId="strategy_type_hofi"
+                                    value="HOFI"
+                                />
+                                <InputLabel for="strategy_type_hofi" class="ml-2">HOFI</InputLabel>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton
+                                    v-model="form.strategy_type"
+                                    inputId="strategy_type_alpha"
+                                    value="Alpha"
+                                />
+                                <InputLabel for="strategy_type_alpha" class="ml-2">Alpha</InputLabel>
+                            </div>
+                        </div>
+                        <InputError :message="form.errors.strategy_type" />
+                    </div>
+
                     <!-- PAMM Type -->
                     <div
                         v-if="form.category === 'pamm'"
@@ -328,34 +356,6 @@ const closeDialog = () => {
                             :invalid="!!form.errors.leaders"
                         />
                         <InputError :message="form.errors.leaders" />
-                    </div>
-
-                    <!-- Strategy Type -->
-                    <div class="flex flex-col items-start gap-1 self-stretch">
-                        <InputLabel
-                            for="strategy_type"
-                            :value="$t('public.strategy_type')"
-                            :invalid="!!form.errors.strategy_type"
-                        />
-                        <div class="flex flex-wrap gap-4">
-                            <div class="flex items-center">
-                                <RadioButton
-                                    v-model="form.strategy_type"
-                                    inputId="strategy_type_hofi"
-                                    value="HOFI"
-                                />
-                                <InputLabel for="strategy_type_hofi" class="ml-2">HOFI</InputLabel>
-                            </div>
-                            <div class="flex items-center">
-                                <RadioButton
-                                    v-model="form.strategy_type"
-                                    inputId="strategy_type_alpha"
-                                    value="Alpha"
-                                />
-                                <InputLabel for="strategy_type_alpha" class="ml-2">Alpha</InputLabel>
-                            </div>
-                        </div>
-                        <InputError :message="form.errors.strategy_type" />
                     </div>
                 </div>
             </div>

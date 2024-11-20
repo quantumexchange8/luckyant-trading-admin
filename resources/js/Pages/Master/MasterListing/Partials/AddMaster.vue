@@ -179,7 +179,6 @@ const getSettlementPeriods = async () => {
 
                                     <!-- Copy Trading Type -->
                                     <div
-                                        v-if="form.category === 'copy_trade'"
                                         class="flex flex-col items-start gap-1 self-stretch"
                                     >
                                         <InputLabel
