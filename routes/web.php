@@ -128,7 +128,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/getAllMaster', [MasterController::class, 'getAllMaster'])->name('master.getAllMaster');
         Route::get('/master_configuration/{meta_login}', [MasterController::class, 'viewMasterConfiguration'])->name('master.viewMasterConfiguration');
         Route::post('/updateMasterConfiguration', [MasterController::class, 'updateMasterConfiguration'])->name('master.updateMasterConfiguration');
-        Route::post('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
+//        Route::post('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
         Route::post('/updateMasterSubscriptionPackage', [MasterController::class, 'updateMasterSubscriptionPackage'])->name('master.updateMasterSubscriptionPackage');
         Route::post('/addVisibleToLeaders', [MasterController::class, 'addVisibleToLeaders'])->name('master.addVisibleToLeaders');
 
@@ -137,9 +137,13 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         // New Master Listing
         Route::get('/master_listing', [MasterController::class, 'master_listing'])->name('master.master_listing');
         Route::get('/getMasters', [MasterController::class, 'getMasters'])->name('master.getMasters');
+        Route::get('/getMasterOverview', [MasterController::class, 'getMasterOverview'])->name('master.getMasterOverview');
+        Route::get('/getMasterAnalyticChartData', [MasterController::class, 'getMasterAnalyticChartData'])->name('master.getMasterAnalyticChartData');
+        Route::get('/getMasterManagementFee', [MasterController::class, 'getMasterManagementFee'])->name('master.getMasterManagementFee');
 
         Route::post('/addMaster', [MasterController::class, 'addMaster'])->name('master.addMaster');
         Route::post('/updateMaster', [MasterController::class, 'updateMaster'])->name('master.updateMaster');
+        Route::patch('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
     });
 
     /**

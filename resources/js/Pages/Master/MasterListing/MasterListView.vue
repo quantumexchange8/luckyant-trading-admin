@@ -143,7 +143,9 @@ const clearSearch = () => {
 const clearAll = () => {
     selectedLeaders.value = [];
     tag.value = null;
+    masterType.value = null;
     strategyType.value = null;
+    pammType.value = null;
     status.value = null;
 }
 
@@ -475,10 +477,7 @@ watchEffect(() => {
             </div>
 
             <!-- Filter strategy -->
-            <div
-                v-if="masterType === 'copy_trade'"
-                class="flex flex-col gap-2 items-center self-stretch"
-            >
+            <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
                     {{ $t('public.filter_by_strategy')}}
                 </div>

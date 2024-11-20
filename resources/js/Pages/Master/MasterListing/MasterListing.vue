@@ -24,7 +24,9 @@ defineProps({
 
         <div class="flex flex-col items-center gap-5">
             <!-- Master Overview -->
-            <MasterOverview />
+            <MasterOverview
+                :mastersCount="mastersCount"
+            />
 
             <!-- Master List -->
             <MasterListView

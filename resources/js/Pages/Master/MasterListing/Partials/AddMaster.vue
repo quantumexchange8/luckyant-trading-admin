@@ -23,7 +23,7 @@ import ManagementFeeSetting from "@/Pages/Master/MasterListing/Partials/Manageme
 import RadioButton from "primevue/radiobutton";
 
 const visible = ref(false);
-const activeStep = ref(1);
+const activeStep = ref(3);
 const totalSteps = 3;
 const loadingUsers = ref(false);
 const users = ref([]);

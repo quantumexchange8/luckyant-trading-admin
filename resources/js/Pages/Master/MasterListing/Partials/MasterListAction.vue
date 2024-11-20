@@ -10,7 +10,7 @@ import {
 import {h, ref} from "vue";
 import Dialog from "primevue/dialog";
 import EditMaster from "@/Pages/Master/MasterListing/Partials/EditMaster.vue";
-// import InvestmentReport from "@/Pages/Master/MasterReport/InvestmentReport.vue";
+import UpdateManagementFee from "@/Pages/Master/MasterListing/Partials/UpdateManagementFee.vue";
 
 const props = defineProps({
     master: Object
@@ -83,7 +83,7 @@ const toggle = (event) => {
         :class="dialogType === 'edit' ? 'dialog-xs md:dialog-lg' : 'dialog-xs md:dialog-md'"
     >
         <template v-if="dialogType === 'management_fee'">
-            <EditMaster
+            <UpdateManagementFee
                 :master="master"
                 @update:visible="visible = false"
             />

@@ -417,51 +417,6 @@ class MasterController extends Controller
             ->with('success', 'Successfully configure requirements to follow Master Account for LOGIN: ' . $master->meta_login);
     }
 
-    public function updateMasterManagementFee(Request $request)
-    {
-        $managementDays = $request->management_days;
-        $managementFees = $request->management_fees;
-
-        $errors = [];
-
-        // Validate management days
-        foreach ($managementDays as $index => $day) {
-            if (empty($day)) {
-                $errors["management_fees.{$index}"] = trans('validation.required', ['attribute' => 'Management Period']);
-            }
-        }
-
-        // Validate management fees
-        foreach ($managementFees as $index => $fee) {
-            if (empty($fee)) {
-                $errors["management_fees.{$index}"] = trans('validation.required', ['attribute' => 'Fee Percentage']);
-            }
-        }
-
-        if (!empty($errors)) {
-            throw ValidationException::withMessages($errors);
-        }
-
-        $master = Master::with('masterManagementFee')->find($request->master_id);
-
-        foreach ($master->masterManagementFee as $item) {
-            $item->delete();
-        }
-
-        foreach ($managementFees as $index => $fee) {
-            MasterManagementFee::create([
-                'master_id' => $master->id,
-                'meta_login' => $master->meta_login,
-                'penalty_percentage' => $fee,
-                'penalty_days' => $managementDays[$index] // Set the corresponding days
-            ]);
-        }
-
-        return redirect()->back()
-            ->with('title', 'Success update')
-            ->with('success', 'Successfully updated the management fees');
-    }
-
     public function updateMasterSubscriptionPackage(Request $request)
     {
         $amounts = $request->amounts;
@@ -760,7 +715,7 @@ class MasterController extends Controller
             'company_profit' => $request->company_profit,
             'subscription_fee' => $request->subscription_fee ?? 0,
             'signal_status' => $request->signal_status ?? 1,
-            'estimated_monthly_returns' => $request->estimated_monthly_returns,
+            'estimated_monthly_returns' => $request->estimated_monthly_return,
             'estimated_lot_size' => $request->estimated_lot_size,
             'join_period' => $request->join_period,
             'roi_period' => $request->roi_period,
@@ -768,7 +723,8 @@ class MasterController extends Controller
             'total_fund' => $request->total_fund,
             'max_drawdown' => $request->max_drawdown,
             'is_public' => $request->is_public,
-            'delivery_requirement' => $request->delivery_requirement,
+            'delivery_requirement' => $request->delivery_requirement ?? 0,
+            'status' => 'Active',
         ]);
 
         if ($master->strategy_type == 'Alpha') {
@@ -790,7 +746,9 @@ class MasterController extends Controller
 
         $userModel = User::find($user['id']);
         $metaAccount = $metaService->createUser($userModel, 'JS', 500);
+        $trading_account = TradingAccount::firstWhere('meta_login', $metaAccount['login']);
 
+        $master->trading_account_id = $trading_account->id;
         $master->meta_login = $metaAccount['login'];
         $leaders = $request->leaders;
 
@@ -869,6 +827,178 @@ class MasterController extends Controller
         return back()->with('toast', [
             'title' => trans("public.success"),
             'message' => trans("public.toast_success_update_master_message"),
+            'type' => 'success',
+        ]);
+    }
+
+    public function getMasterOverview()
+    {
+        // current month
+        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
+
+        // last month
+        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        $subscriberQuery = Subscriber::where('status', 'Subscribing');
+
+        // current month active subscribers
+        $current_month_total_master = Master::whereDate('created_at', '<=', $endOfMonth)
+            ->count();
+
+        // current month active subscribers
+        $current_month_active_subscribers = (clone $subscriberQuery)
+            ->whereDate('approval_date', '<=', $endOfMonth)
+            ->count();
+
+        // last month active subscribers
+        $last_month_total_master =  Master::whereDate('created_at', '<=', $endOfLastMonth)
+            ->count();
+
+        // last month active subscribers
+        $last_month_active_subscribers =  (clone $subscriberQuery)
+            ->whereDate('approval_date', '<=', $endOfLastMonth)
+            ->count();
+
+        // comparison % of total master vs last month
+        $last_month_total_master_comparison = $current_month_total_master - $last_month_total_master;
+
+        // comparison % of total subscribers vs last month
+        $last_month_active_subscribers_comparison = $current_month_active_subscribers - $last_month_active_subscribers;
+
+        return response()->json([
+            'currentMonthTotalMaster' => $current_month_total_master,
+            'lastMonthMasterComparison' => $last_month_total_master_comparison,
+            'currentTotalSubscribers' => $current_month_active_subscribers,
+            'lastMonthSubscribersComparison' => $last_month_active_subscribers_comparison,
+        ]);
+    }
+
+    public function getMasterAnalyticChartData()
+    {
+        $masters = Master::select([
+            'id',
+            'meta_login'
+        ])
+            ->with('tradingUser:name,meta_login')
+            ->withCount([
+                'active_copy_trades',
+                'active_pamm'
+            ])
+            ->get()
+            ->filter(function ($master) {
+                // Calculate total subscribers and filter only those with total > 0
+                $totalSubscribers =
+                    ($master->active_copy_trades_count ?? 0) +
+                    ($master->active_pamm_count ?? 0);
+                return $totalSubscribers > 0;
+            });
+
+        // Initialize chart data
+        $chartData = [
+            'labels' => [], // Labels will hold master names
+            'datasets' => [],
+        ];
+
+        $symbolCount = []; // To store the sum of active copy trades and active PAMM counts
+        $backgroundColors = [];
+
+        foreach ($masters as $master) {
+            // Label: master trading user name
+            $chartData['labels'][] = $master->tradingUser->name ?? "Unknown";
+
+            // Data: sum of active copy trades and active PAMM counts
+            $totalSubscribers =
+                ($master->active_copy_trades_count ?? 0) +
+                ($master->active_pamm_count ?? 0);
+            $symbolCount[] = $totalSubscribers;
+
+            // Generate a random color
+            $randomColor = sprintf('#%02X%02X%02X', rand(0, 255), rand(0, 255), rand(0, 255));
+            $backgroundColors[] = $randomColor;
+        }
+
+        $dataset = [
+            'data' => $symbolCount,
+            'backgroundColor' => $backgroundColors,
+            'offset' => 5,
+            'borderColor' => 'transparent'
+        ];
+
+        // Add dataset to the chart data
+        $chartData['datasets'][] = $dataset;
+
+        return response()->json($chartData);
+    }
+
+    public function getMasterManagementFee(Request $request)
+    {
+        $fee = MasterManagementFee::where('master_id', $request->master_id)
+            ->get();
+
+        return response()->json($fee);
+    }
+
+    public function updateMasterManagementFee(Request $request)
+    {
+        $managementFees = $request->input('management_fee', []);
+
+        $errors = [];
+
+        foreach ($managementFees as $index => $fee) {
+            // Validate 'days' field
+            if (empty($fee['days'])) {
+                $errors["management_fee.{$index}.days"] = trans('validation.required', ['attribute' => trans('public.days')]);
+            }
+
+            // Validate 'percentage' field
+            if (empty($fee['percentage'])) {
+                $errors["management_fee.{$index}.percentage"] = trans('validation.required', ['attribute' => trans('public.fee_percentage')]);
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $master = Master::with('masterManagementFee')->findOrFail($request->input('master_id'));
+
+        // Check if the incoming data is the same as existing data
+        $existingFees = $master->masterManagementFee->map(function ($fee) {
+            return [
+                'days' => $fee->penalty_days,
+                'percentage' => $fee->penalty_percentage,
+            ];
+        });
+
+        $incomingFees = collect($managementFees);
+
+        // If incoming data matches the existing data, skip the function
+        if ($existingFees->toArray() == $incomingFees->toArray()) {
+            return back()->with('toast', [
+                'title' => trans("public.info"),
+                'message' => trans("public.toast_info_no_updated_message"),
+                'type' => 'info',
+            ]);
+        }
+
+        // Delete existing management fees
+        foreach ($master->masterManagementFee as $item) {
+            $item->delete();
+        }
+
+        // Save new management fees
+        foreach ($managementFees as $fee) {
+            MasterManagementFee::create([
+                'master_id' => $master->id,
+                'meta_login' => $master->meta_login,
+                'penalty_days' => $fee['days'],
+                'penalty_percentage' => $fee['percentage'],
+            ]);
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_fee_message"),
             'type' => 'success',
         ]);
     }

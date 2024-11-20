@@ -80,4 +80,8 @@ return [
     "back" => "Back",
     "next" => "Next",
     "create" => "Create",
+    "total_masters" => "Total Masters",
+    "analysis_of_masters_by_subscriber_count" => "Analysis of Masters by Subscriber Count",
+    "add_fee" => "Add Fee",
+    "update" => "Update",
 ];
