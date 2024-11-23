@@ -201,6 +201,13 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      * ==============================
      */
     Route::prefix('copy_trading')->group(function () {
+        // Pending
+        Route::get('/pending', [CopyTradingController::class, 'pending'])->name('copy_trading.pending');
+        Route::get('/getPendingSubscription', [CopyTradingController::class, 'getPendingSubscription'])->name('copy_trading.getPendingSubscription');
+
+        Route::patch('/subscriptionApproval', [CopyTradingController::class, 'subscriptionApproval'])->name('copy_trading.subscriptionApproval');
+
+        // Listing
         Route::get('/listing', [CopyTradingController::class, 'index'])->name('copy_trading.listing');
         Route::get('/getSubscriptionOverview', [CopyTradingController::class, 'getSubscriptionOverview'])->name('copy_trading.getSubscriptionOverview');
         Route::get('/getSubscriptionsData', [CopyTradingController::class, 'getSubscriptionsData'])->name('copy_trading.getSubscriptionsData');

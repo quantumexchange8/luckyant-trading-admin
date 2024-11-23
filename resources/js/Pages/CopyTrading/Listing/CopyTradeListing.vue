@@ -11,7 +11,7 @@ defineProps({
 <template>
     <AuthenticatedLayout title="Copy Trading Listing">
         <template #header>
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-2xl font-semibold leading-tight">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-xl font-semibold leading-tight">
                 <div>
                     <h2 class="text-2xl font-semibold leading-tight">
                         Copy Trading Listing

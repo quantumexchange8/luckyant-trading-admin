@@ -20,7 +20,7 @@ export default {
                 'border-surface-200 dark:border-surface-700': !context.active,
                 'text-surface-700 dark:text-surface-0/80': !context.active,
 
-                'text-primary font-semibold': context.active,
+                'text-primary-500 font-semibold border-b-4 border-primary-500': context.active,
 
                 'opacity-60 cursor-default user-select-none select-none pointer-events-none': props?.disabled
             },

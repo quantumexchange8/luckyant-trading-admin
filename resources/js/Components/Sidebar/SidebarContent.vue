@@ -179,8 +179,13 @@ const { hasRole } = usePermission();
             </template>
 
             <SidebarCollapsibleItem
+                :href="route('copy_trading.pending')"
+                :title="$t('public.pending')"
+                :active="route().current('copy_trading.pending')"
+            />
+            <SidebarCollapsibleItem
                 :href="route('copy_trading.listing')"
-                title="Listing"
+                :title="$t('public.listing')"
                 :active="route().current('copy_trading.listing')"
             />
         </SidebarCollapsible>
