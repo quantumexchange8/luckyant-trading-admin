@@ -103,4 +103,9 @@ return [
     "success" => "Success",
     "toast_success_approve_subscription_message" => "Successfully approved subscription.",
     "toast_success_reject_subscription_message" => "Successfully rejected subscription.",
+    "upload_pdf" => "Upload PDF",
+    "en" => "English",
+    "cn" => "Chinese",
+    "current_tnc" => "Current T&C PDF",
+    "view" => "View",
 ];

@@ -144,6 +144,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/addMaster', [MasterController::class, 'addMaster'])->name('master.addMaster');
         Route::post('/updateMaster', [MasterController::class, 'updateMaster'])->name('master.updateMaster');
         Route::patch('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
+        Route::post('/updateTncFile', [MasterController::class, 'updateTncFile'])->name('master.updateTncFile');
     });
 
     /**

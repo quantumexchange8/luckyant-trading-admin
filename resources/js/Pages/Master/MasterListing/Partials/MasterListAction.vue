@@ -11,6 +11,7 @@ import {h, ref} from "vue";
 import Dialog from "primevue/dialog";
 import EditMaster from "@/Pages/Master/MasterListing/Partials/EditMaster.vue";
 import UpdateManagementFee from "@/Pages/Master/MasterListing/Partials/UpdateManagementFee.vue";
+import UpdateMasterTnc from "@/Pages/Master/MasterListing/Partials/UpdateMasterTnc.vue";
 
 const props = defineProps({
     master: Object
@@ -84,6 +85,13 @@ const toggle = (event) => {
     >
         <template v-if="dialogType === 'management_fee'">
             <UpdateManagementFee
+                :master="master"
+                @update:visible="visible = false"
+            />
+        </template>
+
+        <template v-if="dialogType === 'tnc'">
+            <UpdateMasterTnc
                 :master="master"
                 @update:visible="visible = false"
             />

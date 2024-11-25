@@ -652,7 +652,7 @@ class MasterController extends Controller
             'estimated_monthly_return' => ['required'],
             'estimated_lot_size' => ['required'],
             'max_drawdown' => ['required'],
-            'total_fund' => ['required'],
+            'total_fund' => ['nullable'],
             'total_subscribers' => ['nullable'],
         ];
 
@@ -669,38 +669,46 @@ class MasterController extends Controller
             'total_subscribers' => trans('public.total_subscribers'),
         ];
 
-        if ($form_step == 2) {
-            $rules = array_merge($rules, [
-                'min_investment' => ['required'],
-                'sharing_profit' => ['required'],
-                'market_profit' => ['required'],
-                'company_profit' => ['required'],
-                'join_period' => ['nullable'],
-                'roi_period' => ['nullable'],
-                'delivery_requirement' => ['required_if:type,ESG'],
-                'is_public' => ['required'],
-                'leaders' => ['required'],
-            ]);
+        switch ($form_step) {
+            case 1:
+                Validator::make($request->all(), $rules)
+                    ->setAttributeNames($attributeNames)
+                    ->validate();
+                return back();
 
-            $attributeNames = array_merge($attributeNames, [
-                'min_investment' => trans('public.min_investment'),
-                'sharing_profit' => trans('public.shared'),
-                'market_profit' => trans('public.market'),
-                'company_profit' => trans('public.company'),
-                'join_period' => trans('public.join_period'),
-                'roi_period' => trans('public.roi_period'),
-                'delivery_requirement' => trans('public.delivery_requirement'),
-                'is_public' => trans('public.public_status'),
-                'leaders' => trans('public.visible_to'),
-            ]);
-        } elseif ($form_step == 3) {
-            $rules['management_fee'] = ['nullable'];
-            $attributeNames['management_fee'] = trans('public.management_fee');
+            case 2:
+                $rules['min_investment'] = ['required'];
+                $rules['sharing_profit'] = ['required'];
+                $rules['market_profit'] = ['required'];
+                $rules['company_profit'] = ['required'];
+                $rules['join_period'] = ['nullable'];
+                $rules['roi_period'] = ['nullable'];
+                $rules['delivery_requirement'] = ['nullable'];
+                $rules['leaders'] = ['required'];
+
+                $attributeNames['min_investment'] = trans('public.min_investment');
+                $attributeNames['sharing_profit'] = trans('public.shared');
+                $attributeNames['market_profit'] = trans('public.market');
+                $attributeNames['company_profit'] = trans('public.company');
+                $attributeNames['join_period'] = trans('public.join_period');
+                $attributeNames['roi_period'] = trans('public.roi_period');
+                $attributeNames['delivery_requirement'] = trans('public.delivery_requirement');
+                $attributeNames['leaders'] = trans('public.visible_to');
+
+                Validator::make($request->all(), $rules)
+                    ->setAttributeNames($attributeNames)
+                    ->validate();
+                return back();
+
+            default:
+                $rules['management_fee'] = ['nullable'];
+                $attributeNames['management_fee'] = trans('public.management_fee');
+
+                Validator::make($request->all(), $rules)
+                    ->setAttributeNames($attributeNames)
+                    ->validate();
+                break;
         }
-
-        Validator::make($request->all(), $rules)
-            ->setAttributeNames($attributeNames)
-            ->validate();
 
         $user = $request->leader;
 
@@ -999,6 +1007,38 @@ class MasterController extends Controller
         return back()->with('toast', [
             'title' => trans("public.success"),
             'message' => trans("public.toast_success_update_fee_message"),
+            'type' => 'success',
+        ]);
+    }
+
+    public function updateTncFile(Request $request)
+    {
+        $master = Master::find($request->master_id);
+
+        $pamm_tnc_files = $request->tnc_pdf;
+        $tree_tnc_files = $request->tree_pdf;
+
+        if ($pamm_tnc_files) {
+            foreach ($pamm_tnc_files as $locale => $pamm_tnc_file) {
+                if ($pamm_tnc_file) {
+                    $master->clearMediaCollection($locale . '_tnc_pdf');
+                    $master->addMedia($pamm_tnc_file)->toMediaCollection($locale . '_tnc_pdf');
+                }
+            }
+        }
+
+        if ($tree_tnc_files) {
+            foreach ($tree_tnc_files as $locale => $tree_tnc_file) {
+                if ($tree_tnc_file) {
+                    $master->clearMediaCollection($locale . '_tree_pdf');
+                    $master->addMedia($tree_tnc_file)->toMediaCollection($locale . '_tree_pdf');
+                }
+            }
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_tnc_message"),
             'type' => 'success',
         ]);
     }
