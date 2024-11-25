@@ -4,7 +4,7 @@ import Column from "primevue/column";
 import DataTable from "primevue/datatable";
 import Input from "@/Components/Input.vue";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import {SearchIcon, XCircleIcon} from "@heroicons/vue/outline";
+import {XCircleIcon} from "@heroicons/vue/outline";
 import Loading from "@/Components/Loading.vue";
 import {onMounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
@@ -14,17 +14,18 @@ import Button from "primevue/button";
 import {
     SlidersOneIcon,
     CloudDownloadIcon,
-    XIcon
+    XIcon,
+    SearchLgIcon
 } from "@/Components/Icons/outline.jsx"
 import dayjs from "dayjs";
-import Tag from "primevue/tag";
 import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
-import RadioButton from "primevue/radiobutton"
+import PendingSubscriptionAction from "@/Pages/CopyTrading/Pending/PendingSubscription/PendingSubscriptionAction.vue";
+import PendingPammAction from "@/Pages/Pamm/PendingPamm/PendingPammAction.vue";
 
 const props = defineProps({
-    subscriptionBatchesCount: Number
+    pendingSubscriptionsCount: Number
 })
 
 const isLoading = ref(false);
@@ -32,27 +33,18 @@ const subscriptions = ref([]);
 const exportTable = ref('no');
 const {formatAmount} = transactionFormat();
 
-const getResults = async (filterJoinDate = null, filterTerminationDate = null, filterFundType = null) => {
+const getResults = async (filterJoinDate = null) => {
     isLoading.value = true;
     try {
-        let url = `/copy_trading/getSubscriptionsData?export=${exportTable.value}`;
+        let url = `/pamm/getPendingPammData?export=${exportTable.value}`;
 
         if (filterJoinDate?.length > 0) {
             const [startDate, endDate] = filterJoinDate;
             url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
         }
 
-        if (filterTerminationDate?.length > 0) {
-            const [startDate, endDate] = filterTerminationDate;
-            url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-        }
-
-        if (filterFundType) {
-            url += `&fundType=${filterFundType}`;
-        }
-
         const response = await axios.get(url);
-        subscriptions.value = response.data.subscriptions;
+        subscriptions.value = response.data.pendingSubscribers;
     } catch (error) {
         console.error('Error fetching subscriptions:', error);
     } finally {
@@ -68,7 +60,6 @@ const filters = ref({
     global: {value: null, matchMode: FilterMatchMode.CONTAINS},
     master_meta_login: {value: null, matchMode: FilterMatchMode.EQUALS},
     "first_leader_id": {value: null, matchMode: FilterMatchMode.EQUALS},
-    status: {value: null, matchMode: FilterMatchMode.EQUALS},
 });
 
 const clearFilterGlobal = () => {
@@ -80,22 +71,6 @@ watchEffect(() => {
         getResults();
     }
 });
-
-const getSeverity = (status) => {
-    switch (status) {
-        case 'Terminated':
-            return 'danger';
-
-        case 'Active':
-            return 'success';
-
-        case 'Pending':
-            return 'info';
-
-        case 'Expiring':
-            return 'warning';
-    }
-}
 
 const op = ref();
 const toggle = (event) => {
@@ -111,7 +86,7 @@ const selectedMaster = ref();
 const getMasters = async () => {
     loadingMasters.value = true;
     try {
-        const response = await axios.get('/getMasters?category=copy_trade');
+        const response = await axios.get('/getMasters');
         masters.value = response.data;
     } catch (error) {
         console.error('Error fetching masters:', error);
@@ -124,7 +99,6 @@ const leaders = ref();
 const loadingLeaders = ref(false);
 const selectedLeader = ref();
 const joinDatePicker = ref([]);
-const terminateDatePicker = ref();
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -157,65 +131,31 @@ watch(joinDatePicker, (newDateRange) => {
         const [startDate, endDate] = newDateRange;
 
         if (startDate && endDate) {
-            getResults([startDate, endDate], terminateDatePicker.value, selectedFundType.value);
+            getResults([startDate, endDate]);
         } else if (startDate || endDate) {
-            getResults([startDate || endDate, endDate || startDate], terminateDatePicker.value, selectedFundType.value);
+            getResults([startDate || endDate, endDate || startDate]);
         } else {
             getResults();
         }
     } else {
         console.warn('Invalid date range format:', newDateRange);
     }
-})
-
-const clearTerminateDate = () => {
-    terminateDatePicker.value = [];
-}
-
-watch(terminateDatePicker, (newDateRange) => {
-    if (Array.isArray(newDateRange)) {
-        const [startDate, endDate] = newDateRange;
-
-        if (startDate && endDate) {
-            getResults(null, [startDate, endDate], selectedFundType.value);
-        } else if (startDate || endDate) {
-            getResults(null, [startDate || endDate, endDate || startDate], selectedFundType.value);
-        } else {
-            getResults();
-        }
-    } else {
-        console.warn('Invalid date range format:', newDateRange);
-    }
-})
-
-const selectedFundType = ref('');
-
-watch(selectedFundType, (newFundType) => {
-    getResults(joinDatePicker.value, terminateDatePicker.value, newFundType);
 })
 
 const clearAll = () => {
     filters.value['master_meta_login'].value = null;
     filters.value['first_leader_id'].value = null;
-    filters.value['status'].value = null;
     selectedMaster.value = null;
     selectedLeader.value = null;
     joinDatePicker.value = [];
-    terminateDatePicker.value = [];
-    selectedFundType.value = '';
 }
 
 const exportReport = () => {
-    let url = `/copy_trading/getSubscriptionsData?export=yes`;
+    let url = `/pamm/getPendingPammData?export=yes`;
 
     if (joinDatePicker.value?.length > 0) {
         const [startDate, endDate] = joinDatePicker.value;
         url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-    }
-
-    if (terminateDatePicker.value?.length > 0) {
-        const [startDate, endDate] = terminateDatePicker.value;
-        url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
     }
 
     if (selectedMaster.value) {
@@ -226,16 +166,14 @@ const exportReport = () => {
         url += `&first_leader_id=${selectedLeader.value.id}`;
     }
 
-    if (selectedFundType.value) {
-        url += `&fundType=${selectedFundType.value}`;
-    }
-
-    if (filters.value['status'].value) {
-        url += `&status=${filters.value['status'].value}`;
-    }
-
     window.location.href = url;
 }
+
+watchEffect(() => {
+    if (usePage().props.toast !== null) {
+        getResults();
+    }
+});
 </script>
 
 <template>
@@ -264,7 +202,7 @@ const exportReport = () => {
                             <div class="relative w-full md:w-60">
                                 <InputIconWrapper class="md:col-span-2">
                                     <template #icon>
-                                        <SearchIcon aria-hidden="true" class="w-5 h-5" />
+                                        <SearchLgIcon aria-hidden="true" class="w-5 h-5" />
                                     </template>
                                     <Input
                                         withIcon
@@ -321,16 +259,16 @@ const exportReport = () => {
                     </template>
                     <template v-if="subscriptions.length">
                         <Column
-                            field="approval_date"
+                            field="created_at"
                             sortable
                             frozen
                             class="table-cell min-w-36"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.join_date') }}</span>
+                                <span class="block">{{ $t('public.date') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ dayjs(slotProps.data.approval_date).format('DD/MM/YYYY HH:mm:ss') }}</span>
+                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('DD/MM/YYYY HH:mm:ss') }}</span>
                             </template>
                         </Column>
                         <Column
@@ -406,8 +344,7 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="platform"
-                            sortable
+                            field="strategy"
                             class="table-cell"
                         >
                             <template #header>
@@ -418,47 +355,27 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="meta_balance"
+                            field="subscription_amount"
                             sortable
-                            class="table-cell min-w-40"
+                            class="md:table-cell hidden min-w-40"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.fund') }}</span>
+                                <span class="block">Fund</span>
                             </template>
                             <template #body="slotProps">
-                                $ {{ formatAmount(slotProps.data.meta_balance ?? 0) }}
-                                <Tag
-                                    :severity="slotProps.data.demo_fund > 0 ? 'secondary' : 'info'"
-                                    :value="slotProps.data.demo_fund > 0 ? 'Demo' : 'Real'"
-                                />
+                                $ {{ formatAmount(slotProps.data.subscription_amount ?? 0) }}
                             </template>
                         </Column>
                         <Column
-                            field="status"
-                            sortable
+                            field="action"
                             class="table-cell"
+                            frozen
+                            align-frozen="right"
                         >
-                            <template #header>
-                                <span class="block">{{ $t('public.status') }}</span>
-                            </template>
                             <template #body="slotProps">
-                                <Tag
-                                    :severity="getSeverity(slotProps.data.status)"
-                                    :value="slotProps.data.status"
+                                <PendingPammAction
+                                    :subscription="slotProps.data"
                                 />
-                            </template>
-                        </Column>
-                        <Column
-                            field="termination_date"
-                            sortable
-                            class="table-cell min-w-32"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.termination') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                <span v-if="slotProps.data.termination_date" class="uppercase">{{ dayjs(slotProps.data.termination_date).format('DD/MM/YYYY HH:mm:ss') }}</span>
-                                <span v-else>-</span>
                             </template>
                         </Column>
                     </template>
@@ -472,7 +389,7 @@ const exportReport = () => {
             <!-- Filter Role-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by Master
+                    {{ $t('public.filter_by_master') }}
                 </div>
                 <Select
                     v-model="selectedMaster"
@@ -501,7 +418,7 @@ const exportReport = () => {
             <!-- Filter Leader-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by Leader
+                    {{ $t('public.filter_by_leaders') }}
                 </div>
                 <Select
                     v-model="selectedLeader"
@@ -531,7 +448,7 @@ const exportReport = () => {
             <!-- Filter Join Date-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter Join Date
+                    {{ $t('public.filter_date') }}
                 </div>
                 <div class="relative w-full">
                     <DatePicker
@@ -547,63 +464,6 @@ const exportReport = () => {
                         @click="clearJoinDate"
                     >
                         <XIcon class="w-4 h-4" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Terminate Date-->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter Termination Date
-                </div>
-                <div class="relative w-full">
-                    <DatePicker
-                        v-model="terminateDatePicker"
-                        dateFormat="dd/mm/yy"
-                        class="w-full"
-                        selectionMode="range"
-                        placeholder="dd/mm/yyyy - dd/mm/yyyy"
-                    />
-                    <div
-                        v-if="terminateDatePicker && terminateDatePicker.length > 0"
-                        class="absolute top-2/4 -mt-2.5 right-4 text-gray-400 select-none cursor-pointer bg-white"
-                        @click="clearTerminateDate"
-                    >
-                        <XIcon class="w-4 h-4" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Fund -->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by fund
-                </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950">
-                        <RadioButton v-model="selectedFundType" inputId="demo_fund" value="demo_fund" class="w-4 h-4" />
-                        <label for="demo_fund">Demo</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950">
-                        <RadioButton v-model="selectedFundType" inputId="real_fund" value="real_fund" class="w-4 h-4" />
-                        <label for="real_fund">Real</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Status -->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by status
-                </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_active" value="Active" class="w-4 h-4" />
-                        <label for="status_active">Active</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_terminated" value="Terminated" class="w-4 h-4" />
-                        <label for="status_terminated">Terminated</label>
                     </div>
                 </div>
             </div>

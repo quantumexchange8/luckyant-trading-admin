@@ -108,4 +108,10 @@ return [
     "cn" => "Chinese",
     "current_tnc" => "Current T&C PDF",
     "view" => "View",
+    "pending_pamm_request" => "Pending PAMM Request",
+    "pamm_listing" => "PAMM Listing",
+    "join_date" => "Join Date",
+    "fund" => "Fund",
+    "status" => "Status",
+    "termination" => "Termination",
 ];

@@ -223,12 +223,12 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         //pending pamm
         Route::get('/pending_pamm', [PammController::class, 'pending_pamm'])->name('pamm.pending_pamm');
         Route::get('/getPendingPammData', [PammController::class, 'getPendingPammData'])->name('subscription.getPendingPammData');
-        Route::post('/approveSubscribePamm', [PammController::class, 'approveSubscribePamm'])->name('pamm.approveSubscribePamm');
-        Route::post('/rejectSubscribePamm', [PammController::class, 'rejectSubscribePamm'])->name('pamm.rejectSubscribePamm');
+        Route::patch('/pammSubscriptionApproval', [PammController::class, 'pammSubscriptionApproval'])->name('pamm.pammSubscriptionApproval');
 
         // pamm listing
         Route::get('/pamm_listing', [PammController::class, 'pamm_listing'])->name('pamm.pamm_listing');
         Route::get('/getPammListingData', [PammController::class, 'getPammListingData'])->name('pamm.getPammListingData');
+        Route::get('/getPammSubscriptionOverview', [PammController::class, 'getPammSubscriptionOverview'])->name('pamm.getPammSubscriptionOverview');
     });
 
     /**

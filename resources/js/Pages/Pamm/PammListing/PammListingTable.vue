@@ -23,10 +23,6 @@ import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
 import RadioButton from "primevue/radiobutton"
 
-const props = defineProps({
-    subscriptionBatchesCount: Number
-})
-
 const isLoading = ref(false);
 const subscriptions = ref([]);
 const exportTable = ref('no');
@@ -35,7 +31,7 @@ const {formatAmount} = transactionFormat();
 const getResults = async (filterJoinDate = null, filterTerminationDate = null, filterFundType = null) => {
     isLoading.value = true;
     try {
-        let url = `/copy_trading/getSubscriptionsData?export=${exportTable.value}`;
+        let url = `/pamm/getPammListingData?export=${exportTable.value}`;
 
         if (filterJoinDate?.length > 0) {
             const [startDate, endDate] = filterJoinDate;
@@ -111,7 +107,7 @@ const selectedMaster = ref();
 const getMasters = async () => {
     loadingMasters.value = true;
     try {
-        const response = await axios.get('/getMasters?category=copy_trade');
+        const response = await axios.get('/getMasters?category=pamm');
         masters.value = response.data;
     } catch (error) {
         console.error('Error fetching masters:', error);
@@ -206,7 +202,7 @@ const clearAll = () => {
 }
 
 const exportReport = () => {
-    let url = `/copy_trading/getSubscriptionsData?export=yes`;
+    let url = `/pamm/getPammListingData?export=yes`;
 
     if (joinDatePicker.value?.length > 0) {
         const [startDate, endDate] = joinDatePicker.value;
@@ -406,6 +402,18 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
+                            field="type"
+                            sortable
+                            class="table-cell"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.type') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                <span class="uppercase">{{ slotProps.data.type }}</span>
+                            </template>
+                        </Column>
+                        <Column
                             field="platform"
                             sortable
                             class="table-cell"
@@ -418,7 +426,7 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="meta_balance"
+                            field="subscription_amount"
                             sortable
                             class="table-cell min-w-40"
                         >
@@ -426,7 +434,7 @@ const exportReport = () => {
                                 <span class="block">{{ $t('public.fund') }}</span>
                             </template>
                             <template #body="slotProps">
-                                $ {{ formatAmount(slotProps.data.meta_balance ?? 0) }}
+                                $ {{ formatAmount(slotProps.data.subscription_amount ?? 0) }}
                                 <Tag
                                     :severity="slotProps.data.demo_fund > 0 ? 'secondary' : 'info'"
                                     :value="slotProps.data.demo_fund > 0 ? 'Demo' : 'Real'"

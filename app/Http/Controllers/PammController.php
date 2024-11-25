@@ -13,10 +13,14 @@ use App\Notifications\SubscriptionConfirmationNotification;
 use App\Services\dealAction;
 use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
+use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -24,110 +28,152 @@ class PammController extends Controller
 {
     public function pending_pamm()
     {
-        return Inertia::render('Pamm/PendingPamm/PendingPamm');
+        return Inertia::render('Pamm/PendingPamm/PendingPamm', [
+            'pendingSubscriptionsCount' => PammSubscription::where('status', 'Pending')->count(),
+        ]);
     }
 
-    public function getPendingPammData(Request $request)
+    public function getPendingPammData(Request $request, UserService $userService)
     {
-        $authUser = \Auth::user();
-        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
-        // Decode the JSON
-        $decodedColumnName = json_decode(urldecode($columnName), true);
-
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
-        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
-
-        $pendingSubscriber = PammSubscription::query()
-            ->with(['user', 'master', 'master.user', 'transaction', 'master.tradingUser'])
+        $pendingQuery = PammSubscription::query()
+            ->with([
+                'user:id,name,email,hierarchyList',
+                'master:id,meta_login,strategy_type',
+                'master.tradingUser:id,meta_login,name,company'
+            ])
             ->where('status', 'Pending');
 
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $pendingSubscriber->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search);
-                })
-                    ->orWhereHas('master', function ($master) use ($search) {
-                        $master->where('meta_login', 'like', $search);
-                    })
-                    ->orWhere('meta_login', 'like', $search);
-            });
-        }
+        $authUser = Auth::user();
 
-        if ($request->filled('date')) {
-            $date = $request->input('date');
-            $dateRange = explode(' - ', $date);
-            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+        $join_start_date = $request->query('joinStartDate');
+        $join_end_date = $request->query('joinEndDate');
 
-            $pendingSubscriber->whereBetween('created_at', [$start_date, $end_date]);
-        }
+        if ($join_start_date && $join_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $join_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
 
-        if ($request->filled('leader')) {
-            $leader = $request->input('leader');
-            $leaderUser = User::find($leader);
-            if ($leaderUser) {
-                $pendingSubscriber->whereIn('user_id', $leaderUser->getChildrenIds());
-            }
+            $pendingQuery->whereBetween('created_at', [$start_date, $end_date]);
         }
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
-            $pendingSubscriber->whereIn('user_id', $childrenIds);
+            $pendingQuery->whereIn('user_id', $childrenIds);
         } elseif ($authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
         } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $pendingSubscriber->whereIn('user_id', $childrenIds);
+            $pendingQuery->whereIn('user_id', $childrenIds);
         } else {
             // No applicable conditions, set whereIn to empty array
-            $pendingSubscriber->whereIn('user_id', []);
+            $pendingQuery->whereIn('user_id', []);
         }
 
-        if ($request->has('exportStatus')) {
-            return Excel::download(new PammSubscriptionExport($pendingSubscriber), Carbon::now() . '-pending-pamm-report.xlsx');
+        if ($request->export == 'yes') {
+            if ($request->master_meta_login) {
+                $pendingQuery->where('master_meta_login', $request->master_meta_login);
+            }
+
+            if ($request->first_leader_id) {
+                $first_leader = User::find($request->first_leader_id);
+                $childrenIds = $first_leader->getChildrenIds();
+                $pendingQuery->whereIn('user_id', $childrenIds);
+            }
+
+            return Excel::download(new PammSubscriptionExport($pendingQuery), Carbon::now() . '-pending-pamm-report.xlsx');
         }
 
-        $totalSubscriberQuery = clone $pendingSubscriber;
-        $totalCopyTradeBalanceQuery = clone $pendingSubscriber;
+        $subscribers = $pendingQuery->select([
+            'id',
+            'user_id',
+            'meta_login',
+            'subscription_amount',
+            'master_id',
+            'master_meta_login',
+            'strategy_type',
+            'created_at',
+        ])
+            ->orderByDesc('created_at')
+            ->get();
 
-        $results = $pendingSubscriber
-            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
-            ->paginate($request->input('paginate', 10));
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $subscribers->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
 
-        $totalSubscriber = $totalSubscriberQuery->count();
-        $totalCopyTradeBalance = $totalCopyTradeBalanceQuery
-            ->sum('subscription_amount');
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
 
-        $results->each(function ($user) {
-            $user->first_leader = $user->user->getFirstLeader()->name ?? '-';
+        // Attach the first leader details
+        $subscribers->each(function ($subscribersQuery) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($subscribersQuery->user?->hierarchyList, $leaders);
+
+            $subscribersQuery->first_leader_id = $firstLeader?->id;
+            $subscribersQuery->first_leader_name = $firstLeader?->name;
+            $subscribersQuery->first_leader_email = $firstLeader?->email;
         });
 
         return response()->json([
-            'subscribers' => $results,
-            'totalSubscriber' => $totalSubscriber,
-            'totalCopyTradeBalance' => $totalCopyTradeBalance,
+            'pendingSubscribers' => $subscribers
         ]);
     }
 
-    public function approveSubscribePamm(Request $request)
+    public function pammSubscriptionApproval(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'remarks' => ['required_if:action,reject'],
+        ])->setAttributeNames([
+            'remarks' => trans('public.remarks'),
+        ]);
+        $validator->validate();
+
         $pamm_subscription = PammSubscription::find($request->subscription_id);
 
         $pamm_subscription->update([
+            'status' => $request->action == 'approve' ? 'Active' : 'Rejected',
             'approval_date' => now(),
-            'status' => 'Active',
-            'handle_by' => \Auth::id(),
+            'remarks' => $request->remarks,
+            'handle_by' => Auth::id(),
         ]);
 
+        if ($pamm_subscription->status == 'Active') {
+            if ($pamm_subscription->type != 'StandardGroup') {
+                // balance half from trading account
+                $client_deal = [];
 
-        if ($pamm_subscription->type != 'StandardGroup') {
-            // balance half from trading account
-            $client_deal = [];
+                try {
+                    $client_deal = (new MetaFiveService())->createDeal($pamm_subscription->meta_login, $pamm_subscription->subscription_amount, '#' . $pamm_subscription->meta_login, dealAction::WITHDRAW);
+                } catch (\Exception $e) {
+                    \Log::error('Error fetching trading accounts: '. $e->getMessage());
+                }
+
+                Transaction::create([
+                    'category' => 'trading_account',
+                    'user_id' => $pamm_subscription->master->user_id,
+                    'from_meta_login' => $pamm_subscription->meta_login,
+                    'ticket' => $client_deal['deal_Id'],
+                    'transaction_number' => RunningNumberService::getID('transaction'),
+                    'transaction_type' => 'PurchaseProduct',
+                    'fund_type' => 'RealFund',
+                    'amount' => $pamm_subscription->subscription_amount,
+                    'transaction_charges' => 0,
+                    'transaction_amount' => $pamm_subscription->subscription_amount,
+                    'status' => 'Success',
+                    'comment' => $client_deal['conduct_Deal']['comment'],
+                ]);
+            }
+
+            // fund to master
+            $description = $pamm_subscription->meta_login ? 'Login #' . $pamm_subscription->meta_login : ('Client #' . $pamm_subscription->user_id);
+            $deal = [];
 
             try {
-                $client_deal = (new MetaFiveService())->createDeal($pamm_subscription->meta_login, $pamm_subscription->subscription_amount, '#' . $pamm_subscription->meta_login, dealAction::WITHDRAW);
+                $deal = (new MetaFiveService())->createDeal($pamm_subscription->master_meta_login, $pamm_subscription->subscription_amount, $description, dealAction::DEPOSIT);
             } catch (\Exception $e) {
                 \Log::error('Error fetching trading accounts: '. $e->getMessage());
             }
@@ -135,171 +181,215 @@ class PammController extends Controller
             Transaction::create([
                 'category' => 'trading_account',
                 'user_id' => $pamm_subscription->master->user_id,
-                'from_meta_login' => $pamm_subscription->meta_login,
-                'ticket' => $client_deal['deal_Id'],
+                'to_meta_login' => $pamm_subscription->master_meta_login,
+                'ticket' => $deal['deal_Id'],
                 'transaction_number' => RunningNumberService::getID('transaction'),
-                'transaction_type' => 'PurchaseProduct',
+                'transaction_type' => 'DepositCapital',
                 'fund_type' => 'RealFund',
                 'amount' => $pamm_subscription->subscription_amount,
                 'transaction_charges' => 0,
                 'transaction_amount' => $pamm_subscription->subscription_amount,
                 'status' => 'Success',
-                'comment' => $client_deal['conduct_Deal']['comment'],
+                'comment' => $deal['conduct_Deal']['comment'],
             ]);
+
+            $masterAccount = Master::find($pamm_subscription->master_id);
+            $masterAccount->total_fund += $pamm_subscription->subscription_amount;
+            $masterAccount->save();
         }
 
-        // fund to master
-        $description = $pamm_subscription->meta_login ? 'Login #' . $pamm_subscription->meta_login : ('Client #' . $pamm_subscription->user_id);
-        $deal = [];
-
-        try {
-            $deal = (new MetaFiveService())->createDeal($pamm_subscription->master_meta_login, $pamm_subscription->subscription_amount, $description, dealAction::DEPOSIT);
-        } catch (\Exception $e) {
-            \Log::error('Error fetching trading accounts: '. $e->getMessage());
-        }
-
-        Transaction::create([
-            'category' => 'trading_account',
-            'user_id' => $pamm_subscription->master->user_id,
-            'to_meta_login' => $pamm_subscription->master_meta_login,
-            'ticket' => $deal['deal_Id'],
-            'transaction_number' => RunningNumberService::getID('transaction'),
-            'transaction_type' => 'DepositCapital',
-            'fund_type' => 'RealFund',
-            'amount' => $pamm_subscription->subscription_amount,
-            'transaction_charges' => 0,
-            'transaction_amount' => $pamm_subscription->subscription_amount,
-            'status' => 'Success',
-            'comment' => $deal['conduct_Deal']['comment'],
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_{$request->action}_subscription_message"),
+            'type' => 'success',
         ]);
-
-//        $response = Http::post('https://api.luckyantmallvn.com/serverapi/pamm/subscription/join', $pamm_subscription);
-//        \Log::debug($response);
-        $masterAccount = Master::find($pamm_subscription->master_id);
-        $masterAccount->total_fund += $pamm_subscription->subscription_amount;
-        $masterAccount->save();
-//        $master_response = \Http::post('https://api.luckyantmallvn.com/serverapi/pamm/strategy', $masterAccount);
-//        \Log::debug($master_response);
-
-        return redirect()->back()
-            ->with('title', 'Success approve')
-            ->with('success', 'Approve this subscription');
-    }
-
-    public function rejectSubscribePamm(Request $request)
-    {
-        $request->validate([
-            'remarks' => ['required'],
-        ]);
-
-        $pamm_subscription = PammSubscription::find($request->subscription_id);
-
-        $pamm_subscription->update([
-            'approval_date' => now(),
-            'status' => 'Rejected',
-            'handle_by' => \Auth::id(),
-        ]);
-
-        return redirect()->back()
-            ->with('title', 'Success rejected')
-            ->with('warning', 'Rejected this subscription');
     }
 
     public function pamm_listing()
     {
-        return Inertia::render('Pamm/PammListing/PammListing');
+        return Inertia::render('Pamm/PammListing/PammListing', [
+            'subscriptionsCount' => PammSubscription::whereNot('status', 'Pending')->count(),
+        ]);
     }
 
-    public function getPammListingData(Request $request)
+    public function getPammListingData(Request $request, UserService $userService)
     {
-        $authUser = \Auth::user();
-        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
-        // Decode the JSON
-        $decodedColumnName = json_decode(urldecode($columnName), true);
+        $subscriptionQuery = PammSubscription::with([
+            'user:id,name,email,hierarchyList',
+            'master:id,meta_login,type,strategy_type',
+            'master.tradingUser:id,meta_login,name,company'
+        ]);
 
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'approval_date';
-        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+        $authUser = Auth::user();
 
-        $subscription = PammSubscription::query()
-            ->with(['user', 'master', 'transaction', 'master.tradingUser', 'package']);
+        $join_start_date = $request->query('joinStartDate');
+        $join_end_date = $request->query('joinEndDate');
 
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $subscription->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search)
-                        ->orWhere('email', 'like', $search);
-                })
-                    ->orWhereHas('master', function ($master) use ($search) {
-                        $master->where('meta_login', 'like', $search);
-                    })
-                    ->orWhere('meta_login', 'like', $search);
-            });
+        if ($join_start_date && $join_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $join_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
+
+            $subscriptionQuery->whereBetween('approval_date', [$start_date, $end_date]);
         }
 
-        if ($request->filled('date')) {
-            $date = $request->input('date');
-            $dateRange = explode(' - ', $date);
-            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+        $terminate_start_date = $request->query('terminateStartDate');
+        $terminate_end_date = $request->query('terminateEndDate');
 
-            $subscription->whereBetween('approval_date', [$start_date, $end_date]);
+        if ($terminate_start_date && $terminate_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $terminate_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $terminate_end_date)->endOfDay();
+
+            $subscriptionQuery->whereBetween('termination_date', [$start_date, $end_date]);
         }
 
-        if ($request->filled('leader')) {
-            $leader = $request->input('leader');
-            $leaderUser = User::find($leader);
-            if ($leaderUser) {
-                $subscription->whereIn('user_id', $leaderUser->getChildrenIds());
+        if ($request->fundType) {
+            switch ($request->fundType) {
+                case 'demo_fund':
+                    $subscriptionQuery->where('demo_fund', '>', 0);
+                    break;
+
+                case 'real_fund':
+                    $subscriptionQuery->where('demo_fund', 0)
+                        ->orWhereNull('demo_fund');
+                    break;
             }
-        }
-
-        if ($request->filled('status')) {
-            $status = $request->input('status');
-            $subscription->where('status', $status);
-        }
-
-        if ($request->filled('product')) {
-            $product = '%' . $request->input('product') . '%';
-            $subscription->where('subscription_package_product', 'like', $product);
         }
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
-            $subscription->whereIn('user_id', $childrenIds);
+            $subscriptionQuery->whereIn('user_id', $childrenIds);
         } elseif ($authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
         } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
             $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $subscription->whereIn('user_id', $childrenIds);
+            $subscriptionQuery->whereIn('user_id', $childrenIds);
         } else {
             // No applicable conditions, set whereIn to empty array
-            $subscription->whereIn('user_id', []);
+            $subscriptionQuery->whereIn('user_id', []);
         }
 
-        if ($request->has('exportStatus')) {
-            return Excel::download(new PammSubscriptionExport($subscription), Carbon::now() . '-pamm_subscription-report.xlsx');
+        if ($request->export == 'yes') {
+            if ($request->master_meta_login) {
+                $subscriptionQuery->where('master_meta_login', $request->master_meta_login);
+            }
+
+            if ($request->first_leader_id) {
+                $first_leader = User::find($request->first_leader_id);
+                $childrenIds = $first_leader->getChildrenIds();
+                $subscriptionQuery->whereIn('user_id', $childrenIds);
+            }
+
+            if ($request->status) {
+                $subscriptionQuery->where('status', $request->status);
+            }
+
+            return Excel::download(new PammSubscriptionExport($subscriptionQuery), Carbon::now() . '-copy-trading-report.xlsx');
         }
 
-        $totalSubscriptionQuery = clone $subscription;
-        $totalCopyTradeBalanceQuery = clone $subscription;
+        $subscription = $subscriptionQuery->select([
+            'id',
+            'user_id',
+            'meta_login',
+            'strategy_type',
+            'subscription_amount',
+            'demo_fund',
+            'master_id',
+            'master_meta_login',
+            'type',
+            'approval_date',
+            'termination_date',
+            'status',
+        ])
+            ->orderByDesc('approval_date')
+            ->get();
 
-        $results = $subscription
-            ->orderBy($column == null ? 'approval_date' : $column, $sortOrder)
-            ->paginate($request->input('paginate', 10));
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $subscription->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
 
-        $totalSubscriptions = $totalSubscriptionQuery->count();
-        $totalCopyTradeBalance = $totalCopyTradeBalanceQuery->sum('subscription_amount');
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
 
-        $results->each(function ($user) {
-            $user->first_leader = $user->user->getFirstLeader() ?? null;
+        // Attach the first leader details
+        $subscription->each(function ($subscriptionQuery) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+            $subscriptionQuery->first_leader_id = $firstLeader?->id;
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+            $subscriptionQuery->first_leader_email = $firstLeader?->email;
         });
 
         return response()->json([
-            'subscribers' => $results,
-            'totalSubscriptions' => $totalSubscriptions,
-            'totalCopyTradeBalance' => $totalCopyTradeBalance,
+            'subscriptions' => $subscription
+        ]);
+    }
+
+    public function getPammSubscriptionOverview()
+    {
+        // current month
+        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
+
+        // last month
+        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        $subscriptionQuery = PammSubscription::where('status', 'Active');
+
+        // current month active subscribers
+        $current_month_active_subscriber = (clone $subscriptionQuery)
+            ->whereDate('approval_date', '<=', $endOfMonth)
+            ->distinct('meta_login')
+            ->count();
+
+        // current month active fund
+        $current_month_active_fund = (clone $subscriptionQuery)
+            ->whereDate('approval_date', '<=', $endOfMonth)
+            ->sum('subscription_amount');
+
+        // last month active subscribers
+        $last_month_active_subscriber =  (clone $subscriptionQuery)
+            ->whereDate('approval_date', '<=', $endOfLastMonth)
+            ->distinct('meta_login')
+            ->count();
+
+        // last month active fund
+        $last_month_active_fund =  (clone $subscriptionQuery)
+            ->whereDate('approval_date', '<=', $endOfLastMonth)
+            ->sum('subscription_amount');
+
+        // comparison % of success deposit vs last month
+        $last_month_active_subscriber_comparison = $current_month_active_subscriber - $last_month_active_subscriber;
+
+        // comparison % of success deposit vs last month
+        $last_month_active_fund_comparison = $last_month_active_fund > 0
+            ? (($current_month_active_fund - $last_month_active_fund) / $last_month_active_fund) * 100
+            : ($current_month_active_fund > 0 ? 100 : 0);
+
+        // Get and format top 3 users by total deposit
+        $topThreeUser = PammSubscription::select('user_id', DB::raw('SUM(subscription_amount) as total_fund'))
+            ->where('status', 'Active')
+            ->groupBy('user_id')
+            ->orderByDesc('total_fund')
+            ->take(3)
+            ->with(['user:id,name', 'user.media'])
+            ->get()
+            ->map(function ($subscription) {
+                $subscription->profile_photo = $subscription->user->getFirstMediaUrl('profile_photo');
+                return $subscription;
+            });
+
+        return response()->json([
+            'currentMonthActiveSubscriber' => $current_month_active_subscriber,
+            'lastMonthSubscriberComparison' => $last_month_active_subscriber_comparison,
+            'currentActiveFund' => $current_month_active_fund,
+            'lastMonthActiveFundComparison' => $last_month_active_fund_comparison,
+            'topThreeUser' => $topThreeUser,
         ]);
     }
 }

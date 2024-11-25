@@ -178,6 +178,7 @@ class CopyTradingController extends Controller
             'master_id',
             'master_meta_login',
             'type',
+            'strategy_type',
             'approval_date',
             'termination_date',
             'status',

@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Master;
 use App\Models\SettingSettlementPeriod;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class SelectOptionController extends Controller
 {
-    public function getMasters()
+    public function getMasters(Request $request)
     {
         $masters = Master::with('tradingUser:id,name,meta_login')
-            ->where('type', 'CopyTrade')
+            ->where('category', $request->category)
             ->select('id', 'meta_login')
             ->get();
 

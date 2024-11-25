@@ -1,302 +1,170 @@
 <script setup>
+import Button from "primevue/button";
+import Dialog from "primevue/dialog";
+import {
+    IconCheck,
+    IconX
+} from "@tabler/icons-vue"
 import {ref} from "vue";
-import Tooltip from "@/Components/Tooltip.vue";
-import {MemberDetailIcon, alertTriangle} from "@/Components/Icons/outline.jsx";
-import {CheckIcon, XIcon, BanIcon } from "@heroicons/vue/outline";
-import Button from "@/Components/Button.vue";
-import Modal from "@/Components/Modal.vue";
 import {transactionFormat} from "@/Composables/index.js";
+import dayjs from "dayjs";
+import Tag from "primevue/tag";
+import Textarea from "primevue/textarea";
+import InputLabel from "@/Components/Label.vue";
 import {useForm} from "@inertiajs/vue3";
-import Label from "@/Components/Label.vue";
-import Input from "@/Components/Input.vue";
 import InputError from "@/Components/InputError.vue";
 
 const props = defineProps({
-    pammSubscription: Object,
-})
+    subscription: Object
+});
 
-const transactionModal = ref(false);
-const modalComponent = ref('');
-const { formatDateTime, formatAmount, formatType } = transactionFormat();
+const visible = ref(false);
+const dialogType = ref('');
+const {formatAmount} = transactionFormat();
 
-const openTransactionModal = (componentType) => {
-    transactionModal.value = true;
-    if (componentType === 'approve') {
-        modalComponent.value = 'Approve subscription';
-    } else if (componentType === 'reject') {
-        modalComponent.value = 'Reject subscription';
-    } else if (componentType === 'rejectRemarks') {
-        modalComponent.value = 'Reject Remark';
-    } else if (componentType === 'view') {
-        // modalComponent.value = 'Renewal Details';
-        modalComponent.value = 'Subscriber Details';
-
-    } else if (componentType === 'termination') {
-        modalComponent.value = 'Termination';
-    } else if (componentType === 'terminateRemarks') {
-        modalComponent.value = 'Terminate Remark';
-    }
-}
-
-const closeModal = () => {
-    transactionModal.value = false
-    modalComponent.value = null;
+const openDialog = (action) => {
+    visible.value = true;
+    dialogType.value = action;
 }
 
 const form = useForm({
-    subscription_id: props.pammSubscription.id,
-    userId: props.pammSubscription.user_id,
-    transactionId: props.pammSubscription.transaction_id,
+    subscription_id: props.subscription.id,
+    action: '',
     remarks: '',
-});
+})
 
 const submitForm = () => {
-    let submitRoute;
-    if (modalComponent.value === 'Approve subscription') {
-        submitRoute = route('pamm.approveSubscribePamm');
-    } else if (modalComponent.value === 'Reject Remark') {
-        submitRoute = route('pamm.rejectSubscribePamm');
-    }
-
-    if (submitRoute) {
-        form.post(submitRoute, {
-            onSuccess: () => {
-                closeModal();
-                form.reset();
-            },
-        });
-    } else {
-        console.error('Invalid modal component:', modalComponent);
-    }
+    form.action = dialogType.value;
+    form.patch(route('pamm.pammSubscriptionApproval'), {
+        onSuccess: () => {
+            closeDialog();
+            form.reset();
+        }
+    })
 }
 
+const closeDialog = () => {
+    visible.value = false;
+}
 </script>
 
 <template>
-    <Tooltip v-if="pammSubscription.status !== 'Subscribing'" content="Approve" placement="bottom">
+    <div class="flex items-center gap-3">
         <Button
-            type="button"
-            pill
-            class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-            variant="success"
-            @click="openTransactionModal('approve')"
+            rounded
+            outlined
+            severity="success"
+            class="!p-1.5"
+            v-tooltip.bottom="$t('public.approve')"
+            @click="openDialog('approve')"
         >
-            <CheckIcon aria-hidden="true" class="w-6 h-6 absolute" />
-            <span class="sr-only">Approve</span>
+            <IconCheck size="16"/>
         </Button>
-    </Tooltip>
-    <Tooltip v-if="pammSubscription.status !== 'Subscribing'" content="Reject" placement="bottom">
-        <Button
-            type="button"
-            pill
-            class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-            variant="danger"
-            @click="openTransactionModal('reject')"
-        >
-            <XIcon aria-hidden="true" class="w-6 h-6 absolute" />
-            <span class="sr-only">reject</span>
-        </Button>
-    </Tooltip>
-    <Tooltip content="View" placement="bottom">
-        <Button
-            type="button"
-            pill
-            class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-            variant="gray"
-            @click="openTransactionModal('view')"
-        >
-            <MemberDetailIcon aria-hidden="true" class="w-6 h-6 absolute" />
-            <span class="sr-only">Reset</span>
-        </Button>
-    </Tooltip>
 
-    <Tooltip v-if="pammSubscription.status === 'Subscribing'" content="Termination" placement="bottom">
         <Button
-            type="button"
-            pill
-            class="justify-center px-4 pt-2 mx-1 w-8 h-8 focus:outline-none"
-            variant="danger"
-            @click="openTransactionModal('termination')"
+            rounded
+            outlined
+            severity="danger"
+            class="!p-1.5"
+            v-tooltip.bottom="$t('public.reject')"
+            @click="openDialog('reject')"
         >
-            <BanIcon aria-hidden="true" class="w-6 h-6 absolute" />
-            <span class="sr-only">Reset</span>
+            <IconX size="16"/>
         </Button>
-    </Tooltip>
+    </div>
 
-    <Modal :show="transactionModal" :title="modalComponent" @close="closeModal" max-width="lg">
-        <div v-if="modalComponent === 'Approve subscription'">
-            <div class="px-2 space-y-2">
-                <alertTriangle />
-                <h2 class="text-xl font-semibold dark:text-white pt-5">Approve Subscriber</h2>
-                <div class="text-sm font-normal dark:text-gray-400">
-                    Do you want to approve this subscription?
+    <Dialog
+        v-model:visible="visible"
+        modal
+        :header="$t(`public.${dialogType}_subscription`)"
+        class="dialog-xs md:dialog-md"
+    >
+        <div class="flex flex-col items-center gap-4 divide-y dark:divide-gray-700 self-stretch">
+            <div class="flex flex-col-reverse md:flex-row md:items-center gap-3 self-stretch w-full">
+                <div class="flex flex-col items-start w-full">
+                    <span class="text-gray-950 dark:text-white text-sm font-medium">{{ subscription.user.name }}</span>
+                    <span class="text-gray-500 text-xs">{{ subscription.user.email }}</span>
+                </div>
+                <div class="min-w-[180px] text-gray-950 dark:text-white font-semibold text-xl md:text-right">
+                    $ {{ formatAmount(subscription.subscription_amount) }}
                 </div>
             </div>
-            <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button
-                    type="button"
-                    variant="secondary"
-                    class="px-6 justify-center"
-                    @click="closeModal"
-                >
-                    Cancel
-                </Button>
-                <Button
-                    class="px-6 justify-center"
-                    @click.prevent="submitForm"
-                    :disabled="form.processing"
-                >
-                    Confirm
-                </Button>
-            </div>
-        </div>
 
-        <div v-if="modalComponent === 'Reject subscription'">
-            <div class="px-2 space-y-2">
-                <alertTriangle />
-                <h2 class="text-xl font-semibold dark:text-white pt-5">Reject Subscriber</h2>
-                <div class="text-sm font-normal dark:text-gray-400">
-                    Do you want to reject this subscription?
-                </div>
-            </div>
-            <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button
-                    type="button"
-                    variant="secondary"
-                    class="px-6 justify-center"
-                    @click="closeModal"
-                >
-                    Cancel
-                </Button>
-                <Button
-                    class="px-6 justify-center"
-                    @click="openTransactionModal('rejectRemarks')"
-                >
-                    Confirm
-                </Button>
-            </div>
-        </div>
-
-        <div v-if="modalComponent === 'Termination'">
-            <div class="px-2 space-y-2">
-                <alertTriangle />
-                <h2 class="text-xl font-semibold dark:text-white pt-5">Terminate Subscriber</h2>
-                <div class="text-sm font-normal dark:text-gray-400">
-                    Do you want to terminate this subscription?
-                </div>
-            </div>
-            <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
-                    Cancel
-                </Button>
-                <Button class="px-6 justify-center" @click="openTransactionModal('terminateRemarks')">Confirm</Button>
-            </div>
-        </div>
-
-        <div v-if="modalComponent === 'Reject Remark'">
-            <form>
-                <div class="flex gap-2 mt-3 mb-8">
-                    <Label class="text-sm text-black dark:text-white w-1/4 pt-0.5" for="remark" value="Remark" />
-                    <div class="flex flex-col w-full">
-                        <Input
-                            id="remark"
-                            type="text"
-                            placeholder="Enter remark (visible to member)"
-                            class="block w-full"
-                            :class="form.errors.remarks ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
-                            v-model="form.remarks"
-                        />
-                        <InputError :message="form.errors.remarks" class="mt-2" />
+            <div class="flex flex-col gap-3 items-start w-full pt-4">
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.requested_date') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ dayjs(subscription.created_at).format('DD/MM/YYYY HH:mm:ss') }}
                     </div>
                 </div>
-                <div class="pt-5 px-2 grid grid-cols-2 gap-4">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        class="px-6 justify-center"
-                        @click="closeModal"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        class="px-6 justify-center"
-                        @click.prevent="submitForm"
-                        :disabled="form.processing"
-                    >
-                        Confirm
-                    </Button>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.account') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ subscription.meta_login }}
+                    </div>
                 </div>
-            </form>
-        </div>
-
-        <div v-if="modalComponent === 'Terminate Remark'">
-            <div class="flex gap-2 mt-3 mb-8">
-                <Label class="text-sm text-black dark:text-white w-1/4 pt-0.5" for="remark" value="Remark" />
-                <div class="flex flex-col w-full">
-                    <Input
-                        id="remark"
-                        type="text"
-                        placeholder="Enter remark (visible to member)"
-                        class="block w-full"
-                        :class="form.errors.remarks ? 'border border-error-500 dark:border-error-500' : 'border border-gray-400 dark:border-gray-600'"
-                        v-model="form.remarks"
-                    />
-                    <InputError :message="form.errors.remarks" class="mt-2" />
+                <div class="flex flex-col md:flex-row md:items-start gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.master') }}
+                    </div>
+                    <div class="flex flex-col text-gray-950 dark:text-white text-sm font-medium">
+                        <span>{{ subscription.master.trading_user.name }} <Tag
+                            :severity="subscription.strategy_type === 'HOFI' ? 'warn' : 'info'"
+                            :value="subscription.master.strategy_type"
+                        /></span>
+                        <span class="text-gray-400">{{ subscription.master_meta_login }}</span>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-start gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.leader') }}
+                    </div>
+                    <div class="flex flex-col text-gray-950 dark:text-white text-sm font-medium">
+                        <span>{{ subscription.first_leader_name }}</span>
+                        <span class="text-gray-400">{{ subscription.first_leader_email }}</span>
+                    </div>
                 </div>
             </div>
-            <div class="pt-5 px-2 grid grid-cols-2 gap-4 border-t dark:border-gray-700">
-                <Button type="button" variant="secondary" class="px-6 justify-center" @click="closeModal">
-                    Cancel
-                </Button>
-                <Button class="px-6 justify-center" @click.prevent="submitForm">Confirm</Button>
-            </div>
-        </div>
 
-        <div v-if="modalComponent === 'Subscriber Details'">
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(pammSubscription.created_at)}}</span>
+            <div v-if="dialogType === 'reject'" class="flex flex-col items-start gap-1 self-stretch pt-4">
+                <InputLabel for="remarks">{{ $t('public.remarks') }}</InputLabel>
+                <Textarea
+                    id="remarks"
+                    type="text"
+                    class="flex flex-1 self-stretch"
+                    v-model="form.remarks"
+                    :placeholder="dialogType === 'approve' ? $t(`public.${dialogType}_subscription`) : $t(`public.${dialogType}_subscription`)"
+                    :invalid="!!form.errors.remarks"
+                    rows="5"
+                    cols="30"
+                    autofocus
+                />
+                <InputError :message="form.errors.remarks"/>
             </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">User</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.first_leader') }}</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.first_leader }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Trading Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.meta_login }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Name</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.master.trading_user.name }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Master Account</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.master.meta_login }}</span>
-            </div>
-            <!-- <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">pammSubscription Fee</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ pammSubscription.pammSubscription.subscription_fee ? pammSubscription.pammSubscription.subscription_fee : '0.00' }}</span>
-            </div> -->
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Copy Trade Balance</span>
-                <span class="col-span-2 text-black dark:text-white py-2">$ {{ formatAmount(pammSubscription.subscription_amount ? pammSubscription.subscription_amount : 0) }}</span>
-            </div>
-            <div class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Settlement Period</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.settlement_period }} Days</span>
-            </div>
-            <div v-if="pammSubscription.approval_date != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Approval Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ formatDateTime(pammSubscription.approval_date) }}</span>
-            </div>
-            <div v-if="pammSubscription.expired_date != null" class="grid grid-cols-3 items-center gap-2">
-                <span class="col-span-1 text-sm font-semibold dark:text-gray-400">Expired Date</span>
-                <span class="col-span-2 text-black dark:text-white py-2">{{ pammSubscription.expired_date ? formatDateTime(pammSubscription.expired_date) : '-'}}</span>
+
+            <div class="pt-5 flex gap-3 justify-end items-center self-stretch w-full">
+                <Button
+                    type="button"
+                    :label="$t('public.cancel')"
+                    severity="secondary"
+                    variant="outlined"
+                    class="px-3 w-full md:w-auto"
+                    :disabled="form.processing"
+                    @click="closeDialog"
+                />
+
+                <Button
+                    type="submit"
+                    class="px-3 w-full md:w-auto"
+                    :label="$t('public.confirm')"
+                    :disabled="form.processing"
+                    @click.prevent="submitForm"
+                />
             </div>
         </div>
-    </Modal>
+    </Dialog>
 </template>
