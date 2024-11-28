@@ -23,7 +23,7 @@ import ManagementFeeSetting from "@/Pages/Master/MasterListing/Partials/Manageme
 import RadioButton from "primevue/radiobutton";
 
 const visible = ref(false);
-const activeStep = ref(1);
+const activeStep = ref(2);
 const totalSteps = 3;
 const loadingUsers = ref(false);
 const users = ref([]);
@@ -68,7 +68,9 @@ const initialFormState = {
     join_period: null,
     roi_period: '',
     delivery_requirement: '',
-    is_public: null,
+    is_public: 1,
+    can_top_up: '',
+    can_revoke: '',
     leaders: null,
     management_fee: '',
 };
@@ -351,7 +353,7 @@ const getSettlementPeriods = async () => {
 
                                     <!-- Max Fund Percentage -->
                                     <div
-                                        v-if="form.category === 'copy_trade' && form.strategy_type === 'Alpha'"
+                                        v-if="form.strategy_type === 'Alpha'"
                                         class="flex flex-col items-start gap-1 self-stretch"
                                     >
                                         <InputLabel
@@ -562,33 +564,6 @@ const getSettlementPeriods = async () => {
                             <div class="flex flex-col items-center gap-3 self-stretch">
                                 <span class="self-stretch text-surface-950 dark:text-white text-sm font-bold">{{ $t('public.master_settings') }}</span>
                                 <div class="w-full grid grid-cols-1 gap-3 md:grid-cols-2">
-                                    <!-- Master Public Status -->
-                                    <div class="flex flex-col items-start gap-1 self-stretch">
-                                        <InputLabel
-                                            for="public_status"
-                                            :value="$t('public.public_status')"
-                                        />
-                                        <div class="flex flex-wrap gap-4">
-                                            <div class="flex items-center">
-                                                <RadioButton
-                                                    v-model="form.is_public"
-                                                    inputId="is_public_true"
-                                                    :value="1"
-                                                />
-                                                <InputLabel for="is_public_true" class="ml-2">{{ $t('public.public') }}</InputLabel>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <RadioButton
-                                                    v-model="form.is_public"
-                                                    inputId="is_public_false"
-                                                    :value="0"
-                                                />
-                                                <InputLabel for="is_public_false" class="ml-2">{{ $t('public.private') }}</InputLabel>
-                                            </div>
-                                        </div>
-                                        <InputError :message="form.errors.is_public" />
-                                    </div>
-
                                     <!-- Visible To -->
                                     <div class="flex flex-col items-start gap-1 self-stretch">
                                         <InputLabel
@@ -607,6 +582,62 @@ const getSettlementPeriods = async () => {
                                             :invalid="!!form.errors.leaders"
                                         />
                                         <InputError :message="form.errors.leaders" />
+                                    </div>
+
+                                    <!-- Master Topup Status -->
+                                    <div class="flex flex-col items-start gap-1 self-stretch">
+                                        <InputLabel
+                                            for="top_up_status"
+                                            :value="$t('public.top_up')"
+                                            :invalid="!!form.errors.can_top_up"
+                                        />
+                                        <div class="flex flex-wrap gap-4">
+                                            <div class="flex items-center">
+                                                <RadioButton
+                                                    v-model="form.can_top_up"
+                                                    inputId="can_top_up_true"
+                                                    :value="1"
+                                                />
+                                                <InputLabel for="can_top_up_true" class="ml-2">{{ $t('public.yes') }}</InputLabel>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <RadioButton
+                                                    v-model="form.can_top_up"
+                                                    inputId="can_top_up_false"
+                                                    :value="0"
+                                                />
+                                                <InputLabel for="can_top_up_false" class="ml-2">{{ $t('public.no') }}</InputLabel>
+                                            </div>
+                                        </div>
+                                        <InputError :message="form.errors.can_top_up" />
+                                    </div>
+
+                                    <!-- Master Revoke Status -->
+                                    <div class="flex flex-col items-start gap-1 self-stretch">
+                                        <InputLabel
+                                            for="revoke_status"
+                                            :value="$t('public.revoke')"
+                                            :invalid="!!form.errors.can_revoke"
+                                        />
+                                        <div class="flex flex-wrap gap-4">
+                                            <div class="flex items-center">
+                                                <RadioButton
+                                                    v-model="form.can_revoke"
+                                                    inputId="can_revoke_true"
+                                                    :value="1"
+                                                />
+                                                <InputLabel for="can_revoke_true" class="ml-2">{{ $t('public.yes') }}</InputLabel>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <RadioButton
+                                                    v-model="form.can_revoke"
+                                                    inputId="can_revoke_false"
+                                                    :value="0"
+                                                />
+                                                <InputLabel for="can_revoke_false" class="ml-2">{{ $t('public.no') }}</InputLabel>
+                                            </div>
+                                        </div>
+                                        <InputError :message="form.errors.can_revoke" />
                                     </div>
 
                                     <!-- Delivery Requirement -->

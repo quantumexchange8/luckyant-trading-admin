@@ -114,4 +114,8 @@ return [
     "fund" => "Fund",
     "status" => "Status",
     "termination" => "Termination",
+    "top_up" => "Top Up",
+    "yes" => "Yes",
+    "no" => "No",
+    "revoke" => "Revoke",
 ];

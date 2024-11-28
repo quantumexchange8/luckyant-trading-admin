@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\MasterExport;
+use App\Models\Group;
 use App\Models\Master;
 use App\Models\MasterLeader;
 use App\Models\MasterManagementFee;
@@ -685,6 +686,8 @@ class MasterController extends Controller
                 $rules['roi_period'] = ['nullable'];
                 $rules['delivery_requirement'] = ['nullable'];
                 $rules['leaders'] = ['required'];
+                $rules['can_top_up'] = ['required'];
+                $rules['can_revoke'] = ['required'];
 
                 $attributeNames['min_investment'] = trans('public.min_investment');
                 $attributeNames['sharing_profit'] = trans('public.shared');
@@ -694,6 +697,8 @@ class MasterController extends Controller
                 $attributeNames['roi_period'] = trans('public.roi_period');
                 $attributeNames['delivery_requirement'] = trans('public.delivery_requirement');
                 $attributeNames['leaders'] = trans('public.visible_to');
+                $attributeNames['can_top_up'] = trans('public.top_up');
+                $attributeNames['can_revoke'] = trans('public.revoke');
 
                 Validator::make($request->all(), $rules)
                     ->setAttributeNames($attributeNames)
@@ -730,7 +735,9 @@ class MasterController extends Controller
             'total_subscribers' => $request->total_subscribers,
             'total_fund' => $request->total_fund,
             'max_drawdown' => $request->max_drawdown,
-            'is_public' => $request->is_public,
+            'is_public' => $request->is_public ?? 1,
+            'can_top_up' => $request->can_top_up,
+            'can_revoke' => $request->can_revoke,
             'delivery_requirement' => $request->delivery_requirement ?? 0,
             'status' => 'Active',
         ]);
@@ -738,8 +745,6 @@ class MasterController extends Controller
         if ($master->strategy_type == 'Alpha') {
             $master->max_fund_percentage = $request->max_fund_percentage;
         }
-
-        //TODO::Add management fee
 
         $metaService = new MetaFiveService();
         $connection = $metaService->getConnectionStatus();
@@ -753,7 +758,8 @@ class MasterController extends Controller
         }
 
         $userModel = User::find($user['id']);
-        $metaAccount = $metaService->createUser($userModel, 'JS', 500);
+        $group = Group::firstWhere('display', $master->strategy_type);
+        $metaAccount = $metaService->createUser($userModel, $group, 500);
         $trading_account = TradingAccount::firstWhere('meta_login', $metaAccount['login']);
 
         $master->trading_account_id = $trading_account->id;
@@ -770,9 +776,20 @@ class MasterController extends Controller
         }
         $master->save();
 
+        $managementFees = $request->input('management_fee', []);
+
+        foreach ($managementFees as $fee) {
+            MasterManagementFee::create([
+                'master_id' => $master->id,
+                'meta_login' => $master->meta_login,
+                'penalty_days' => $fee['days'],
+                'penalty_percentage' => $fee['percentage'],
+            ]);
+        }
+
         return back()->with('toast', [
             'title' => trans('public.success'),
-            'message' => trans('public.toast_create_deposit_profile_success'),
+            'message' => trans('public.toast_create_master_success'),
             'type' => 'success',
         ]);
     }
@@ -798,6 +815,8 @@ class MasterController extends Controller
             'total_subscribers' => $request->total_subscribers,
             'max_drawdown' => $request->max_drawdown,
             'is_public' => $request->is_public,
+            'can_top_up' => $request->can_top_up,
+            'can_revoke' => $request->can_revoke,
             'delivery_requirement' => $request->delivery_requirement,
         ]);
 

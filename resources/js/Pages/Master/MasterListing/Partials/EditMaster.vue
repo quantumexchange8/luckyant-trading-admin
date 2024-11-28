@@ -34,6 +34,8 @@ const form = useForm({
     total_subscribers: props.master.total_subscribers,
     max_drawdown: props.master.max_drawdown,
     is_public: props.master.is_public,
+    can_top_up: props.master.can_top_up,
+    can_revoke: props.master.can_revoke,
     delivery_requirement: props.master.delivery_requirement,
     leaders: ''
 })
@@ -282,32 +284,80 @@ const closeDialog = () => {
                         <InputError :message="form.errors.max_drawdown" />
                     </div>
 
-                    <!-- Master Public Status -->
+                    <!-- Visible To -->
                     <div class="flex flex-col items-start gap-1 self-stretch">
                         <InputLabel
-                            for="public_status"
-                            :value="$t('public.public_status')"
-                            :invalid="!!form.errors.is_public"
+                            for="leaders"
+                            :value="$t('public.visible_to')"
+                        />
+                        <MultiSelect
+                            v-model="selectedLeaders"
+                            :options="leaders"
+                            optionLabel="name"
+                            filter
+                            :filter-fields="['name', 'email']"
+                            placeholder="Select leaders"
+                            :maxSelectedLabels="3"
+                            class="w-full"
+                            :invalid="!!form.errors.leaders"
+                        />
+                        <InputError :message="form.errors.leaders" />
+                    </div>
+
+                    <!-- Master Topup Status -->
+                    <div class="flex flex-col items-start gap-1 self-stretch">
+                        <InputLabel
+                            for="top_up_status"
+                            :value="$t('public.top_up')"
+                            :invalid="!!form.errors.can_top_up"
                         />
                         <div class="flex flex-wrap gap-4">
                             <div class="flex items-center">
                                 <RadioButton
-                                    v-model="form.is_public"
-                                    inputId="is_public_true"
+                                    v-model="form.can_top_up"
+                                    inputId="can_top_up_true"
                                     :value="1"
                                 />
-                                <InputLabel for="is_public_true" class="ml-2">{{ $t('public.public') }}</InputLabel>
+                                <InputLabel for="can_top_up_true" class="ml-2">{{ $t('public.yes') }}</InputLabel>
                             </div>
                             <div class="flex items-center">
                                 <RadioButton
-                                    v-model="form.is_public"
-                                    inputId="is_public_false"
+                                    v-model="form.can_top_up"
+                                    inputId="can_top_up_false"
                                     :value="0"
                                 />
-                                <InputLabel for="is_public_false" class="ml-2">{{ $t('public.private') }}</InputLabel>
+                                <InputLabel for="can_top_up_false" class="ml-2">{{ $t('public.no') }}</InputLabel>
                             </div>
                         </div>
-                        <InputError :message="form.errors.is_public" />
+                        <InputError :message="form.errors.can_top_up" />
+                    </div>
+
+                    <!-- Master Revoke Status -->
+                    <div class="flex flex-col items-start gap-1 self-stretch">
+                        <InputLabel
+                            for="revoke_status"
+                            :value="$t('public.revoke')"
+                            :invalid="!!form.errors.can_revoke"
+                        />
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center">
+                                <RadioButton
+                                    v-model="form.can_revoke"
+                                    inputId="can_revoke_true"
+                                    :value="1"
+                                />
+                                <InputLabel for="can_revoke_true" class="ml-2">{{ $t('public.yes') }}</InputLabel>
+                            </div>
+                            <div class="flex items-center">
+                                <RadioButton
+                                    v-model="form.can_revoke"
+                                    inputId="can_revoke_false"
+                                    :value="0"
+                                />
+                                <InputLabel for="can_revoke_false" class="ml-2">{{ $t('public.no') }}</InputLabel>
+                            </div>
+                        </div>
+                        <InputError :message="form.errors.can_revoke" />
                     </div>
 
                     <!-- Delivery Requirement -->
@@ -336,26 +386,6 @@ const closeDialog = () => {
                             </div>
                         </div>
                         <InputError :message="form.errors.delivery_requirement" />
-                    </div>
-
-                    <!-- Visible To -->
-                    <div class="flex flex-col items-start gap-1 self-stretch">
-                        <InputLabel
-                            for="leaders"
-                            :value="$t('public.visible_to')"
-                        />
-                        <MultiSelect
-                            v-model="selectedLeaders"
-                            :options="leaders"
-                            optionLabel="name"
-                            filter
-                            :filter-fields="['name', 'email']"
-                            placeholder="Select leaders"
-                            :maxSelectedLabels="3"
-                            class="w-full"
-                            :invalid="!!form.errors.leaders"
-                        />
-                        <InputError :message="form.errors.leaders" />
                     </div>
                 </div>
             </div>

@@ -105,71 +105,71 @@ const { hasRole } = usePermission();
             </template>
         </SidebarLink>
 
-        <SidebarCollapsible
-            title="Subscribers"
-            :active="route().current('subscriber.*')"
-            :pending-counts="pendingSubscriberRequestCount"
-        >
-            <template #icon>
-                <UsersCheckIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template>
+<!--        <SidebarCollapsible-->
+<!--            title="Subscribers"-->
+<!--            :active="route().current('subscriber.*')"-->
+<!--            :pending-counts="pendingSubscriberRequestCount"-->
+<!--        >-->
+<!--            <template #icon>-->
+<!--                <UsersCheckIcon-->
+<!--                    class="flex-shrink-0 w-6 h-6"-->
+<!--                    aria-hidden="true"-->
+<!--                />-->
+<!--            </template>-->
 
-            <SidebarCollapsibleItem
-                :href="route('subscriber.pending_subscriber')"
-                title="Pending Subscribers"
-                :active="route().current('subscriber.pending_subscriber')"
-                :pending-counts="pendingSubscriberRequestCount"
-            />
-            <SidebarCollapsibleItem
-                :href="route('subscriber.subscribersListing')"
-                title="Subscribers Listing"
-                :active="route().current('subscriber.subscribersListing')"
-            />
-            <SidebarCollapsibleItem
-                :href="route('subscriber.switch_master')"
-                title="Switch Master"
-                :active="route().current('subscriber.switch_master')"
-                :pending-counts="pendingSwitchMasterCount"
-            />
-        </SidebarCollapsible>
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscriber.pending_subscriber')"-->
+<!--                title="Pending Subscribers"-->
+<!--                :active="route().current('subscriber.pending_subscriber')"-->
+<!--                :pending-counts="pendingSubscriberRequestCount"-->
+<!--            />-->
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscriber.subscribersListing')"-->
+<!--                title="Subscribers Listing"-->
+<!--                :active="route().current('subscriber.subscribersListing')"-->
+<!--            />-->
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscriber.switch_master')"-->
+<!--                title="Switch Master"-->
+<!--                :active="route().current('subscriber.switch_master')"-->
+<!--                :pending-counts="pendingSwitchMasterCount"-->
+<!--            />-->
+<!--        </SidebarCollapsible>-->
 
-        <SidebarCollapsible
-            title="Subscriptions"
-            :active="route().current('subscription.*')"
-            :pending-counts="pendingSubscriberRequestCount"
-        >
-            <template #icon>
-                <FileCheck02Icon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template>
+<!--        <SidebarCollapsible-->
+<!--            title="Subscriptions"-->
+<!--            :active="route().current('subscription.*')"-->
+<!--            :pending-counts="pendingSubscriberRequestCount"-->
+<!--        >-->
+<!--            <template #icon>-->
+<!--                <FileCheck02Icon-->
+<!--                    class="flex-shrink-0 w-6 h-6"-->
+<!--                    aria-hidden="true"-->
+<!--                />-->
+<!--            </template>-->
 
-            <SidebarCollapsibleItem
-                :href="route('subscription.pending_renewal')"
-                title="Pending Renewal"
-                :active="route().current('subscription.pending_renewal')"
-                :pending-counts="pendingRenewalCount"
-            />
-            <SidebarCollapsibleItem
-                :href="route('subscription.subscription_listing')"
-                title="Subscriptions Listing"
-                :active="route().current('subscription.subscription_listing')"
-            />
-            <SidebarCollapsibleItem
-                :href="route('subscription.termination_fee')"
-                title="Termination Fee"
-                :active="route().current('subscription.termination_fee')"
-            />
-        </SidebarCollapsible>
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscription.pending_renewal')"-->
+<!--                title="Pending Renewal"-->
+<!--                :active="route().current('subscription.pending_renewal')"-->
+<!--                :pending-counts="pendingRenewalCount"-->
+<!--            />-->
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscription.subscription_listing')"-->
+<!--                title="Subscriptions Listing"-->
+<!--                :active="route().current('subscription.subscription_listing')"-->
+<!--            />-->
+<!--            <SidebarCollapsibleItem-->
+<!--                :href="route('subscription.termination_fee')"-->
+<!--                title="Termination Fee"-->
+<!--                :active="route().current('subscription.termination_fee')"-->
+<!--            />-->
+<!--        </SidebarCollapsible>-->
 
         <SidebarCollapsible
             title="Copy Trading"
             :active="route().current('copy_trading.*')"
-            :pending-counts="pendingPammCount"
+            :pending-counts="pendingSubscriberRequestCount"
         >
             <template #icon>
                 <ScalesTwoIcon
@@ -182,6 +182,7 @@ const { hasRole } = usePermission();
                 :href="route('copy_trading.pending')"
                 :title="$t('public.pending')"
                 :active="route().current('copy_trading.pending')"
+                :pending-counts="pendingSubscriberRequestCount"
             />
             <SidebarCollapsibleItem
                 :href="route('copy_trading.listing')"

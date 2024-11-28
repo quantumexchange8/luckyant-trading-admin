@@ -9,6 +9,7 @@ use App\Models\Master;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
+use App\Models\SubscriptionRenewalRequest;
 use App\Models\TradingAccount;
 use App\Models\Transaction;
 use App\Models\User;
@@ -217,6 +218,7 @@ class CopyTradingController extends Controller
     {
         return Inertia::render('CopyTrading/Pending/Pending', [
             'pendingSubscriptionsCount' => Subscriber::where('status', 'Pending')->count(),
+            'pendingRenewalCount' => SubscriptionRenewalRequest::where('status', 'Pending')->count(),
         ]);
     }
 

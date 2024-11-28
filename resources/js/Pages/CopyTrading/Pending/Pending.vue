@@ -5,11 +5,13 @@ import TabList from 'primevue/tablist';
 import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
+import Badge from 'primevue/badge';
 import {h, ref} from "vue";
 import PendingSubscription from "@/Pages/CopyTrading/Pending/PendingSubscription/PendingSubscription.vue";
 
 const props = defineProps({
-    pendingSubscriptionsCount: Number
+    pendingSubscriptionsCount: Number,
+    pendingRenewalCount: Number,
 });
 
 const tabs = ref([
@@ -18,11 +20,13 @@ const tabs = ref([
         component: h(PendingSubscription, {
             pendingSubscriptionsCount: props.pendingSubscriptionsCount,
         }),
-        value: '0'
+        value: '0',
+        count: props.pendingSubscriptionsCount
     },
     {
         title: 'renewal',
-        value: '1'
+        value: '1',
+        count: props.pendingRenewalCount
     },
 ]);
 </script>
@@ -43,7 +47,10 @@ const tabs = ref([
         <Tabs value="0">
             <TabList>
                 <Tab v-for="tab in tabs" :key="tab.title" :value="tab.value">
-                    {{ $t(`public.${tab.title}`) }}
+                    <div class="flex items-center gap-2">
+                        <span>{{ $t(`public.${tab.title}`) }}</span>
+                        <Badge :value="tab.count" />
+                    </div>
                 </Tab>
             </TabList>
             <TabPanels>
