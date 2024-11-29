@@ -189,6 +189,16 @@ const { hasRole } = usePermission();
                 :title="$t('public.listing')"
                 :active="route().current('copy_trading.listing')"
             />
+            <SidebarCollapsibleItem
+                :href="route('copy_trading.termination_report')"
+                :title="$t('public.termination_report')"
+                :active="route().current('copy_trading.termination_report')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('copy_trading.switch_master')"
+                :title="$t('public.switch_master')"
+                :active="route().current('copy_trading.switch_master')"
+            />
         </SidebarCollapsible>
 
         <SidebarCollapsible
@@ -213,6 +223,11 @@ const { hasRole } = usePermission();
                 :href="route('pamm.pamm_listing')"
                 title="PAMM Listing"
                 :active="route().current('pamm.pamm_listing')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('pamm.termination_report')"
+                :title="$t('public.termination_report')"
+                :active="route().current('pamm.termination_report')"
             />
         </SidebarCollapsible>
 

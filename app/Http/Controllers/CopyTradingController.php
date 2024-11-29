@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Exports\PendingSubscriberExport;
 use App\Exports\SubscriptionExport;
+use App\Exports\TerminationFeeExport;
 use App\Models\CopyTradeTransaction;
 use App\Models\Master;
+use App\Models\PammSubscription;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
+use App\Models\SubscriptionPenaltyLog;
 use App\Models\SubscriptionRenewalRequest;
+use App\Models\SwitchMaster;
 use App\Models\TradingAccount;
 use App\Models\Transaction;
 use App\Models\User;
@@ -433,5 +437,277 @@ class CopyTradingController extends Controller
             'message' => trans("public.toast_success_{$request->action}_subscription_message"),
             'type' => 'success',
         ]);
+    }
+
+    public function termination_report(Request $request)
+    {
+        $category = $this->getTradeCategory($request);
+
+        $terminationCounts = SubscriptionPenaltyLog::whereHas('master', function ($query) use ($category) {
+            $query->where('category', $category);
+        })
+            ->count();
+
+        return Inertia::render('CopyTrading/TerminationFee/TerminationReport', [
+            'terminationsCount' => $terminationCounts,
+            'routeName' => $category
+        ]);
+    }
+
+    public function getTerminationOverview(Request $request)
+    {
+        // current month
+        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
+
+        // last month
+        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        $category = $this->getTradeCategory($request);
+
+        $terminationQuery = SubscriptionPenaltyLog::whereHas('master', function ($query) use ($category) {
+                $query->where('category', $category);
+            });
+
+        // current month termination fund
+        $current_month_termination_fund = (clone $terminationQuery)
+            ->whereDate('created_at', '<=', $endOfMonth)
+            ->sum('subscription_batch_amount');
+
+        // current month termination fee
+        $current_month_termination_fee = (clone $terminationQuery)
+            ->whereDate('created_at', '<=', $endOfMonth)
+            ->sum('penalty_amount');
+
+        // last month termination fund
+        $last_month_termination_fund =  (clone $terminationQuery)
+            ->whereDate('created_at', '<=', $endOfLastMonth)
+            ->sum('subscription_batch_amount');
+
+        // last month termination fee
+        $last_month_termination_fee =  (clone $terminationQuery)
+            ->whereDate('created_at', '<=', $endOfLastMonth)
+            ->sum('penalty_amount');
+
+        // comparison % of termination fund vs last month
+        $last_month_termination_fund_comparison = $last_month_termination_fund > 0
+            ? (($current_month_termination_fund - $last_month_termination_fund) / $last_month_termination_fund) * 100
+            : ($current_month_termination_fund > 0 ? 100 : 0);
+
+        // comparison % of success deposit vs last month
+        $last_month_termination_fee_comparison = $last_month_termination_fee > 0
+            ? (($current_month_termination_fee - $last_month_termination_fee) / $last_month_termination_fee) * 100
+            : ($current_month_termination_fee > 0 ? 100 : 0);
+
+        return response()->json([
+            'currentTerminationFund' => $current_month_termination_fund,
+            'lastMonthTerminationFundComparison' => $last_month_termination_fund_comparison,
+            'currentTerminationFee' => $current_month_termination_fee,
+            'lastMonthTerminationFeeComparison' => $last_month_termination_fee_comparison,
+        ]);
+    }
+
+    public function getTerminationReportData(Request $request, UserService $userService)
+    {
+        $category = $this->getTradeCategory($request);
+
+        $terminationQuery = SubscriptionPenaltyLog::with([
+            'user:id,name,email,hierarchyList',
+            'master:id,meta_login,type,strategy_type',
+            'master.tradingUser:id,meta_login,name,company',
+            'master.masterManagementFee',
+        ])
+            ->whereHas('master', function ($query) use ($category) {
+                $query->where('category', $category);
+            });
+
+        $authUser = Auth::user();
+
+        $join_start_date = $request->query('joinStartDate');
+        $join_end_date = $request->query('joinEndDate');
+
+        if ($join_start_date && $join_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $join_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
+
+            $terminationQuery->whereBetween('approval_date', [$start_date, $end_date]);
+        }
+
+        $terminate_start_date = $request->query('terminateStartDate');
+        $terminate_end_date = $request->query('terminateEndDate');
+
+        if ($terminate_start_date && $terminate_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $terminate_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $terminate_end_date)->endOfDay();
+
+            $terminationQuery->whereBetween('termination_date', [$start_date, $end_date]);
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $terminationQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $terminationQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $terminationQuery->whereIn('user_id', []);
+        }
+
+        if ($request->export == 'yes') {
+            if ($request->master_meta_login) {
+                $terminationQuery->where('master_meta_login', $request->master_meta_login);
+            }
+
+            if ($request->first_leader_id) {
+                $first_leader = User::find($request->first_leader_id);
+                $childrenIds = $first_leader->getChildrenIds();
+                $terminationQuery->whereIn('user_id', $childrenIds);
+            }
+
+            return Excel::download(new TerminationFeeExport($terminationQuery), Carbon::now() . '-copy-trade-terminate-report.xlsx');
+        }
+
+        $terminations = $terminationQuery
+            ->orderByDesc('termination_date')
+            ->get();
+
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $terminations->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $terminations->each(function ($subscriptionQuery) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+            $subscriptionQuery->first_leader_id = $firstLeader?->id;
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+            $subscriptionQuery->first_leader_email = $firstLeader?->email;
+        });
+
+        return response()->json([
+            'terminations' => $terminations
+        ]);
+    }
+
+    /**
+     *
+     * @param Request $request
+     * @return string
+     */
+    private function getTradeCategory(Request $request): string
+    {
+        $strategyTypeMapping = [
+            'copy_trading' => 'copy_trade',
+            'pamm' => 'pamm',
+        ];
+
+        $routeName = $request->route()->getName();
+
+        foreach ($strategyTypeMapping as $prefix => $type) {
+            if (str_starts_with($routeName, $prefix)) {
+                return $type;
+            }
+        }
+
+        abort(404, 'Invalid trade type');
+    }
+
+    public function switch_master(Request $request)
+    {
+        return Inertia::render('CopyTrading/SwitchMaster/SwitchMaster', [
+            'switchMastersCount' => SwitchMaster::where('status', 'Success')->count(),
+        ]);
+    }
+
+    public function getSwitchMasterData(Request $request, UserService $userService)
+    {
+        $switchQuery = SwitchMaster::with([
+            'user:id,name,email,hierarchyList',
+            'old_master:id,meta_login,type,strategy_type',
+            'old_master.tradingUser:id,meta_login,name,company',
+            'new_master:id,meta_login,type,strategy_type',
+            'new_master.tradingUser:id,meta_login,name,company',
+        ])
+            ->whereNot('status', 'Pending');
+
+        $authUser = Auth::user();
+
+        $join_start_date = $request->query('joinStartDate');
+        $join_end_date = $request->query('joinEndDate');
+
+        if ($join_start_date && $join_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $join_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
+
+            $switchQuery->whereBetween('approval_date', [$start_date, $end_date]);
+        }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $switchQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $switchQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $switchQuery->whereIn('user_id', []);
+        }
+
+        if ($request->export == 'yes') {
+            if ($request->master_meta_login) {
+                $switchQuery->where('master_meta_login', $request->master_meta_login);
+            }
+
+            if ($request->first_leader_id) {
+                $first_leader = User::find($request->first_leader_id);
+                $childrenIds = $first_leader->getChildrenIds();
+                $switchQuery->whereIn('user_id', $childrenIds);
+            }
+
+            return Excel::download(new TerminationFeeExport($switchQuery), Carbon::now() . '-copy-trade-terminate-report.xlsx');
+        }
+
+        $switchMasters = $switchQuery
+            ->orderByDesc('approval_date')
+            ->get();
+
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $switchMasters->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $switchMasters->each(function ($subscriptionQuery) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+            $subscriptionQuery->first_leader_id = $firstLeader?->id;
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+            $subscriptionQuery->first_leader_email = $firstLeader?->email;
+        });
+
+        return response()->json($switchMasters);
     }
 }

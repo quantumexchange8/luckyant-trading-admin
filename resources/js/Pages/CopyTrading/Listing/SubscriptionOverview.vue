@@ -57,7 +57,7 @@ const calculatePercentage = (fund) => {
                     <div class="flex justify-between items-center">
                         <div class="flex flex-col gap-1">
                             <div class="flex flex-col items-start gap-2">
-                                <div class="text-gray-500 text-sm">
+                                <div class="text-gray-500 text-sm font-semibold">
                                     Active Subscribers
                                 </div>
                                 <div class="text-gray-950 dark:text-white text-xl font-semibold md:text-xxl">
@@ -104,7 +104,7 @@ const calculatePercentage = (fund) => {
                     <div class="flex justify-between items-center">
                         <div class="flex flex-col gap-1">
                             <div class="flex flex-col items-start gap-2">
-                                <div class="text-gray-500 text-sm">
+                                <div class="text-gray-500 text-sm font-semibold">
                                     Active Fund
                                 </div>
                                 <div class="text-gray-950 dark:text-white text-xl font-semibold md:text-xxl">
@@ -153,7 +153,7 @@ const calculatePercentage = (fund) => {
                 <div class="flex flex-col items-start gap-5">
                     <div class="flex flex-col gap-2 items-start self-stretch md:flex-shrink-0">
                         <div class="flex justify-center items-center">
-                            <span class="text-gray-500 text-sm">Top Active Subscribers</span>
+                            <span class="text-gray-500 text-sm font-semibold">Top Active Subscribers</span>
                         </div>
                     </div>
                     <div class="flex flex-col gap-3 items-center self-stretch w-full">

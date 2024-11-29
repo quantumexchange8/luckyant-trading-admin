@@ -24,7 +24,7 @@ class SwitchMaster extends Model
     ];
 
     protected $casts = [
-        'approval_date' => 'timestamp',
+        'approval_date' => 'datetime',
     ];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo

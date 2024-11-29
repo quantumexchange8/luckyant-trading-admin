@@ -212,6 +212,15 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/listing', [CopyTradingController::class, 'index'])->name('copy_trading.listing');
         Route::get('/getSubscriptionOverview', [CopyTradingController::class, 'getSubscriptionOverview'])->name('copy_trading.getSubscriptionOverview');
         Route::get('/getSubscriptionsData', [CopyTradingController::class, 'getSubscriptionsData'])->name('copy_trading.getSubscriptionsData');
+
+        // Termination Report
+        Route::get('/termination_report', [CopyTradingController::class, 'termination_report'])->name('copy_trading.termination_report');
+        Route::get('/getTerminationOverview', [CopyTradingController::class, 'getTerminationOverview'])->name('copy_trading.getTerminationOverview');
+        Route::get('/getTerminationReportData', [CopyTradingController::class, 'getTerminationReportData'])->name('copy_trading.getTerminationReportData');
+
+        // Switch Master Report
+        Route::get('/switch_master', [CopyTradingController::class, 'switch_master'])->name('copy_trading.switch_master');
+        Route::get('/getSwitchMasterData', [CopyTradingController::class, 'getSwitchMasterData'])->name('copy_trading.getSwitchMasterData');
     });
 
     /**
@@ -229,6 +238,11 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/pamm_listing', [PammController::class, 'pamm_listing'])->name('pamm.pamm_listing');
         Route::get('/getPammListingData', [PammController::class, 'getPammListingData'])->name('pamm.getPammListingData');
         Route::get('/getPammSubscriptionOverview', [PammController::class, 'getPammSubscriptionOverview'])->name('pamm.getPammSubscriptionOverview');
+
+        // Termination Report
+        Route::get('/termination_report', [CopyTradingController::class, 'termination_report'])->name('pamm.termination_report');
+        Route::get('/getTerminationOverview', [CopyTradingController::class, 'getTerminationOverview'])->name('pamm.getTerminationOverview');
+        Route::get('/getTerminationReportData', [CopyTradingController::class, 'getTerminationReportData'])->name('pamm.getTerminationReportData');
     });
 
     /**
