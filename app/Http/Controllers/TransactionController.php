@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\UserService;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Support\Facades\App;
@@ -291,153 +292,79 @@ class TransactionController extends Controller
         return redirect()->back()->with('title', 'Rejected successfully')->with('success', 'The transaction request has been rejected successfully.');
     }
 
-    public function getTransactionHistory(Request $request)
+    public function getTransactionHistory(Request $request, UserService $userService)
     {
-        $authUser = Auth::user();
-        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
-        // Decode the JSON
-        $decodedColumnName = json_decode(urldecode($columnName), true);
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
 
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
-        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+            $query = Transaction::with([
+                'user',
+                'from_wallet:id,type',
+                'to_wallet:id,type',
+                'from_meta_login:id,meta_login',
+                'to_meta_login:id,meta_login',
+            ])
+                ->where('transaction_type', $data['filters']['type']['value']);
 
-        $transaction_query = Transaction::query()
-            ->with(['user:id,name,email,username,country,upline_id,hierarchyList,leader_status,top_leader_id', 'to_wallet:id,user_id,name,type,wallet_address', 'from_wallet:id,user_id,name,type,wallet_address', 'to_meta_login:id,meta_login', 'from_meta_login:id,meta_login', 'payment_account', 'to_wallet.user:id,name,email', 'from_wallet.user:id,name,email'])
-            ->whereNotIn('transaction_type', ['Management Fee', 'Settlement'])
-            ->whereNotIn('status', ['Processing', 'Pending']);
+            if ($data['filters']['global']['value']) {
+                $query->where(function ($query) use ($data) {
+                    $keyword = $data['filters']['global']['value'];
 
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $transaction_query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search)
-                        ->orWhere('email', 'like', $search)
-                        ->orWhere('username', 'like', $search);
-                })
-                    ->orWhereHas('from_wallet', function ($master) use ($search) {
-                        $master->where('wallet_address', 'like', $search);
-                    })
-                    ->orWhereHas('to_wallet', function ($master) use ($search) {
-                        $master->where('wallet_address', 'like', $search);
-                    })
-                    ->orWhereHas('from_meta_login', function ($master) use ($search) {
-                        $master->where('meta_login', 'like', $search);
-                    })
-                    ->orWhereHas('to_meta_login', function ($master) use ($search) {
-                        $master->where('meta_login', 'like', $search);
-                    })
-                    ->orWhere('transaction_number', 'like', $search)
-                    ->orWhere('txn_hash', 'like', $search)
-                    ->orWhere('to_wallet_address', 'like', $search);
-            });
-        }
+                    $query->where('first_name', 'like', '%' . $keyword . '%')
+                        ->orWhere('email', 'like', '%' . $keyword . '%')
+                        ->orWhere('id_number', 'like', '%' . $keyword . '%');
+                });
+            }
 
-        if ($request->filled('date')) {
-            $date = $request->input('date');
-            $dateRange = explode(' - ', $date);
-            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+            //FIX: filter leader
+            if ($data['filters']['leader_id']['value']) {
+                $leaderId = $data['filters']['leader_id']['value']['id'];
 
-            if ($request->type == 'Withdrawal') {
-                $transaction_query->whereBetween('approval_at', [$start_date, $end_date]);
+                // Constrain the query to only include transactions associated with the specific leader
+                $query->whereHas('user', function ($userQuery) use ($leaderId) {
+                    $userQuery->whereRaw("FIND_IN_SET(?, TRIM(BOTH '-' FROM hierarchyList))", [$leaderId])
+                        ->where('leader_status', 1);
+                });
+            }
+
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
             } else {
-                $transaction_query->whereBetween('created_at', [$start_date, $end_date]);
+                $query->latest();
             }
-        }
 
-        if ($request->filled('leader')) {
-            $leader = $request->input('leader');
-            $leaderUser = User::find($leader);
-            if ($leaderUser) {
-                $transaction_query->whereIn('user_id', $leaderUser->getChildrenIds());
-            }
-        }
+            $transactions = $query->paginate($data['rows']);
 
-        if ($request->filled('type')) {
-            $type = $request->input('type');
-            $transaction_query->where(function ($q) use ($type) {
-                $q->where('transaction_type',  $type);
+            // Extract all hierarchy IDs from users' hierarchyLists
+            $userHierarchyLists = $transactions->pluck('user.hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                ->where('leader_status', 1);
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            // Attach the first leader details
+            $transactions->each(function ($transaction) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($transaction->user?->hierarchyList, $leaders);
+
+                $transaction->first_leader_id = $firstLeader?->id;
+                $transaction->first_leader_name = $firstLeader?->name;
+                $transaction->first_leader_email = $firstLeader?->email;
             });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transactions,
+            ]);
         }
 
-        if ($request->filled('methods')) {
-            $methods = $request->input('methods');
-            $transaction_query->where(function ($q) use ($methods) {
-                $q->where('payment_method', $methods);
-            });
-        }
-
-        if ($request->filled('fund_type')) {
-            $fund_type = $request->input('fund_type');
-            $transaction_query->where(function ($q) use ($fund_type) {
-                $q->where('fund_type', $fund_type);
-            });
-        }
-
-        if ($request->filled('status')) {
-            $status = $request->input('status');
-            $transaction_query->where(function ($q) use ($status) {
-                $q->where('status', $status);
-            });
-        }
-
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $childrenIds = $authUser->getChildrenIds();
-            $childrenIds[] = $authUser->id;
-            $transaction_query->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $transaction_query->whereIn('user_id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $transaction_query->whereIn('user_id', []);
-        }
-
-        if ($request->has('exportStatus')) {
-            $fileName = Carbon::now() . '-' . $request->type . '_History-report.xlsx';
-            return Excel::download(new TransactionsExport($transaction_query), $fileName);
-        }
-
-        $totalAmountQuery = clone $transaction_query;
-        $rejectedAmountQuery = clone $transaction_query;
-
-        $results = $transaction_query
-            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
-            ->paginate($request->input('paginate', 10));
-
-        $totalAmount = $totalAmountQuery->sum('amount');
-        $successAmount = $totalAmountQuery->where('status', 'Success')->sum('amount');
-        $rejectedAmount = $rejectedAmountQuery->where('status', 'Rejected')->sum('amount');
-
-        $results->each(function ($transaction) {
-            $transaction->first_leader = $transaction->user->getFirstLeader()->name ?? null;
-            $transaction->created_at = $transaction->transaction_type == 'Withdrawal' ? $transaction->approval_at : $transaction->created_at;
-        });
-
-        if ($request->input('type') == 'Withdrawal') {
-            $results->each(function ($transaction) {
-                $profit = WalletLog::where('user_id', $transaction->user_id)
-                    ->where('purpose', 'ProfitSharing')
-                    ->sum('amount');
-
-                $bonus = WalletLog::where('user_id', $transaction->user_id)
-                    ->whereIn('purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate'])
-                    ->sum('amount');
-                $transaction->profit_amount = $profit;
-                $transaction->bonus_amount = $bonus;
-                $transaction->currency_symbol = $transaction->payment_account->of_country->currency_symbol ?? null;
-                $transaction->payment_type = strtolower($transaction->payment_method);
-            });
-        }
-
-        return response()->json([
-            'transactions' => $results,
-            'totalAmount' => $totalAmount,
-            'successAmount' => $successAmount,
-            'rejectedAmount' => $rejectedAmount,
-        ]);
+        return response()->json(['success' => false, 'data' => []]);
     }
 
     public function getBalanceHistory(Request $request, $type)

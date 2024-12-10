@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Wallet extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use SoftDeletes, LogsActivity;
 
     protected $fillable = [
         'user_id',
