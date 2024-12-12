@@ -211,6 +211,11 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      * ==============================
      */
     Route::prefix('setting')->middleware('role:super-admin')->group(function () {
+        //account types
+        Route::get('/account_type', [SettingController::class, 'account_type'])->name('setting.account_type');
+        Route::get('/getAccountTypes', [SettingController::class, 'getAccountTypes'])->name('setting.getAccountTypes');
+        Route::post('/updateAccountType', [SettingController::class, 'updateAccountType'])->name('setting.updateAccountType');
+
         //payment setting
         Route::get('/payment_setting', [SettingController::class, 'paymentSetting'])->name('setting.payment_setting');
         Route::get('/getCryptoNetworks', [SettingController::class, 'getCryptoNetworks'])->name('setting.getCryptoNetworks');

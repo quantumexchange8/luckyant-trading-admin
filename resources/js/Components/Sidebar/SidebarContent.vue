@@ -272,6 +272,11 @@ const { hasRole } = usePermission();
                 />
             </template>
             <SidebarCollapsibleItem
+                :href="route('setting.account_type')"
+                title="Account Type"
+                :active="route().current('setting.account_type')"
+            />
+            <SidebarCollapsibleItem
                 :href="route('setting.master_setting')"
                 title="Master Setting"
                 :active="route().current('setting.master_setting')"
