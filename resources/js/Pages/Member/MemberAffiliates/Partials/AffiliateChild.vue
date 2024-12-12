@@ -195,13 +195,16 @@ export default {
                         :src="selectedAffiliate.profile_photo ? selectedAffiliate.profile_photo : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
                         alt="userPic"
                     />
-                    <div class="flex-col ml-3">
+                    <div class="flex-col gap-1 ml-3">
                         <div class="flex gap-2 text-sm font-semibold">
                             {{ selectedAffiliate.name }}
                             <span
-                                class="text-xs px-2 py-0.5 rounded-full text-primary-100 bg-primary-400 dark:bg-warning-400 dark:text-gray-800">{{ $t('public.level') }} {{
+                                class="text-xs px-2 py-0.5 rounded-full text-primary-100 bg-primary-400 dark:bg-primary-600 dark:text-gray-0">{{ $t('public.level') }} {{
                                     selectedAffiliate.level
                                 }}</span>
+                        </div>
+                        <div class="text-gray-400 text-xs">
+                            {{ selectedAffiliate.email }}
                         </div>
                     </div>
                 </div>
@@ -219,12 +222,12 @@ export default {
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
-                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Deposit') }}</span>
+                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.total_deposit') }}</span>
                     <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.self_deposit ? selectedAffiliate.self_deposit : 0) }}</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 items-center">
                     <span
-                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.Total Group Deposit') }}</span>
+                        class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.total_group_deposit') }}</span>
                     <span class="text-black dark:text-white py-2">$ {{ formatAmount(selectedAffiliate.total_group_deposit ? selectedAffiliate.total_group_deposit : 0) }}</span>
                 </div>
             </div>

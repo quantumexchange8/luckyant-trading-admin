@@ -580,11 +580,11 @@ const exportReport = () => {
                     Filter by fund
                 </div>
                 <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
                         <RadioButton v-model="selectedFundType" inputId="demo_fund" value="demo_fund" class="w-4 h-4" />
                         <label for="demo_fund">Demo</label>
                     </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
                         <RadioButton v-model="selectedFundType" inputId="real_fund" value="real_fund" class="w-4 h-4" />
                         <label for="real_fund">Real</label>
                     </div>

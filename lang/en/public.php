@@ -146,4 +146,9 @@ return [
     "bonus" => "Bonus",
     "request_date" => "Request Date",
     "approval_date" => "Approval Date",
+    "level" => "Level",
+    "direct_clients" => "Direct Clients",
+    "total_clients" => "Total Clients",
+    "total_deposit" => "Total Deposit",
+    "total_group_deposit" => "Total Group Deposit",
 ];

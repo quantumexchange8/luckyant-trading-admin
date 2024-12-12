@@ -37,7 +37,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
             'created_at',
             'status',
         ])
-            ->orderByDesc('created_at')
+            ->orderByDesc('approval_date')
             ->get();
 
         $userHierarchyLists = $records->pluck('user.hierarchyList')

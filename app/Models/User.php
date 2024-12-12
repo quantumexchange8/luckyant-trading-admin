@@ -109,6 +109,16 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(Transaction::class);
     }
 
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Subscription::class, 'user_id', 'id');
+    }
+
+    public function pammSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PammSubscription::class, 'user_id', 'id');
+    }
+
     public function getFirstLeader()
     {
         $first_leader = null;

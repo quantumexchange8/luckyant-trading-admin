@@ -330,12 +330,13 @@ class TransactionController extends Controller
             }
 
             if ($data['filters']['global']['value']) {
-                $query->where(function ($query) use ($data) {
-                    $keyword = $data['filters']['global']['value'];
-
-                    $query->where('first_name', 'like', '%' . $keyword . '%')
-                        ->orWhere('email', 'like', '%' . $keyword . '%')
-                        ->orWhere('id_number', 'like', '%' . $keyword . '%');
+                $query->whereHas('user', function($q) use ($data) {
+                    $q->where(function ($query) use ($data) {
+                        $keyword = $data['filters']['global']['value'];
+    
+                        $query->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%');
+                    });
                 });
             }
 
@@ -373,6 +374,23 @@ class TransactionController extends Controller
             } else {
                 $query->latest();
             }
+
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('user_id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('user_id', []);
+            }
+    
 
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {

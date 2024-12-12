@@ -702,10 +702,29 @@ class MemberController extends Controller
         $searchUser = null;
         $searchTerm = $request->input('search');
         $locale = app()->getLocale();
-
+        $authUser = Auth::user();
+        
         if ($searchTerm) {
-            $searchUser = User::where('name', 'like', '%' . $searchTerm . '%')
-                ->orWhere('email', 'like', '%' . $searchTerm . '%')
+            $searchUserQuery = User::query();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $searchUserQuery->whereIn('id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin can search all users
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $searchUserQuery->whereIn('id', $childrenIds);
+            } else {
+                $users->whereIn('id', []);
+            }
+        
+            $searchUser = $searchUserQuery
+                ->where(function ($query) use ($searchTerm) {
+                    $query->where('name', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('email', 'like', '%' . $searchTerm . '%');
+                })
                 ->first();
 
             if (!$searchUser) {
@@ -726,7 +745,7 @@ class MemberController extends Controller
 
         $level = 0;
         $rootNode = [
-            'name' => $user->username,
+            'name' => $user->name,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
             'level' => $level,
@@ -787,7 +806,7 @@ class MemberController extends Controller
         $translations = json_decode($rank->name, true);
 
         $mappedUser = [
-            'name' => $user->username,
+            'name' => $user->name,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
             'level' => $level + 1,

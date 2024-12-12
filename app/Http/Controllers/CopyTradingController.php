@@ -38,45 +38,64 @@ class CopyTradingController extends Controller
 
     public function getSubscriptionOverview()
     {
-        // current month
-        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
-
-        // last month
-        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+        $authUser = Auth::user();
 
         $subscriptionQuery = Subscription::where('status', 'Active');
+        $subscriberQuery = Subscriber::where('status', 'Subscribing');
 
-        // current month active subscribers
-        $current_month_active_subscriber = Subscriber::where('status', 'Subscribing')
+        // Apply filtering based on roles and leader status
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $subscriptionQuery->whereIn('user_id', $childrenIds);
+            $subscriberQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $subscriptionQuery->whereIn('user_id', $childrenIds);
+            $subscriberQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $subscriptionQuery->whereIn('user_id', []);
+            $subscriberQuery->whereIn('user_id', []);
+        }
+
+        // Current month and last month
+        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
+        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        // Current month active subscribers
+        $current_month_active_subscriber = (clone $subscriberQuery)
             ->whereDate('approval_date', '<=', $endOfMonth)
             ->count();
 
-        // current month active fund
+        // Current month active fund
         $current_month_active_fund = (clone $subscriptionQuery)
             ->whereDate('approval_date', '<=', $endOfMonth)
             ->sum('meta_balance');
 
-        // last month active subscribers
-        $last_month_active_subscriber =  Subscriber::where('status', 'Subscribing')
+        // Last month active subscribers
+        $last_month_active_subscriber = (clone $subscriberQuery)
             ->whereDate('approval_date', '<=', $endOfLastMonth)
             ->count();
 
-        // last month active fund
-        $last_month_active_fund =  (clone $subscriptionQuery)
+        // Last month active fund
+        $last_month_active_fund = (clone $subscriptionQuery)
             ->whereDate('approval_date', '<=', $endOfLastMonth)
             ->sum('meta_balance');
 
-        // comparison % of success deposit vs last month
+        // Comparison % of active subscribers vs last month
         $last_month_active_subscriber_comparison = $current_month_active_subscriber - $last_month_active_subscriber;
 
-        // comparison % of success deposit vs last month
+        // Comparison % of active fund vs last month
         $last_month_active_fund_comparison = $last_month_active_fund > 0
             ? (($current_month_active_fund - $last_month_active_fund) / $last_month_active_fund) * 100
             : ($current_month_active_fund > 0 ? 100 : 0);
 
         // Get and format top 3 users by total deposit
-        $topThreeUser = Subscription::select('user_id', DB::raw('SUM(meta_balance) as total_fund'))
-            ->where('status', 'Active')
+        $topThreeUser = (clone $subscriptionQuery)
+            ->select('user_id', DB::raw('SUM(meta_balance) as total_fund'))
             ->groupBy('user_id')
             ->orderByDesc('total_fund')
             ->take(3)
@@ -245,6 +264,22 @@ class CopyTradingController extends Controller
 
             $pendingQuery->whereBetween('created_at', [$start_date, $end_date]);
         }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $pendingQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $pendingQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $pendingQuery->whereIn('user_id', []);
+        }
+
+        $authUser = Auth::user();
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
@@ -454,6 +489,8 @@ class CopyTradingController extends Controller
 
     public function getTerminationOverview(Request $request)
     {
+        $authUser = Auth::user();
+        
         // current month
         $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
 
@@ -465,6 +502,21 @@ class CopyTradingController extends Controller
         $terminationQuery = SubscriptionPenaltyLog::whereHas('master', function ($query) use ($category) {
                 $query->where('category', $category);
             });
+
+        // Apply filtering based on roles and leader status
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $terminationQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $terminationQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $terminationQuery->whereIn('user_id', []);
+        }
 
         // current month termination fund
         $current_month_termination_fund = (clone $terminationQuery)
@@ -651,6 +703,22 @@ class CopyTradingController extends Controller
 
             $switchQuery->whereBetween('approval_date', [$start_date, $end_date]);
         }
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $switchQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $switchQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $switchQuery->whereIn('user_id', []);
+        }
+
+        $authUser = Auth::user();
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();

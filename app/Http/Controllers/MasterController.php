@@ -621,6 +621,22 @@ class MasterController extends Controller
             $mastersQuery->where('status', $status);
         }
 
+        $authUser = Auth::user();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $mastersQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $mastersQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $mastersQuery->whereIn('user_id', []);
+        }
+
         // Get total count of masters
         $totalRecords = $mastersQuery->count();
 
@@ -860,36 +876,57 @@ class MasterController extends Controller
 
     public function getMasterOverview()
     {
-        // current month
-        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
+        $authUser = Auth::user();
 
-        // last month
-        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
-
+        $mastersQuery = Master::query();
         $subscriberQuery = Subscriber::where('status', 'Subscribing');
 
-        // current month active subscribers
-        $current_month_total_master = Master::whereDate('created_at', '<=', $endOfMonth)
+        // Apply filtering based on role and leader status
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $mastersQuery->whereIn('user_id', $childrenIds);
+            $subscriberQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $mastersQuery->whereIn('user_id', $childrenIds);
+            $subscriberQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $mastersQuery->whereIn('user_id', []);
+            $subscriberQuery->whereIn('user_id', []);
+        }
+
+        // Current month and last month
+        $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
+        $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        // Current month total masters
+        $current_month_total_master = (clone $mastersQuery)
+            ->whereDate('created_at', '<=', $endOfMonth)
             ->count();
 
-        // current month active subscribers
+        // Current month active subscribers
         $current_month_active_subscribers = (clone $subscriberQuery)
             ->whereDate('approval_date', '<=', $endOfMonth)
             ->count();
 
-        // last month active subscribers
-        $last_month_total_master =  Master::whereDate('created_at', '<=', $endOfLastMonth)
+        // Last month total masters
+        $last_month_total_master = (clone $mastersQuery)
+            ->whereDate('created_at', '<=', $endOfLastMonth)
             ->count();
 
-        // last month active subscribers
-        $last_month_active_subscribers =  (clone $subscriberQuery)
+        // Last month active subscribers
+        $last_month_active_subscribers = (clone $subscriberQuery)
             ->whereDate('approval_date', '<=', $endOfLastMonth)
             ->count();
 
-        // comparison % of total master vs last month
+        // Comparison: total masters vs last month
         $last_month_total_master_comparison = $current_month_total_master - $last_month_total_master;
 
-        // comparison % of total subscribers vs last month
+        // Comparison: total subscribers vs last month
         $last_month_active_subscribers_comparison = $current_month_active_subscribers - $last_month_active_subscribers;
 
         return response()->json([
@@ -902,7 +939,7 @@ class MasterController extends Controller
 
     public function getMasterAnalyticChartData()
     {
-        $masters = Master::select([
+        $mastersQuery = Master::select([
             'id',
             'meta_login'
         ])
@@ -910,8 +947,25 @@ class MasterController extends Controller
             ->withCount([
                 'active_copy_trades',
                 'active_pamm'
-            ])
-            ->get()
+            ]);
+
+        $authUser = Auth::user();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $mastersQuery->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $mastersQuery->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $mastersQuery->whereIn('user_id', []);
+        }
+        
+        $masters = $mastersQuery->get()
             ->filter(function ($master) {
                 // Calculate total subscribers and filter only those with total > 0
                 $totalSubscribers =
