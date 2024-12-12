@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountType;
+use App\Models\AccountTypeToLeader;
 use App\Models\PaymentGateway;
 use App\Models\PaymentGatewayToLeader;
 use Auth;
@@ -525,5 +527,61 @@ class SettingController extends Controller
         return redirect()->back()
             ->with('title', 'Deleted Successfully')
             ->with('success', 'A payment gateway has been deleted successfully.');
+    }
+
+    public function account_type()
+    {
+        return Inertia::render('Setting/AccountType/AccountType', [
+            'accountTypesCount' => AccountType::count(),
+        ]);
+    }
+
+    public function getAccountTypes()
+    {
+        $accountTypes = AccountType::with('visibleLeaders')
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'accountTypes' => $accountTypes,
+        ]);
+    }
+
+    public function updateAccountType(Request $request)
+    {
+        Validator::make($request->all(), [
+            'maximum_account_number' => ['required'],
+            'leaders' => ['required'],
+        ])->setAttributeNames([
+            'maximum_account_number' => 'Max Accounts',
+            'leaders' => 'Visible To',
+        ])->validate();
+
+        $account_type = AccountType::find($request->account_type_id);
+
+        $account_type->update([
+            'maximum_account_number' => $request->maximum_account_number,
+        ]);
+
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            $existing_leaders = AccountTypeToLeader::where('account_type_id', $account_type->id)->get();
+
+            foreach ($existing_leaders as $existing_leader) {
+                $existing_leader->delete();
+            }
+
+            foreach ($leaders as $leader) {
+                AccountTypeToLeader::create([
+                    'account_type_id' => $account_type->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
+        }
+
+        return redirect()->back()
+            ->with('title', 'Updated Successfully')
+            ->with('success', 'Account Type has been updated successfully.');
     }
 }
