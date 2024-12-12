@@ -79,7 +79,8 @@ const calculatePercentage = (fund) => {
                                         :class="
                                         {
                                             'text-green-500': lastMonthSubscriberComparison > 0,
-                                            'text-pink-500': lastMonthSubscriberComparison < 0
+                                            'text-pink-500': lastMonthSubscriberComparison < 0,
+                                            'text-gray-500' : lastMonthSubscriberComparison === 0,
                                         }"
                                     >
                                         <ArrowCircleUpIcon v-if="lastMonthSubscriberComparison > 0" class="w-5 h-5" />
@@ -126,7 +127,8 @@ const calculatePercentage = (fund) => {
                                         :class="
                                         {
                                             'text-green-500': lastMonthActiveFundComparison > 0,
-                                            'text-pink-500': lastMonthActiveFundComparison < 0
+                                            'text-pink-500': lastMonthActiveFundComparison < 0,
+                                            'text-gray-500' : lastMonthActiveFundComparison === 0,
                                         }"
                                     >
                                         <ArrowCircleUpIcon v-if="lastMonthActiveFundComparison > 0" class="w-5 h-5" />

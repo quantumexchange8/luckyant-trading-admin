@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\Activitylog\LogOptions;
@@ -96,6 +97,11 @@ class User extends Authenticatable implements HasMedia
     public function walletLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(WalletLog::class);
+    }
+
+    public function walletLogsAmount(): HasManyThrough
+    {
+        return $this->hasManyThrough(WalletLog::class, Wallet::class, 'user_id', 'wallet_id');
     }
 
     public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany

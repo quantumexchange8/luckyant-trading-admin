@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\UserService;
 use Carbon\Carbon;
 use App\Models\User;
+use DB;
 use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 use App\Models\Wallet;
@@ -299,12 +300,34 @@ class TransactionController extends Controller
 
             $query = Transaction::with([
                 'user',
-                'from_wallet:id,type',
-                'to_wallet:id,type',
+                'from_wallet:id,type,name,wallet_address',
+                'to_wallet:id,type,name,wallet_address',
                 'from_meta_login:id,meta_login',
                 'to_meta_login:id,meta_login',
             ])
-                ->where('transaction_type', $data['filters']['type']['value']);
+                ->where('transaction_type', $data['filters']['type']['value'])
+                ->whereNot('status', 'Processing');
+
+            if ($data['filters']['type']['value'] == 'Withdrawal') {
+                $query->addSelect([
+                    'profitAmount' => DB::table('wallet_logs')
+                        ->selectRaw('SUM(amount)')
+                        ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
+                        ->where('wallet_logs.purpose', 'ProfitSharing'),
+
+                    'bonusAmount' => DB::table('wallet_logs')
+                        ->selectRaw('SUM(amount)')
+                        ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
+                        ->whereIn('wallet_logs.purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate']),
+                ]);
+            }
+
+            if ($data['filters']['type']['value'] == 'Transfer') {
+                $query->with([
+                    'from_wallet.user:id,name',
+                    'to_wallet.user:id,name',
+                ]);
+            }
 
             if ($data['filters']['global']['value']) {
                 $query->where(function ($query) use ($data) {
@@ -316,15 +339,32 @@ class TransactionController extends Controller
                 });
             }
 
-            //FIX: filter leader
-            if ($data['filters']['leader_id']['value']) {
-                $leaderId = $data['filters']['leader_id']['value']['id'];
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
 
-                // Constrain the query to only include transactions associated with the specific leader
-                $query->whereHas('user', function ($userQuery) use ($leaderId) {
-                    $userQuery->whereRaw("FIND_IN_SET(?, TRIM(BOTH '-' FROM hierarchyList))", [$leaderId])
-                        ->where('leader_status', 1);
-                });
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('created_at', [$start_date, $end_date]);
+            }
+
+            if ($data['filters']['fund_type']['value']) {
+                $query->where('fund_type', $data['filters']['fund_type']['value']);
+            }
+
+            if ($data['filters']['status']['value']) {
+                $query->where('status', $data['filters']['status']['value']);
             }
 
             if ($data['sortField'] && $data['sortOrder']) {
@@ -334,9 +374,18 @@ class TransactionController extends Controller
                 $query->latest();
             }
 
+            // Export logic
+            if ($request->has('exportStatus') && $request->exportStatus) {
+                return Excel::download(new TransactionsExport($query), now() . '-'. $data['filters']['type']['value'] . 'report.xlsx');
+            }
+
+            // Calculate totals before pagination
+            $totalAmount = (clone $query)->sum('amount');
+            $successAmount = (clone $query)->where('status', 'Success')->sum('amount');
+            $rejectedAmount = (clone $query)->where('status', 'Rejected')->sum('amount');
+
             $transactions = $query->paginate($data['rows']);
 
-            // Extract all hierarchy IDs from users' hierarchyLists
             $userHierarchyLists = $transactions->pluck('user.hierarchyList')
                 ->filter()
                 ->flatMap(fn($list) => explode('-', trim($list, '-')))
@@ -344,12 +393,16 @@ class TransactionController extends Controller
                 ->toArray();
 
             // Load all potential leaders in bulk
-            $leaderQuery = User::whereIn('id', $userHierarchyLists)
-                ->where('leader_status', 1);
+            if ($leaderId > 0) {
+                $leaderQuery = User::where('id', $leaderId)
+                    ->where('leader_status', 1);
+            } else {
+                $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                    ->where('leader_status', 1);
+            }
 
             $leaders = $leaderQuery->get()->keyBy('id');
 
-            // Attach the first leader details
             $transactions->each(function ($transaction) use ($userService, $leaders) {
                 $firstLeader = $userService->getFirstLeader($transaction->user?->hierarchyList, $leaders);
 
@@ -361,6 +414,9 @@ class TransactionController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $transactions,
+                'totalAmount' => $totalAmount,
+                'successAmount' => $successAmount,
+                'rejectedAmount' => $rejectedAmount,
             ]);
         }
 

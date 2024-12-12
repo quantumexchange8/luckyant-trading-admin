@@ -422,7 +422,7 @@ const exportReport = () => {
                                 <span class="block">{{ $t('public.strategy') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ slotProps.data.strategy_type }}</span>
+                                <span class="uppercase">{{ slotProps.data.strategy_type ?? 'HOFI' }}</span>
                             </template>
                         </Column>
                         <Column

@@ -43,13 +43,13 @@ const successAmount = ref();
 const rejectedAmount = ref();
 
 const filters = ref({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    type: { value: props.selectedType, matchMode: FilterMatchMode.EQUALS },
-    leader_id: { value: null, matchMode: FilterMatchMode.EQUALS },
-    start_date: { value: null, matchMode: FilterMatchMode.EQUALS },
-    end_date: { value: null, matchMode: FilterMatchMode.EQUALS },
-    fund_type: { value: null, matchMode: FilterMatchMode.EQUALS },
-    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    global: {value: null, matchMode: FilterMatchMode.CONTAINS},
+    type: {value: props.selectedType, matchMode: FilterMatchMode.EQUALS},
+    leader_id: {value: null, matchMode: FilterMatchMode.EQUALS},
+    start_date: {value: null, matchMode: FilterMatchMode.EQUALS},
+    end_date: {value: null, matchMode: FilterMatchMode.EQUALS},
+    fund_type: {value: null, matchMode: FilterMatchMode.EQUALS},
+    status: {value: null, matchMode: FilterMatchMode.EQUALS},
 });
 
 const lazyParams = ref({});
@@ -57,7 +57,7 @@ const lazyParams = ref({});
 const loadLazyData = (event) => {
     isLoading.value = true;
 
-    lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value = {...lazyParams.value, first: event?.first || first.value};
 
     try {
         setTimeout(async () => {
@@ -80,7 +80,7 @@ const loadLazyData = (event) => {
             rejectedAmount.value = results?.rejectedAmount;
             isLoading.value = false;
         }, 100);
-    }  catch (e) {
+    } catch (e) {
         transactions.value = [];
         totalRecords.value = 0;
         isLoading.value = false;
@@ -95,7 +95,7 @@ const onSort = (event) => {
     loadLazyData(event);
 };
 const onFilter = (event) => {
-    lazyParams.value.filters = filters.value ;
+    lazyParams.value.filters = filters.value;
     loadLazyData(event);
 };
 
@@ -217,7 +217,7 @@ const exportReport = () => {
     exportStatus.value = true;
     isLoading.value = true;
 
-    lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value = {...lazyParams.value, first: event?.first || first.value};
 
     const params = {
         page: JSON.stringify(event?.page + 1),
@@ -273,7 +273,7 @@ const exportReport = () => {
                             <div class="relative w-full md:w-60">
                                 <InputIconWrapper class="md:col-span-2">
                                     <template #icon>
-                                        <SearchLgIcon aria-hidden="true" class="w-5 h-5" />
+                                        <SearchLgIcon aria-hidden="true" class="w-5 h-5"/>
                                     </template>
                                     <Input
                                         withIcon
@@ -299,7 +299,7 @@ const exportReport = () => {
                                     outlined
                                     @click="toggle"
                                 >
-                                    <SlidersOneIcon class="w-4 h-4" />
+                                    <SlidersOneIcon class="w-4 h-4"/>
                                     Filter
                                 </Button>
                                 <div class="w-full flex justify-end">
@@ -309,7 +309,7 @@ const exportReport = () => {
                                         @click="exportReport"
                                         :disabled="exportTable==='yes'"
                                     >
-                                        <CloudDownloadIcon class="w-4 h-4" />
+                                        <CloudDownloadIcon class="w-4 h-4"/>
                                         Export
                                     </Button>
                                 </div>
@@ -323,7 +323,7 @@ const exportReport = () => {
                     </template>
                     <template #loading>
                         <div class="flex flex-col gap-2 items-center justify-center">
-                            <Loading />
+                            <Loading/>
                             <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">Loading transactions</span>
                             <span v-else class="text-sm text-gray-700 dark:text-gray-300">Exporting Report</span>
                         </div>
@@ -333,13 +333,15 @@ const exportReport = () => {
                             field="created_at"
                             sortable
                             frozen
-                            class="table-cell min-w-36"
+                            class="table-cell min-w-44"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.date') }}</span>
+                                <span class="block">{{ $t('public.request_date') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('DD/MM/YYYY HH:mm:ss') }}</span>
+                                <span class="uppercase">{{
+                                        dayjs(slotProps.data.created_at).format('DD/MM/YYYY HH:mm:ss')
+                                    }}</span>
                             </template>
                         </Column>
                         <Column
@@ -383,26 +385,38 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="to_wallet_id"
-                            class="table-cell"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.to') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                {{ $t(`public.${slotProps.data.to_wallet.type}`) }}
-                            </template>
-                        </Column>
-                        <Column
                             field="transaction_number"
                             sortable
-                            class="table-cell"
+                            class="table-cell min-w-52"
                         >
                             <template #header>
                                 <span class="block">{{ $t('public.transaction_no') }}</span>
                             </template>
                             <template #body="slotProps">
                                 <span class="font-semibold">{{ slotProps.data.transaction_number }}</span>
+                            </template>
+                        </Column>
+
+                        <Column
+                            field="profitAmount"
+                            class="table-cell min-w-32"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.profit') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                $ {{ formatAmount(slotProps.data.profitAmount ?? 0) }}
+                            </template>
+                        </Column>
+                        <Column
+                            field="bonusAmount"
+                            class="table-cell min-w-32"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.bonus') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                $ {{ formatAmount(slotProps.data.bonusAmount ?? 0) }}
                             </template>
                         </Column>
                         <Column
@@ -425,7 +439,18 @@ const exportReport = () => {
                                 <span class="block">{{ $t('public.status') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <Tag :severity="getSeverity(slotProps.data.status)" :value="slotProps.data.status" />
+                                <Tag :severity="getSeverity(slotProps.data.status)" :value="slotProps.data.status"/>
+                            </template>
+                        </Column>
+                        <Column
+                            field="approval_at"
+                            class="table-cell min-w-44"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.approval_date') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                {{ dayjs(slotProps.data.approval_at).format('DD/MM/YYYY HH:mm:ss') }}
                             </template>
                         </Column>
                         <Column
@@ -443,7 +468,7 @@ const exportReport = () => {
                                     class="!p-2"
                                     @click="openDialog(data)"
                                 >
-                                    <IconFileSearch size="14" />
+                                    <IconFileSearch size="14"/>
                                 </Button>
                             </template>
                         </Column>
@@ -504,7 +529,7 @@ const exportReport = () => {
                         class="absolute top-2/4 -mt-2.5 right-4 text-gray-400 select-none cursor-pointer bg-white"
                         @click="clearJoinDate"
                     >
-                        <XIcon class="w-4 h-4" />
+                        <XIcon class="w-4 h-4"/>
                     </div>
                 </div>
             </div>
@@ -516,11 +541,13 @@ const exportReport = () => {
                 </div>
                 <div class="flex flex-col gap-1 self-stretch">
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['fund_type'].value" inputId="demo_fund" value="DemoFund" class="w-4 h-4" />
+                        <RadioButton v-model="filters['fund_type'].value" inputId="demo_fund" value="DemoFund"
+                                     class="w-4 h-4"/>
                         <label for="demo_fund">Demo</label>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['fund_type'].value" inputId="real_fund" value="RealFund" class="w-4 h-4" />
+                        <RadioButton v-model="filters['fund_type'].value" inputId="real_fund" value="RealFund"
+                                     class="w-4 h-4"/>
                         <label for="real_fund">Real</label>
                     </div>
                 </div>
@@ -533,11 +560,13 @@ const exportReport = () => {
                 </div>
                 <div class="flex flex-col gap-1 self-stretch">
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_success" value="Success" class="w-4 h-4" />
+                        <RadioButton v-model="filters['status'].value" inputId="status_success" value="Success"
+                                     class="w-4 h-4"/>
                         <label for="status_success">Success</label>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_rejected" value="Rejected" class="w-4 h-4" />
+                        <RadioButton v-model="filters['status'].value" inputId="status_rejected" value="Rejected"
+                                     class="w-4 h-4"/>
                         <label for="status_rejected">Rejected</label>
                     </div>
                 </div>
@@ -575,7 +604,7 @@ const exportReport = () => {
             <div class="flex flex-col gap-3 items-start w-full pt-4">
                 <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
                     <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.date') }}
+                        {{ $t('public.requested_date') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
                         {{ dayjs(detail.created_at).format('DD/MM/YYYY HH:mm:ss') }}
@@ -583,10 +612,26 @@ const exportReport = () => {
                 </div>
                 <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
                     <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.approval_date') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ dayjs(detail.approval_at).format('DD/MM/YYYY HH:mm:ss') }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.from') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ $t(`public.${detail.from_wallet.type}`) }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
                         {{ $t('public.to') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ $t(`public.${detail.to_wallet.type}`) }}
+                        {{ detail.payment_method }} - {{ detail.to_wallet_address }}
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
@@ -613,10 +658,26 @@ const exportReport = () => {
                 </div>
                 <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
                     <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.profit') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        $ {{ formatAmount(detail.profitAmount ?? 0) }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.bonus') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        $ {{ formatAmount(detail.bonusAmount ?? 0) }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
                         {{ $t('public.status') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <Tag :severity="getSeverity(detail.status)" :value="detail.status" />
+                        <Tag :severity="getSeverity(detail.status)" :value="detail.status"/>
                     </div>
                 </div>
             </div>

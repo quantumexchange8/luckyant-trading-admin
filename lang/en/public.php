@@ -143,4 +143,7 @@ return [
     "transfer" => "Transfer",
     "internal_transfer" => "Internal Transfer",
     "view_details" => "View Details",
+    "bonus" => "Bonus",
+    "request_date" => "Request Date",
+    "approval_date" => "Approval Date",
 ];

@@ -383,6 +383,20 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
+                            field="from_wallet_id"
+                            class="table-cell"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.from') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                <div class="flex flex-col">
+                                    <span>{{ slotProps.data.from_wallet.user.name }}</span>
+                                    <span class="text-gray-400">{{ slotProps.data.from_wallet.wallet_address }}</span>
+                                </div>
+                            </template>
+                        </Column>
+                        <Column
                             field="to_wallet_id"
                             class="table-cell"
                         >
@@ -390,7 +404,10 @@ const exportReport = () => {
                                 <span class="block">{{ $t('public.to') }}</span>
                             </template>
                             <template #body="slotProps">
-                                {{ $t(`public.${slotProps.data.to_wallet.type}`) }}
+                                <div class="flex flex-col">
+                                    <span>{{ slotProps.data.to_wallet.user.name }}</span>
+                                    <span class="text-gray-400">{{ slotProps.data.to_wallet.wallet_address }}</span>
+                                </div>
                             </template>
                         </Column>
                         <Column
@@ -581,12 +598,26 @@ const exportReport = () => {
                         {{ dayjs(detail.created_at).format('DD/MM/YYYY HH:mm:ss') }}
                     </div>
                 </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.from') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        <div class="flex flex-col">
+                            <span class="font-semibold">{{ detail.from_wallet.user.name }}</span>
+                            <span class="text-gray-400">{{ detail.from_wallet.wallet_address }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
                     <div class="w-[140px] text-gray-500 text-xs font-medium">
                         {{ $t('public.to') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ $t(`public.${detail.to_wallet.type}`) }}
+                        <div class="flex flex-col">
+                            <span class="font-semibold">{{ detail.to_wallet.user.name }}</span>
+                            <span class="text-gray-400">{{ detail.to_wallet.wallet_address }}</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">

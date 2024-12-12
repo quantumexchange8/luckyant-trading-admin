@@ -9,6 +9,8 @@ import Tab from 'primevue/tab';
 import TabPanels from 'primevue/tabpanels';
 import TabPanel from 'primevue/tabpanel';
 import DepositTable from "@/Pages/Transaction/TransactionHistory/DepositTable.vue";
+import WithdrawalTable from "@/Pages/Transaction/TransactionHistory/WithdrawalTable.vue";
+import TransferTable from "@/Pages/Transaction/TransactionHistory/TransferTable.vue";
 
 const props = defineProps({
     transactionTypes: Array,
@@ -30,26 +32,31 @@ const tabs = ref([
     {
         title: 'withdrawal',
         type: 'Withdrawal',
-        value: '1'
+        value: '1',
+        component: h(WithdrawalTable)
     },
     {
         title: 'transfer',
         type: 'Transfer',
-        value: '2'
+        value: '2',
+        component: h(TransferTable)
     },
-    {
-        title: 'internal_transfer',
-        type: 'InternalTransfer',
-        value: '3'
-    },
+    // {
+    //     title: 'internal_transfer',
+    //     type: 'InternalTransfer',
+    //     value: '3'
+    // },
 ]);
 
 const selectedType = ref('deposit');
 const activeIndex = ref('0');
 
 // Watch for changes in selectedType and update the activeIndex accordingly
-watch(activeIndex, (newType) => {
-    selectedType.value = newType;
+watch(activeIndex, (newIndex) => {
+    const activeTab = tabs.value.find(tab => tab.value === newIndex);
+    if (activeTab) {
+        selectedType.value = activeTab.type;
+    }
 });
 
 const handleUpdateTotals = (data) => {

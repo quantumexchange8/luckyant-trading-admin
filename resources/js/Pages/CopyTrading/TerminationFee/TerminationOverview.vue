@@ -68,7 +68,8 @@ onMounted(() => {
                                     :class="
                                         {
                                             'text-green-500': lastMonthTerminationFundComparison > 0,
-                                            'text-pink-500': lastMonthTerminationFundComparison < 0
+                                            'text-pink-500': lastMonthTerminationFundComparison < 0,
+                                            'text-gray-500': lastMonthTerminationFundComparison === 0,
                                         }"
                                 >
                                     <ArrowCircleUpIcon v-if="lastMonthTerminationFundComparison > 0" class="w-5 h-5" />
@@ -116,7 +117,8 @@ onMounted(() => {
                                     :class="
                                         {
                                             'text-green-500': lastMonthTerminationFeeComparison > 0,
-                                            'text-pink-500': lastMonthTerminationFeeComparison < 0
+                                            'text-pink-500': lastMonthTerminationFeeComparison < 0,
+                                            'text-gray-500': lastMonthTerminationFeeComparison === 0,
                                         }"
                                 >
                                     <ArrowCircleUpIcon v-if="lastMonthTerminationFeeComparison > 0" class="w-5 h-5" />
