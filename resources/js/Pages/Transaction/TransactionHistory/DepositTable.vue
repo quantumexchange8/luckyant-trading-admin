@@ -166,7 +166,8 @@ watch([filters.value['type'], filters.value['leader_id'], filters.value['fund_ty
 const clearAll = () => {
     filters.value['global'].value = null;
     filters.value['leader_id'].value = null;
-    selectedDate.value = [];
+    filters.value['start_date'].value = null;
+    filters.value['end_date'].value = null;
 };
 
 const clearFilterGlobal = () => {

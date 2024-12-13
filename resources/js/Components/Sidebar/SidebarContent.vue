@@ -278,6 +278,11 @@ const { hasRole } = usePermission();
                 title="Performance Incentive"
                 :active="route().current('report.performance_incentive')"
             />
+            <SidebarCollapsibleItem
+                :href="route('report.daily_register')"
+                :title="$t('public.daily_register')"
+                :active="route().current('report.daily_register')"
+            />
         </SidebarCollapsible>
 
         <SidebarCollapsible

@@ -153,4 +153,7 @@ return [
     "total_group_deposit" => "Total Group Deposit",
     "transaction_fee" => "Transaction Fee",
     "filter_approval_date" => "Filter approval date",
+    "daily_register" => "Daily Registration",
+    "today_registration" => "Today Registration",
+    "total_registration" => "Total Registration",
 ];

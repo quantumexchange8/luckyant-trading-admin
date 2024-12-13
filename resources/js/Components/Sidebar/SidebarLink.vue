@@ -2,6 +2,7 @@
 import { Link } from '@inertiajs/vue3'
 import { sidebarState } from '@/Composables'
 import { EmptyCircleIcon, InfoCircleIcon } from '@/Components/Icons/outline'
+import Tag from "primevue/tag";
 
 const props = defineProps({
     href: {
@@ -23,12 +24,12 @@ const props = defineProps({
     pendingCounts: Number,
 })
 
-const Tag = !props.external ? Link : 'a'
+const ExternalTag = !props.external ? Link : 'a'
 </script>
 
 <template>
     <component
-        :is="Tag"
+        :is="ExternalTag"
         v-if="href"
         :href="href"
         :class="[
@@ -76,9 +77,7 @@ const Tag = !props.external ? Link : 'a'
             >
                 {{ title }}
             </span>
-            <span v-if="pendingCounts > 0 && (sidebarState.isOpen || sidebarState.isHovered)" class="text-xs rounded-md px-2 bg-gray-200 dark:bg-primary-800 text-primary-800 dark:text-primary-100">
-                Pending
-            </span>
+            <Tag severity="info" v-if="pendingCounts > 0 && (sidebarState.isOpen || sidebarState.isHovered)" value="Pending"/>
         </div>
         <slot name="arrow" />
     </button>

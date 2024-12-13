@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\PammSubscription;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
@@ -27,7 +28,9 @@ class DashboardController extends Controller
         $pendingDeposits = Transaction::where('category', 'wallet')->where('transaction_type', 'Deposit')->where('status', 'Processing');
         $pendingWithdrawals = Transaction::where('category', 'wallet')->where('transaction_type', 'Withdrawal')->where('status', 'Processing');
         $pendingSubscribers = Subscriber::where('status', 'Pending');
+        $pendingPamm = PammSubscription::where('status', 'Pending');
         $pendingKyc = User::whereNot('role', 'admin')->where('kyc_approval', 'Pending');
+        $dailyRegister = User::whereDate('created_at', Carbon::today());
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
@@ -35,7 +38,9 @@ class DashboardController extends Controller
             $pendingDeposits->whereIn('user_id', $childrenIds);
             $pendingWithdrawals->whereIn('user_id', $childrenIds);
             $pendingSubscribers->whereIn('user_id', $childrenIds);
+            $pendingPamm->whereIn('user_id', $childrenIds);
             $pendingKyc->whereIn('id', $childrenIds);
+            $dailyRegister->whereIn('id', $childrenIds);
         } elseif ($authUser->hasRole('super-admin')) {
             // Super-admin logic, no need to apply whereIn
         } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
@@ -43,13 +48,17 @@ class DashboardController extends Controller
             $pendingDeposits->whereIn('user_id', $childrenIds);
             $pendingWithdrawals->whereIn('user_id', $childrenIds);
             $pendingSubscribers->whereIn('user_id', $childrenIds);
+            $pendingPamm->whereIn('user_id', $childrenIds);
             $pendingKyc->whereIn('id', $childrenIds);
+            $dailyRegister->whereIn('id', $childrenIds);
         } else {
             // No applicable conditions, set whereIn to empty array
             $pendingDeposits->whereIn('user_id', []);
             $pendingWithdrawals->whereIn('user_id', []);
             $pendingSubscribers->whereIn('user_id', []);
+            $pendingPamm->whereIn('user_id', []);
             $pendingKyc->whereIn('id', []);
+            $dailyRegister->whereIn('id', []);
         }
 
         return Inertia::render('Dashboard', [
@@ -57,7 +66,9 @@ class DashboardController extends Controller
             'pendingDeposits' => number_format($pendingDeposits->sum('transaction_amount'), 2, '.', ''),
             'pendingWithdrawals' => number_format($pendingWithdrawals->sum('transaction_amount'), 2, '.', ''),
             'pendingSubscribers' => $pendingSubscribers->count(),
+            'pendingPamm' => $pendingKyc->count(),
             'pendingKyc' => $pendingKyc->count(),
+            'dailyRegister' => $dailyRegister->count(),
         ]);
     }
 

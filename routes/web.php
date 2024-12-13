@@ -255,6 +255,11 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/getTradingRebate', [ReportController::class, 'getTradingRebate'])->name('report.getTradingRebate');
         Route::get('/performance_incentive', [ReportController::class, 'performance_incentive'])->name('report.performance_incentive');
         Route::get('/getPerformanceIncentive', [ReportController::class, 'getPerformanceIncentive'])->name('report.getPerformanceIncentive');
+
+        //Daily register
+        Route::get('/daily_register',[ReportController::class, 'daily_register'])->name('report.daily_register');
+        Route::get('/getDailyRegisterData',[ReportController::class, 'getDailyRegisterData'])->name('report.getDailyRegisterData');
+        Route::get('/getDailyChildRegisterData',[ReportController::class, 'getDailyChildRegisterData'])->name('report.getDailyChildRegisterData');
     });
 
     /**

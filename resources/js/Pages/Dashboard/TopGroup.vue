@@ -1,6 +1,7 @@
 <script setup>
 import {transactionFormat} from "@/Composables/index.js";
 import {ref} from "vue";
+import Tag from "primevue/tag";
 
 const { formatAmount } = transactionFormat();
 const topGroups = ref(null);
@@ -33,8 +34,9 @@ getWallets();
                     </div>
                 </div>
                 <div class="flex flex-col">
-                    <div class="font-semibold">
-                        {{ group.name }} (Leader)
+                    <div class="flex gap-1 items-center">
+                        <span class="font-semibold">{{ group.name }}</span>
+                        <Tag severity="info" value="Leader" />
                     </div>
                     <div class="text-gray-400 dark:text-gray-500 text-xs">
                         {{ group.email }}

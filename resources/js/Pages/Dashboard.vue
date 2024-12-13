@@ -11,7 +11,9 @@ const props = defineProps({
     pendingDeposits: String,
     pendingWithdrawals: String,
     pendingSubscribers: Number,
+    pendingPamm: Number,
     pendingKyc: Number,
+    dailyRegister: Number,
 });
 
 const { formatDateTime, formatAmount } = transactionFormat();
@@ -26,10 +28,16 @@ const handleRedirectTo = (pending) => {
             window.location.href = route('transaction.pending_transaction', {status: 'withdrawal'});
             break
         case 'subscriber':
-            window.location.href = route('subscriber.pending_subscriber');
+            window.location.href = route('copy_trading.pending');
+            break
+        case 'pamm':
+            window.location.href = route('pamm.pending_pamm');
             break
         case 'kyc':
             window.location.href = route('member.member_listing', {status: 'pending'});
+            break
+        case 'daily_register':
+            window.location.href = route('report.daily_register');
             break
         default:
             console.error('Unknown pending status:', pending)
@@ -49,8 +57,8 @@ const handleRedirectTo = (pending) => {
             </div>
         </template>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full">
-            <div class="flex flex-col gap-5 col-span-3 xl:col-span-2">
+        <div class="flex flex-col xl:flex-row self-stretch gap-5 w-full">
+            <div class="flex flex-col w-full gap-5">
                 <div class="flex flex-col sm:flex-row gap-5 items-center w-full">
                     <div class="flex justify-between items-center bg-white dark:bg-gray-900 rounded-md shadow-md p-5 w-full">
                         <div class="flex flex-col gap-2">
@@ -84,6 +92,22 @@ const handleRedirectTo = (pending) => {
                             <ChevronRightIcon class="text-white" />
                         </div>
                     </div>
+                    <div class="flex justify-between items-center bg-white dark:bg-gray-900 rounded-md shadow-md p-5 w-full">
+                        <div class="flex flex-col gap-2">
+                            <div class="text-sm text-gray-400">
+                                Daily Registers
+                            </div>
+                            <div class="text-xl text-gray-900 dark:text-white font-semibold">
+                               {{ dailyRegister }}
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-full bg-primary-400 grow-0 shrink-0 hover:-translate-y-1 transition-all duration-300 ease-in-out hover:cursor-pointer"
+                            @click="handleRedirectTo('daily_register')"
+                        >
+                            <ChevronRightIcon class="text-white" />
+                        </div>
+                    </div>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-5 items-center w-full">
                     <div class="flex justify-between items-center bg-white dark:bg-gray-900 rounded-md shadow-md p-5 w-full">
@@ -98,6 +122,22 @@ const handleRedirectTo = (pending) => {
                         <div
                             class="rounded-full bg-primary-400 grow-0 shrink-0 hover:-translate-y-1 transition-all duration-300 ease-in-out hover:cursor-pointer"
                             @click="handleRedirectTo('subscriber')"
+                        >
+                            <ChevronRightIcon class="text-white" />
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center bg-white dark:bg-gray-900 rounded-md shadow-md p-5 w-full">
+                        <div class="flex flex-col gap-2">
+                            <div class="text-sm text-gray-400">
+                                Pending PAMM
+                            </div>
+                            <div class="text-xl text-gray-900 dark:text-white font-semibold">
+                                {{ formatAmount(pendingPamm, 0) }}
+                            </div>
+                        </div>
+                        <div
+                            class="rounded-full bg-primary-400 grow-0 shrink-0 hover:-translate-y-1 transition-all duration-300 ease-in-out hover:cursor-pointer"
+                            @click="handleRedirectTo('pamm')"
                         >
                             <ChevronRightIcon class="text-white" />
                         </div>
@@ -121,7 +161,7 @@ const handleRedirectTo = (pending) => {
                 </div>
                 <TotalDeposit />
             </div>
-            <div v-if="hasRole('super-admin')" class="rounded-md col-span-3 xl:col-span-1 bg-white dark:bg-gray-900 shadow-md p-5">
+            <div v-if="hasRole('super-admin')" class="rounded-md bg-white dark:bg-gray-900 shadow-md p-5 w-full xl:max-w-[358px] 2xl:max-w-[560px]">
                 <TopGroup />
             </div>
         </div>
