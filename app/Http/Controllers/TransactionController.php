@@ -320,6 +320,13 @@ class TransactionController extends Controller
                         ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
                         ->whereIn('wallet_logs.purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate']),
                 ]);
+
+                if (!empty($data['filters']['start_approval_date']['value']) && !empty($data['filters']['end_approval_date']['value'])) {
+                    $start_date = Carbon::parse($data['filters']['start_approval_date']['value'])->addDay()->startOfDay();
+                    $end_date = Carbon::parse($data['filters']['end_approval_date']['value'])->addDay()->endOfDay();
+
+                    $query->whereBetween('approval_at', [$start_date, $end_date]);
+                }
             }
 
             if ($data['filters']['type']['value'] == 'Transfer') {
@@ -333,7 +340,7 @@ class TransactionController extends Controller
                 $query->whereHas('user', function($q) use ($data) {
                     $q->where(function ($query) use ($data) {
                         $keyword = $data['filters']['global']['value'];
-    
+
                         $query->where('name', 'like', '%' . $keyword . '%')
                             ->orWhere('email', 'like', '%' . $keyword . '%');
                     });
@@ -390,7 +397,7 @@ class TransactionController extends Controller
                 // No applicable conditions, set whereIn to empty array
                 $query->whereIn('user_id', []);
             }
-    
+
 
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {

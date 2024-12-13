@@ -39,7 +39,7 @@ onMounted(() => {
             transition-duration: 150ms;
         "
         :class="[
-            'fixed inset-y-0 z-20 py-4 flex flex-col space-y-6 bg-white shadow-lg dark:bg-gray-950 border-r dark:border-gray-800',
+            'fixed inset-y-0 z-50 py-4 flex flex-col space-y-6 bg-white shadow-lg dark:bg-gray-950 border-r dark:border-gray-800',
             {
                 'translate-x-0 w-72':
                     sidebarState.isOpen || sidebarState.isHovered,

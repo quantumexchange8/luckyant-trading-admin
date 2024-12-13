@@ -14,7 +14,6 @@ import Button from "primevue/button";
 import {
     SlidersOneIcon,
     CloudDownloadIcon,
-    XIcon,
     SearchLgIcon
 } from "@/Components/Icons/outline.jsx"
 import dayjs from "dayjs";
@@ -22,7 +21,7 @@ import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
 import debounce from "lodash/debounce.js";
-import {IconFileSearch} from "@tabler/icons-vue";
+import {IconFileSearch, IconCircleX} from "@tabler/icons-vue";
 import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
 import RadioButton from "primevue/radiobutton";
@@ -48,6 +47,8 @@ const filters = ref({
     leader_id: {value: null, matchMode: FilterMatchMode.EQUALS},
     start_date: {value: null, matchMode: FilterMatchMode.EQUALS},
     end_date: {value: null, matchMode: FilterMatchMode.EQUALS},
+    start_approval_date: {value: null, matchMode: FilterMatchMode.EQUALS},
+    end_approval_date: {value: null, matchMode: FilterMatchMode.EQUALS},
     fund_type: {value: null, matchMode: FilterMatchMode.EQUALS},
     status: {value: null, matchMode: FilterMatchMode.EQUALS},
 });
@@ -108,6 +109,7 @@ const toggle = (event) => {
 const leaders = ref();
 const loadingLeaders = ref(false);
 const selectedDate = ref([]);
+const selectedApprovalDate = ref([]);
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -125,6 +127,10 @@ const clearJoinDate = () => {
     selectedDate.value = [];
 }
 
+const clearApprovalDate = () => {
+    selectedApprovalDate.value = [];
+}
+
 watch(selectedDate, (newDateRange) => {
     if (Array.isArray(newDateRange)) {
         const [startDate, endDate] = newDateRange;
@@ -136,8 +142,15 @@ watch(selectedDate, (newDateRange) => {
     }
 })
 
-watch(selectedDate, () => {
-    loadLazyData();
+watch(selectedApprovalDate, (newDateRange) => {
+    if (Array.isArray(newDateRange)) {
+        const [startDate, endDate] = newDateRange;
+        filters.value['start_approval_date'].value = startDate;
+        filters.value['end_approval_date'].value = endDate;
+        loadLazyData();
+    } else {
+        console.warn('Invalid date range format:', newDateRange);
+    }
 })
 
 onMounted(() => {
@@ -166,8 +179,8 @@ watch([filters.value['type'], filters.value['leader_id'], filters.value['fund_ty
 const clearAll = () => {
     filters.value['global'].value = null;
     filters.value['leader_id'].value = null;
-    filters.value['start_date'].value = null;
-    filters.value['end_date'].value = null;
+    selectedDate.value = [];
+    selectedApprovalDate.value = [];
 };
 
 const clearFilterGlobal = () => {
@@ -510,7 +523,7 @@ const exportReport = () => {
                 </Select>
             </div>
 
-            <!-- Filter Join Date-->
+            <!-- Filter Request Date-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
                     {{ $t('public.filter_date') }}
@@ -526,10 +539,34 @@ const exportReport = () => {
                     />
                     <div
                         v-if="selectedDate && selectedDate.length > 0"
-                        class="absolute top-2/4 -mt-2.5 right-4 text-gray-400 select-none cursor-pointer bg-white"
+                        class="absolute top-2/4 -mt-2 right-2 text-gray-400 select-none cursor-pointer bg-transparent"
                         @click="clearJoinDate"
                     >
-                        <XIcon class="w-4 h-4"/>
+                        <IconCircleX size="16" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Approval Date-->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_approval_date') }}
+                </div>
+                <div class="relative w-full">
+                    <DatePicker
+                        v-model="selectedApprovalDate"
+                        dateFormat="dd/mm/yy"
+                        class="w-full"
+                        selectionMode="range"
+                        placeholder="dd/mm/yyyy - dd/mm/yyyy"
+                        tim
+                    />
+                    <div
+                        v-if="selectedApprovalDate && selectedApprovalDate.length > 0"
+                        class="absolute top-2/4 -mt-2 right-2 text-gray-400 select-none cursor-pointer bg-transparent"
+                        @click="clearApprovalDate"
+                    >
+                        <IconCircleX size="16" />
                     </div>
                 </div>
             </div>
@@ -670,6 +707,14 @@ const exportReport = () => {
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
                         $ {{ formatAmount(detail.bonusAmount ?? 0) }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.transaction_fee') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        $ {{ formatAmount(detail.transaction_charges ?? 0) }}
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">

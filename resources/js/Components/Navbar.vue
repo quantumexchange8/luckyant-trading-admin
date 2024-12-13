@@ -158,7 +158,7 @@ onUnmounted(() => {
     <!-- Mobile bottom bar -->
     <div
         :class="[
-            'fixed inset-x-0 bottom-0 flex items-center justify-between px-4 py-4 sm:px-6 transition-transform duration-500 bg-white md:hidden dark:bg-dark-eval-1',
+            'fixed z-50 inset-x-0 bottom-0 flex items-center justify-between px-4 py-4 sm:px-6 transition-transform duration-500 bg-white md:hidden dark:bg-dark-eval-1',
             {
                 'translate-y-full': scrolling.down,
                 'translate-y-0': scrolling.up,

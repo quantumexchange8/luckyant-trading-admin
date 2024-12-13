@@ -93,7 +93,7 @@ const handleUpdateTotals = (data) => {
                         <div>
                             Total Amount
                         </div>
-                        <div class="text-2xl font-bold">
+                        <div class="text-xl font-bold">
                         <span v-if="totalAmount !== null">
                           $ {{ formatAmount(totalAmount ? totalAmount : 0) }}
                         </span>
@@ -111,7 +111,7 @@ const handleUpdateTotals = (data) => {
                         <div>
                             Success Amount
                         </div>
-                        <div class="text-2xl font-bold">
+                        <div class="text-xl font-bold">
                         <span v-if="successAmount !== null">
                           $ {{ formatAmount(successAmount ? successAmount : 0) }}
                         </span>
@@ -129,7 +129,7 @@ const handleUpdateTotals = (data) => {
                         <div>
                             Rejected Amount
                         </div>
-                        <div class="text-2xl font-bold">
+                        <div class="text-xl font-bold">
                         <span v-if="rejectedAmount !== null">
                           $ {{ formatAmount(rejectedAmount ? rejectedAmount : 0) }}
                         </span>

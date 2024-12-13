@@ -69,22 +69,6 @@ class PammController extends Controller
             $pendingQuery->whereIn('user_id', []);
         }
 
-        $authUser = Auth::user();
-
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $childrenIds = $authUser->getChildrenIds();
-            $childrenIds[] = $authUser->id;
-            $pendingQuery->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $pendingQuery->whereIn('user_id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $pendingQuery->whereIn('user_id', []);
-        }
-
         if ($request->export == 'yes') {
             if ($request->master_meta_login) {
                 $pendingQuery->where('master_meta_login', $request->master_meta_login);
@@ -352,7 +336,7 @@ class PammController extends Controller
         $authUser = Auth::user();
 
         $subscriptionQuery = PammSubscription::where('status', 'Active');
-    
+
         // Apply filtering based on roles and leader status
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
@@ -367,41 +351,41 @@ class PammController extends Controller
             // No applicable conditions, set whereIn to empty array
             $subscriptionQuery->whereIn('user_id', []);
         }
-    
+
         // Current month and last month
         $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
         $endOfLastMonth = Carbon::now()->subMonth()->endOfMonth();
-    
+
         // Current month active subscribers
         $current_month_active_subscriber = (clone $subscriptionQuery)
             ->whereDate('approval_date', '<=', $endOfMonth)
             ->distinct('meta_login')
             ->count();
-    
+
         // Current month active fund
         $current_month_active_fund = (clone $subscriptionQuery)
             ->whereDate('approval_date', '<=', $endOfMonth)
             ->sum('subscription_amount');
-    
+
         // Last month active subscribers
         $last_month_active_subscriber = (clone $subscriptionQuery)
             ->whereDate('approval_date', '<=', $endOfLastMonth)
             ->distinct('meta_login')
             ->count();
-    
+
         // Last month active fund
         $last_month_active_fund = (clone $subscriptionQuery)
             ->whereDate('approval_date', '<=', $endOfLastMonth)
             ->sum('subscription_amount');
-    
+
         // Comparison % of active subscribers vs last month
         $last_month_active_subscriber_comparison = $current_month_active_subscriber - $last_month_active_subscriber;
-    
+
         // Comparison % of active fund vs last month
         $last_month_active_fund_comparison = $last_month_active_fund > 0
             ? (($current_month_active_fund - $last_month_active_fund) / $last_month_active_fund) * 100
             : ($current_month_active_fund > 0 ? 100 : 0);
-    
+
         // Get and format top 3 users by total deposit
         $topThreeUser = (clone $subscriptionQuery)
             ->select('user_id', DB::raw('SUM(subscription_amount) as total_fund'))
@@ -414,7 +398,7 @@ class PammController extends Controller
                 $subscription->profile_photo = $subscription->user->getFirstMediaUrl('profile_photo');
                 return $subscription;
             });
-    
+
         return response()->json([
             'currentMonthActiveSubscriber' => $current_month_active_subscriber,
             'lastMonthSubscriberComparison' => $last_month_active_subscriber_comparison,

@@ -151,4 +151,6 @@ return [
     "total_clients" => "Total Clients",
     "total_deposit" => "Total Deposit",
     "total_group_deposit" => "Total Group Deposit",
+    "transaction_fee" => "Transaction Fee",
+    "filter_approval_date" => "Filter approval date",
 ];

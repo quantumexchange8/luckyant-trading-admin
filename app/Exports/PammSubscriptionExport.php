@@ -13,7 +13,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
 {
     private $query;
 
-    public function g__construct($query)
+    public function __construct($query)
     {
         $this->query = $query;
     }

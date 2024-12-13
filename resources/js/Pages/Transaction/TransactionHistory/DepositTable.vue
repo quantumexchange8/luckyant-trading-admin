@@ -166,8 +166,7 @@ watch([filters.value['type'], filters.value['leader_id'], filters.value['fund_ty
 const clearAll = () => {
     filters.value['global'].value = null;
     filters.value['leader_id'].value = null;
-    filters.value['start_date'].value = null;
-    filters.value['end_date'].value = null;
+    selectedDate.value = [];
 };
 
 const clearFilterGlobal = () => {
@@ -501,7 +500,7 @@ const exportReport = () => {
                     />
                     <div
                         v-if="selectedDate && selectedDate.length > 0"
-                        class="absolute top-2/4 -mt-2.5 right-4 text-gray-400 select-none cursor-pointer bg-white"
+                        class="absolute top-2/4 -mt-2 right-2 text-gray-400 select-none cursor-pointer bg-transparent"
                         @click="clearJoinDate"
                     >
                         <XIcon class="w-4 h-4" />
