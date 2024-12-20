@@ -555,7 +555,7 @@ class SettingController extends Controller
     {
         Validator::make($request->all(), [
             'leverages' => ['required'],
-            'leaders' => ['required'],
+            'leaders' => ['nullable'],
         ])->setAttributeNames([
             'leverages' => trans('public.leverage'),
             'leaders' => 'Visible To',
@@ -607,6 +607,8 @@ class SettingController extends Controller
                     ]);
                 }
             }
+        } else {
+            AccountTypeToLeader::where('account_type_id', $account_type->id)->delete();
         }
 
         return back()->with('toast', [

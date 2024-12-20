@@ -328,7 +328,7 @@ const exportReport = () => {
                             field="meta_login"
                             sortable
                             frozen
-                            class="table-cell"
+                            class="table-cell min-w-40"
                         >
                             <template #header>
                                 <span class="block">{{ $t('public.account_no') }}</span>
@@ -346,7 +346,6 @@ const exportReport = () => {
                         </Column>
                         <Column
                             field="user.name"
-                            sortable
                             class="table-cell"
                         >
                             <template #header>
@@ -366,7 +365,6 @@ const exportReport = () => {
                         </Column>
                         <Column
                             field="first_leader_id"
-                            show-filter-menu
                             class="table-cell"
                         >
                             <template #header>
