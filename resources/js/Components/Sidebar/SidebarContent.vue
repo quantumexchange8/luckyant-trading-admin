@@ -18,14 +18,15 @@ import { ClipboardListIcon, SpeakerphoneIcon } from '@heroicons/vue/outline'
 import {usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import { usePermission } from '@/Composables/permissions.js'
+import {
+    IconPasswordUser
+} from "@tabler/icons-vue";
 
 const page = usePage();
 const pendingTransactionCount = ref(page.props.pendingTransactionCount);
 const pendingKycCount = ref(page.props.pendingKycCount);
-const pendingMasterCount = ref(page.props.pendingMasterCount);
 const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
 const pendingRenewalCount = ref(page.props.pendingRenewalCount);
-const pendingSwitchMasterCount = ref(page.props.pendingSwitchMasterCount);
 const pendingPammCount = ref(page.props.pendingPammCount);
 const { hasRole } = usePermission();
 </script>
@@ -85,10 +86,19 @@ const { hasRole } = usePermission();
                 title="Affiliate Listing"
                 :active="route().current('member.affiliate_listing')"
             />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
+            :title="$t('public.account')"
+            :active="route().current('account.*')"
+        >
+            <template #icon>
+                <IconPasswordUser size="24" />
+            </template>
             <SidebarCollapsibleItem
-                :href="route('member.live_trading')"
-                title="Live Account Listing"
-                :active="route().current('member.live_trading')"
+                :href="route('account.account_listing')"
+                :title="$t('public.account_listing')"
+                :active="route().current('account.account_listing')"
             />
         </SidebarCollapsible>
 

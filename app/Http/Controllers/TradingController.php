@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BalanceAdjustmentRequest;
 use App\Models\CopyTradeTransaction;
+use App\Models\PammSubscription;
 use App\Models\Subscriber;
 use App\Models\Subscription;
 use App\Models\SubscriptionBatch;
@@ -12,7 +13,9 @@ use App\Models\Transaction;
 use App\Models\Mt5DeleteLog;
 use App\Services\dealAction;
 use App\Services\RunningNumberService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use App\Models\TradingAccount;
@@ -30,161 +33,210 @@ use App\Services\passwordType;
 
 class TradingController extends Controller
 {
-    //
-    public function liveTrading()
+    public function account_listing()
     {
-        return Inertia::render('Member/LiveTrading', [
-            'leverageSel' => (new SelectOptionService())->getActiveLeverageSelection(),
+        return Inertia::render('Account/AccountListing/AccountListing', [
+            'accountsCount' => TradingAccount::count(),
         ]);
     }
 
-    public function getTradingAccount(Request $request)
+    public function getTradingAccount(Request $request, UserService $userService)
     {
-        $authUser = \Auth::user();
-        // $connection = (new MetaFiveService())->getConnectionStatus();
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
 
-        // if ($connection == 0) {
-        //     try {
-        //         (new MetaFiveService())->getUserInfo(TradingAccount::all());
-        //     } catch (\Exception $e) {
-        //         \Log::error('Error fetching trading accounts: '. $e->getMessage());
-        //     }
-        // }
+            $query = TradingAccount::with([
+                'user:id,name,email,hierarchyList',
+                'tradingUser:id,meta_login,name,company,acc_status',
+                'accountType:id,name,slug'
+            ])
+                ->withSum('active_copy_trade', 'meta_balance')
+                ->withSum('active_pamm', 'subscription_amount');
 
-        $tradingListing = TradingAccount::query()
-        ->select([
-            'trading_accounts.*',
-            DB::raw('ABS(IFNULL(demo_fund, 0) - balance) AS real_fund')
-        ])
-        ->with(['user', 'accountType', 'tradingUser']);
+            if ($data['filters']['global']['value']) {
+                $keyword = $data['filters']['global']['value'];
 
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $childrenIds = $authUser->getChildrenIds();
-            $childrenIds[] = $authUser->id;
-            $tradingListing->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $tradingListing->whereIn('user_id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $tradingListing->whereIn('user_id', []);
-        }
-
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $tradingListing->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search)
-                        ->orWhere('email', 'like', $search)
-                        ->orWhere('username', 'like', $search);
-                })
-                ->orWhereHas('tradingUser', function ($tradingUser) use ($search) {
-                    $tradingUser->where('name', 'like', $search);
-                })
-                ->orWhere('meta_login', 'like', $search);
-            });
-        }
-
-        if ($request->filled('type')) {
-            $filter = $request->input('type');
-            if ($filter === 'inactive'){
-                $tradingListing->whereRaw('ABS(IFNULL(demo_fund, 0) - balance) = 0');
-            }
-            elseif ($filter === 'deleted'){
-                $tradingListing->where(function ($q) use ($filter) {
-                    $q->whereHas('tradingUser', function ($tradingUser) use ($filter) {
-                        $tradingUser->where('acc_status', 'Deleted');
-                    });
+                $query->where(function ($query) use ($keyword) {
+                    $query->whereHas('user', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%');
+                    })->orWhereHas('tradingUser', function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('company', 'like', '%' . $keyword . '%');
+                    })->orWhere('meta_login', 'like', '%' . $keyword . '%');
                 });
             }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('created_at', [$start_date, $end_date]);
+            }
+
+            if (!empty($data['filters']['type']['value'])) {
+                $accountType = $data['filters']['type']['value'];
+                $query->whereIn('account_type', $accountType);
+            }
+
+            if (!empty($data['filters']['fund_type']['value'])) {
+                $fundType = $data['filters']['fund_type']['value'];
+
+                if ($fundType == 'DemoFund') {
+                    $query->where('demo_fund', '>', 0);
+                } else {
+                    $query->where('demo_fund', '<=', 0)
+                        ->orWhereNull('demo_fund');
+                }
+            }
+
+            if (!empty($data['filters']['status']['value'])) {
+                $status = $data['filters']['status']['value'];
+
+                if ($status == 'zero_balance') {
+                    $query->where('balance', 0)
+                        ->orWhereNull('balance');
+                } else {
+                    $query->whereHas('tradingUser', function ($q) use ($status) {
+                        $q->where('acc_status', $status);
+                    });
+                }
+            }
+
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('user_id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('user_id', []);
+            }
+
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
+            } else {
+                $query->latest();
+            }
+
+            // Export logic
+            if ($request->has('exportStatus') && $request->exportStatus) {
+                return Excel::download(new TradingAccountExport($query), now() . '-trading-accounts.xlsx');
+            }
+
+            $transactions = $query->paginate($data['rows']);
+
+            $userHierarchyLists = $transactions->pluck('user.hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            if ($leaderId > 0) {
+                $leaderQuery = User::where('id', $leaderId)
+                    ->where('leader_status', 1);
+            } else {
+                $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                    ->where('leader_status', 1);
+            }
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            $transactions->each(function ($account) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($account->user?->hierarchyList, $leaders);
+
+                $account->first_leader_id = $firstLeader?->id;
+                $account->first_leader_name = $firstLeader?->name;
+                $account->first_leader_email = $firstLeader?->email;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transactions,
+            ]);
         }
 
-        if ($request->filled('date')) {
-            $date = $request->input('date');
-            $dateRange = explode(' - ', $date);
-            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
-
-            $tradingListing->whereBetween('created_at', [$start_date, $end_date]);
-        }
-           
-        if ($request->has('exportStatus')) {
-            return Excel::download(new TradingAccountExport($tradingListing), Carbon::now() . '_Trading Account' .'_History-report.xlsx');
-        }
-
-        $results = $tradingListing->latest()->paginate(10);
-
-        return response()->json($results);
+        return response()->json(['success' => false, 'data' => []]);
     }
 
     public function edit_leverage(Request $request)
     {
-        $leverage = TradingAccount::find($request->id);
+        $metaService = new MetaFiveService();
+        $metaService->updateLeverage($request->meta_login, $request->margin_leverage);
 
-        $leverage->update([
-            'margin_leverage' => $request->margin_leverage,
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans('public.toast_success_update_leverage_message'),
+            'type' => 'success',
         ]);
-
-
-        return back()->with('toast', trans('public.created_trading_account'));
     }
 
     public function change_password(Request $request)
     {
-        $password = TradingAccount::find($request->id);
-
-        $rules = [
+        Validator::make($request->all(), [
             'meta_login' => ['required'],
-            'master_password' => ['sometimes', 'string', 'regex:/^(?=.*[A-Z])(?=.*\d).+$/'],
+            'master_password' => ['sometimes', 'string'],
             'investor_password' => ['sometimes', 'string'],
-        ];
-
-        $attributes = [
+        ])->setAttributeNames([
             'meta_login' => trans('public.meta_login'),
             'master_password' => trans('public.master_password'),
             'investor_password' => trans('public.investor_password'),
-        ];
+        ])->validate();
 
-        $validator = Validator::make($request->all(), $rules);
-        $validator->setAttributeNames($attributes);
+        $user = User::find($request->user_id);
+        $meta_login = $request->meta_login;
+        $master_password = $request->master_password;
+        $investor_password = $request->investor_password;
+        $metaService = new MetaFiveService();
+        $connection = $metaService->getConnectionStatus();
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        } else {
-
-            $user = User::find($request->user_id);
-            $meta_login = $request->meta_login;
-            $master_password = $request->master_password;
-            $investor_password = $request->investor_password;
-            $metaService = new MetaFiveService();
-            $connection = $metaService->getConnectionStatus();
-
-            if ($connection != 0) {
-                return redirect()->back()
-                    ->with('title', trans('public.server_under_maintenance'))
-                    ->with('warning', trans('public.try_again_later'));
-            }
-
-            if ($master_password || $investor_password) {
-                if ($master_password) {
-                    $metaService->changePassword($meta_login, 0, $master_password);
-                }
-
-                if ($investor_password) {
-                    $metaService->changePassword($meta_login, 1, $investor_password);
-                }
-
-                Notification::route('mail', $user->email)
-                    ->notify(new ChangeTradingAccountPassowrdNotification($user, $meta_login, $master_password, $investor_password));
-
-                return back()->with('toast', trans('public.updated_trading_account'));
-            }
-
-            return back()->with('toast', trans('public.error_updating_account'));
+        if ($connection != 0) {
+            return back()->with('toast', [
+                'title' => trans("public.connection_error"),
+                'message' => trans('public.try_again_later'),
+                'type' => 'warning',
+            ]);
         }
 
+        if ($master_password || $investor_password) {
+            if ($master_password) {
+                $metaService->changePassword($meta_login, 0, $master_password);
+            }
+
+            if ($investor_password) {
+                $metaService->changePassword($meta_login, 1, $investor_password);
+            }
+
+            Notification::route('mail', $user->email)
+                ->notify(new ChangeTradingAccountPassowrdNotification($user, $meta_login, $master_password, $investor_password));
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans('public.toast_success_update_password_message'),
+            'type' => 'success',
+        ]);
     }
 
     public function balanceAdjustment(BalanceAdjustmentRequest $request)
@@ -199,9 +251,11 @@ class TradingController extends Controller
         $metaService = new MetaFiveService();
 
         if ($connection != 0) {
-            return redirect()->back()
-                ->with('title', trans('public.server_under_maintenance'))
-                ->with('warning', trans('public.try_again_later'));
+            return back()->with('toast', [
+                'title' => trans("public.connection_error"),
+                'message' => trans('public.try_again_later'),
+                'type' => 'warning',
+            ]);
         }
 
         $tradingAccount = TradingAccount::with('subscriber')->where('meta_login', $meta_login)->first();
@@ -333,9 +387,41 @@ class TradingController extends Controller
             }
         }
 
-        return redirect()->back()
-            ->with('title', 'Success adjustment')
-            ->with('success', 'Successfully ' . $request->transaction_type . ' to LOGIN: ' . $meta_login);
+        $pamm_subscription = PammSubscription::where('user_id', $user->id)
+            ->where('meta_login', $meta_login)
+            ->whereIn('status', ['Pending', 'Active'])
+            ->first();
+
+        if ($pamm_subscription && $pamm_subscription->status == 'Pending') {
+            $pamm_subscription->subscription_amount += $amount;
+            $pamm_subscription->save();
+        } elseif ($pamm_subscription && $pamm_subscription->status == 'Active') {
+            PammSubscription::create([
+                'user_id' => $user->id,
+                'meta_login' => $meta_login,
+                'master_id' => $pamm_subscription->master_id,
+                'master_meta_login' => $pamm_subscription->master_meta_login,
+                'subscription_amount' => $amount,
+                'subscription_package_id' => $pamm_subscription->subscription_package_id ?? null,
+                'subscription_package_product' => $pamm_subscription->subscription_package_product ?? null,
+                'type' => $pamm_subscription->type,
+                'strategy_type' => $pamm_subscription->strategy_type,
+                'subscription_number' => RunningNumberService::getID('subscription'),
+                'subscription_period' => $pamm_subscription->subscription_period,
+                'settlement_period' => $pamm_subscription->settlement_period,
+                'settlement_date' => now()->addDays($pamm_subscription->settlement_period)->endOfDay(),
+                'expired_date' => $pamm_subscription->subscription_period > 0 ? now()->addDays($pamm_subscription->subscription_period)->endOfDay() : null,
+                'max_out_amount' => $pamm_subscription->max_out_amount,
+                'status' => 'Active',
+                'delivery_address' => $pamm_subscription->delivery_address ?? null,
+            ]);
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success_adjustment"),
+            'message' => trans('public.toast_success_adjustment_message'),
+            'type' => 'success',
+        ]);
     }
 
     public function deleteAccount(Request $request)
@@ -351,11 +437,20 @@ class TradingController extends Controller
         $connection = $metaService->getConnectionStatus();
 
         if ($connection != 0) {
-            return redirect()->back()
-                ->with('title', trans('public.server_under_maintenance'))
-                ->with('warning', trans('public.try_again_later'));
-        }
-        else{
+            return back()->with('toast', [
+                'title' => trans("public.connection_error"),
+                'message' => trans('public.try_again_later'),
+                'type' => 'warning',
+            ]);
+        } else {
+            if ($tradingAcc->balance > 0) {
+                return back()->with('toast', [
+                    'title' => trans("public.invalid_action"),
+                    'message' => trans('public.toast_warning_delete_message'),
+                    'type' => 'warning',
+                ]);
+            }
+
             $metaService->deleteAccount($request->meta_login);
             $tradingUser->update([
                 'remarks' => $request->remarks . ' - by ID : ' . \Auth::user()->id,
@@ -372,11 +467,31 @@ class TradingController extends Controller
                 'remarks' => $request->remarks,
                 'handle_by' => \Auth::user()->id,
             ]);
-
         }
-        
-        return redirect()->back()
-            ->with('title', 'Success delete')
-            ->with('success', 'Successfully deleted LOGIN: ' . $request->meta_login);
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans('public.toast_success_delete_message'),
+            'type' => 'warning',
+        ]);
+    }
+
+    public function getAccountByMetaLogin(Request $request)
+    {
+        $metaService = new MetaFiveService();
+        $connection = $metaService->getConnectionStatus();
+        if ($connection != 0) {
+            return back()->with('toast', [
+                'title' => trans("public.connection_error"),
+                'message' => trans('public.try_again_later'),
+                'type' => 'warning',
+            ]);
+        }
+
+        $tradingAccount = TradingAccount::firstWhere('meta_login', $request->meta_login);
+        $metaService->getUserInfo(collect([$tradingAccount]));
+
+        $account = $tradingAccount;
+        return response()->json($account);
     }
 }

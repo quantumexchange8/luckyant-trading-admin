@@ -1,56 +1,43 @@
 <script setup>
-import Card from "primevue/card"
-import Column from "primevue/column";
-import DataTable from "primevue/datatable";
-import Input from "@/Components/Input.vue";
-import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import {XCircleIcon} from "@heroicons/vue/outline";
-import Loading from "@/Components/Loading.vue";
 import {onMounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import {FilterMatchMode} from "@primevue/core/api";
-import {usePage} from "@inertiajs/vue3";
-import Button from "primevue/button";
-import {
-    SlidersOneIcon,
-    CloudDownloadIcon,
-    SearchLgIcon
-} from "@/Components/Icons/outline.jsx"
-import dayjs from "dayjs";
-import Popover from "primevue/popover";
-import Select from "primevue/select";
-import DatePicker from "primevue/datepicker"
 import debounce from "lodash/debounce.js";
-import {IconFileSearch, IconCircleX} from "@tabler/icons-vue";
-import Dialog from "primevue/dialog";
+import {usePage} from "@inertiajs/vue3";
+import dayjs from "dayjs";
+import Loading from "@/Components/Loading.vue";
 import Tag from "primevue/tag";
+import {CloudDownloadIcon, SearchLgIcon, SlidersOneIcon, XIcon} from "@/Components/Icons/outline.jsx";
+import DataTable from "primevue/datatable";
+import InputIconWrapper from "@/Components/InputIconWrapper.vue";
+import Input from "@/Components/Input.vue";
+import {XCircleIcon} from "@heroicons/vue/outline";
+import Card from "primevue/card";
+import Button from "primevue/button";
+import Column from "primevue/column";
+import AccountTableAction from "@/Pages/Account/AccountListing/AccountTableAction.vue";
 import RadioButton from "primevue/radiobutton";
-
-const props = defineProps({
-    selectedType: String
-})
+import Select from "primevue/select";
+import DatePicker from "primevue/datepicker";
+import Popover from "primevue/popover";
+import MultiSelect from "primevue/multiselect";
 
 const isLoading = ref(false);
 const dt = ref(null);
-const transactions = ref([]);
+const accounts = ref([]);
 const exportTable = ref('no');
 const {formatAmount} = transactionFormat();
 const totalRecords = ref(0);
 const first = ref(0);
-const totalAmount = ref();
-const successAmount = ref();
-const rejectedAmount = ref();
 
 const filters = ref({
-    global: {value: null, matchMode: FilterMatchMode.CONTAINS},
-    type: {value: props.selectedType, matchMode: FilterMatchMode.EQUALS},
-    leader_id: {value: null, matchMode: FilterMatchMode.EQUALS},
-    start_date: {value: null, matchMode: FilterMatchMode.EQUALS},
-    end_date: {value: null, matchMode: FilterMatchMode.EQUALS},
-    start_approval_date: {value: null, matchMode: FilterMatchMode.EQUALS},
-    end_approval_date: {value: null, matchMode: FilterMatchMode.EQUALS},
-    fund_type: {value: null, matchMode: FilterMatchMode.EQUALS},
-    status: {value: null, matchMode: FilterMatchMode.EQUALS},
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    type: { value: null, matchMode: FilterMatchMode.EQUALS },
+    leader_id: { value: null, matchMode: FilterMatchMode.EQUALS },
+    start_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    end_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    fund_type: { value: null, matchMode: FilterMatchMode.EQUALS },
+    status: { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
 const lazyParams = ref({});
@@ -58,7 +45,7 @@ const lazyParams = ref({});
 const loadLazyData = (event) => {
     isLoading.value = true;
 
-    lazyParams.value = {...lazyParams.value, first: event?.first || first.value};
+    lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
 
     try {
         setTimeout(async () => {
@@ -70,19 +57,16 @@ const loadLazyData = (event) => {
                 lazyEvent: JSON.stringify(lazyParams.value)
             };
 
-            const url = route('transaction.getTransactionHistory', params);
+            const url = route('account.getTradingAccount', params);
             const response = await fetch(url);
             const results = await response.json();
 
-            transactions.value = results?.data?.data;
+            accounts.value = results?.data?.data;
             totalRecords.value = results?.data?.total;
-            totalAmount.value = results?.totalAmount;
-            successAmount.value = results?.successAmount;
-            rejectedAmount.value = results?.rejectedAmount;
             isLoading.value = false;
         }, 100);
-    } catch (e) {
-        transactions.value = [];
+    }  catch (e) {
+        accounts.value = [];
         totalRecords.value = 0;
         isLoading.value = false;
     }
@@ -96,7 +80,7 @@ const onSort = (event) => {
     loadLazyData(event);
 };
 const onFilter = (event) => {
-    lazyParams.value.filters = filters.value;
+    lazyParams.value.filters = filters.value ;
     loadLazyData(event);
 };
 
@@ -104,12 +88,12 @@ const op = ref();
 const toggle = (event) => {
     op.value.toggle(event);
     getLeaders();
+    getAccountTypes();
 }
 
 const leaders = ref();
 const loadingLeaders = ref(false);
 const selectedDate = ref([]);
-const selectedApprovalDate = ref([]);
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -123,12 +107,23 @@ const getLeaders = async () => {
     }
 };
 
+const accountTypes = ref();
+const loadingAccountTypes = ref(false);
+
+const getAccountTypes = async () => {
+    loadingAccountTypes.value = true;
+    try {
+        const response = await axios.get('/getAccountTypes');
+        accountTypes.value = response.data;
+    } catch (error) {
+        console.error('Error fetching account types:', error);
+    } finally {
+        loadingAccountTypes.value = false;
+    }
+};
+
 const clearJoinDate = () => {
     selectedDate.value = [];
-}
-
-const clearApprovalDate = () => {
-    selectedApprovalDate.value = [];
 }
 
 watch(selectedDate, (newDateRange) => {
@@ -142,15 +137,8 @@ watch(selectedDate, (newDateRange) => {
     }
 })
 
-watch(selectedApprovalDate, (newDateRange) => {
-    if (Array.isArray(newDateRange)) {
-        const [startDate, endDate] = newDateRange;
-        filters.value['start_approval_date'].value = startDate;
-        filters.value['end_approval_date'].value = endDate;
-        loadLazyData();
-    } else {
-        console.warn('Invalid date range format:', newDateRange);
-    }
+watch(selectedDate, () => {
+    loadLazyData();
 })
 
 onMounted(() => {
@@ -177,10 +165,13 @@ watch([filters.value['type'], filters.value['leader_id'], filters.value['fund_ty
 });
 
 const clearAll = () => {
+    filters.value['type'].value = null;
     filters.value['global'].value = null;
     filters.value['leader_id'].value = null;
-    selectedDate.value = [];
-    selectedApprovalDate.value = [];
+    filters.value['start_date'].value = null;
+    filters.value['end_date'].value = null;
+    filters.value['fund_type'].value = null;
+    filters.value['status'].value = null;
 };
 
 const clearFilterGlobal = () => {
@@ -189,40 +180,19 @@ const clearFilterGlobal = () => {
 
 watchEffect(() => {
     if (usePage().props.toast !== null) {
-        getResults();
+        loadLazyData();
     }
 });
-
-const visible = ref(false);
-const detail = ref(null);
-
-const openDialog = (data) => {
-    visible.value = true;
-    detail.value = data;
-}
 
 const getSeverity = (status) => {
     switch (status) {
-        case 'Rejected':
+        case 'Deleted':
             return 'danger';
 
-        case 'Success':
+        case 'Active':
             return 'success';
-
-        case 'Processing':
-            return 'info';
     }
 }
-
-const emit = defineEmits(['update-totals']);
-
-watch([totalAmount, successAmount, rejectedAmount], () => {
-    emit('update-totals', {
-        totalAmount: totalAmount.value,
-        successAmount: successAmount.value,
-        rejectedAmount: rejectedAmount.value,
-    });
-});
 
 const exportStatus = ref(false);
 
@@ -230,7 +200,7 @@ const exportReport = () => {
     exportStatus.value = true;
     isLoading.value = true;
 
-    lazyParams.value = {...lazyParams.value, first: event?.first || first.value};
+    lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
 
     const params = {
         page: JSON.stringify(event?.page + 1),
@@ -241,7 +211,7 @@ const exportReport = () => {
         exportStatus: true,
     };
 
-    const url = route('transaction.getTransactionHistory', params);  // Construct the export URL
+    const url = route('account.getTradingAccount', params);  // Construct the export URL
 
     try {
         // Send the request to the backend to trigger the export
@@ -262,7 +232,7 @@ const exportReport = () => {
                 class="w-full"
             >
                 <DataTable
-                    :value="transactions"
+                    :value="accounts"
                     :rowsPerPageOptions="[10, 20, 50, 100]"
                     lazy
                     paginator
@@ -286,7 +256,7 @@ const exportReport = () => {
                             <div class="relative w-full md:w-60">
                                 <InputIconWrapper class="md:col-span-2">
                                     <template #icon>
-                                        <SearchLgIcon aria-hidden="true" class="w-5 h-5"/>
+                                        <SearchLgIcon aria-hidden="true" class="w-5 h-5" />
                                     </template>
                                     <Input
                                         withIcon
@@ -312,7 +282,7 @@ const exportReport = () => {
                                     outlined
                                     @click="toggle"
                                 >
-                                    <SlidersOneIcon class="w-4 h-4"/>
+                                    <SlidersOneIcon class="w-4 h-4" />
                                     Filter
                                 </Button>
                                 <div class="w-full flex justify-end">
@@ -322,7 +292,7 @@ const exportReport = () => {
                                         @click="exportReport"
                                         :disabled="exportTable==='yes'"
                                     >
-                                        <CloudDownloadIcon class="w-4 h-4"/>
+                                        <CloudDownloadIcon class="w-4 h-4" />
                                         Export
                                     </Button>
                                 </div>
@@ -331,30 +301,47 @@ const exportReport = () => {
                     </template>
                     <template #empty>
                         <div class="flex flex-col">
-                            <span>No transactions</span>
+                            <span>No accounts</span>
                         </div>
                     </template>
                     <template #loading>
                         <div class="flex flex-col gap-2 items-center justify-center">
-                            <Loading/>
-                            <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">Loading transactions</span>
+                            <Loading />
+                            <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">Loading accounts</span>
                             <span v-else class="text-sm text-gray-700 dark:text-gray-300">Exporting Report</span>
                         </div>
                     </template>
-                    <template v-if="transactions?.length > 0">
+                    <template v-if="accounts?.length > 0">
                         <Column
                             field="created_at"
                             sortable
-                            frozen
-                            class="table-cell min-w-44"
+                            class="table-cell min-w-36"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.request_date') }}</span>
+                                <span class="block">{{ $t('public.date') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{
-                                        dayjs(slotProps.data.created_at).format('DD/MM/YYYY HH:mm:ss')
-                                    }}</span>
+                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('DD/MM/YYYY HH:mm:ss') }}</span>
+                            </template>
+                        </Column>
+                        <Column
+                            field="meta_login"
+                            sortable
+                            frozen
+                            class="table-cell"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.account_no') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                <div class="flex gap-1 items-center">
+                                    <span class="font-semibold">{{ slotProps.data.meta_login }}</span>
+                                    <Tag
+                                        class="!text-xxs"
+                                        severity="secondary"
+                                        :value="$t(`public.${slotProps.data.account_type.slug}`)"
+                                    />
+                                </div>
                             </template>
                         </Column>
                         <Column
@@ -398,72 +385,42 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="transaction_number"
-                            sortable
-                            class="table-cell min-w-52"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.transaction_no') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                <span class="font-semibold">{{ slotProps.data.transaction_number }}</span>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="profitAmount"
-                            class="table-cell min-w-32"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.profit') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                $ {{ formatAmount(slotProps.data.profitAmount ?? 0) }}
-                            </template>
-                        </Column>
-                        <Column
-                            field="bonusAmount"
-                            class="table-cell min-w-32"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.bonus') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                $ {{ formatAmount(slotProps.data.bonusAmount ?? 0) }}
-                            </template>
-                        </Column>
-                        <Column
-                            field="amount"
+                            field="balance"
                             sortable
                             class="table-cell min-w-40"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.amount') }}</span>
+                                <span class="block">{{ $t('public.balance') }}</span>
                             </template>
                             <template #body="slotProps">
-                                $ {{ formatAmount(slotProps.data.amount ?? 0) }}
+                                $ {{ formatAmount(slotProps.data.balance ?? 0) }}
+                                <Tag
+                                    :severity="slotProps.data.demo_fund > 0 ? 'secondary' : 'info'"
+                                    :value="slotProps.data.demo_fund > 0 ? $t('public.demo') : $t('public.real')"
+                                />
                             </template>
                         </Column>
                         <Column
-                            field="status"
+                            field="equity"
+                            sortable
+                            class="table-cell"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.equity') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                $ {{ formatAmount(slotProps.data.equity ?? 0) }}
+                            </template>
+                        </Column>
+                        <Column
+                            field="acc_status"
                             class="table-cell"
                         >
                             <template #header>
                                 <span class="block">{{ $t('public.status') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <Tag :severity="getSeverity(slotProps.data.status)" :value="slotProps.data.status"/>
-                            </template>
-                        </Column>
-                        <Column
-                            field="approval_at"
-                            class="table-cell min-w-44"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.approval_date') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                {{ dayjs(slotProps.data.approval_at).format('DD/MM/YYYY HH:mm:ss') }}
+                                <Tag :severity="getSeverity(slotProps.data.trading_user.acc_status)" :value="slotProps.data.trading_user.acc_status" />
                             </template>
                         </Column>
                         <Column
@@ -473,16 +430,9 @@ const exportReport = () => {
                             align-frozen="right"
                         >
                             <template #body="{data}">
-                                <Button
-                                    type="button"
-                                    rounded
-                                    size="small"
-                                    severity="secondary"
-                                    class="!p-2"
-                                    @click="openDialog(data)"
-                                >
-                                    <IconFileSearch size="14"/>
-                                </Button>
+                                <AccountTableAction
+                                    :account="data"
+                                />
                             </template>
                         </Column>
                     </template>
@@ -493,6 +443,32 @@ const exportReport = () => {
 
     <Popover ref="op">
         <div class="flex flex-col gap-6 w-60">
+            <!-- Filter Leader-->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_by_type') }}
+                </div>
+                <MultiSelect
+                    v-model="filters['type'].value"
+                    :options="accountTypes"
+                    optionLabel="name"
+                    optionValue="id"
+                    filter
+                    :filter-fields="['name', 'slug']"
+                    placeholder="Select type"
+                    :maxSelectedLabels="3"
+                    class="w-full"
+                    :loading="loadingAccountTypes"
+                >
+                    <template #option="slotProps">
+                        <div class="flex gap-1 items-center">
+                            <div>{{ slotProps.option.name }}</div>
+                            <div class="text-gray-500">{{ $t(`public.${slotProps.option.slug}`) }}</div>
+                        </div>
+                    </template>
+                </MultiSelect>
+            </div>
+
             <!-- Filter Leader-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
@@ -523,7 +499,7 @@ const exportReport = () => {
                 </Select>
             </div>
 
-            <!-- Filter Request Date-->
+            <!-- Filter Join Date-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
                     {{ $t('public.filter_date') }}
@@ -542,31 +518,7 @@ const exportReport = () => {
                         class="absolute top-2/4 -mt-2 right-2 text-gray-400 select-none cursor-pointer bg-transparent"
                         @click="clearJoinDate"
                     >
-                        <IconCircleX size="16" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Approval Date-->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    {{ $t('public.filter_approval_date') }}
-                </div>
-                <div class="relative w-full">
-                    <DatePicker
-                        v-model="selectedApprovalDate"
-                        dateFormat="dd/mm/yy"
-                        class="w-full"
-                        selectionMode="range"
-                        placeholder="dd/mm/yyyy - dd/mm/yyyy"
-                        tim
-                    />
-                    <div
-                        v-if="selectedApprovalDate && selectedApprovalDate.length > 0"
-                        class="absolute top-2/4 -mt-2 right-2 text-gray-400 select-none cursor-pointer bg-transparent"
-                        @click="clearApprovalDate"
-                    >
-                        <IconCircleX size="16" />
+                        <XIcon class="w-4 h-4" />
                     </div>
                 </div>
             </div>
@@ -574,17 +526,15 @@ const exportReport = () => {
             <!-- Filter Fund -->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by fund
+                    {{ $t('public.filter_by_fund') }}
                 </div>
                 <div class="flex flex-col gap-1 self-stretch">
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['fund_type'].value" inputId="demo_fund" value="DemoFund"
-                                     class="w-4 h-4"/>
+                        <RadioButton v-model="filters['fund_type'].value" inputId="demo_fund" value="DemoFund" class="w-4 h-4" />
                         <label for="demo_fund">Demo</label>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['fund_type'].value" inputId="real_fund" value="RealFund"
-                                     class="w-4 h-4"/>
+                        <RadioButton v-model="filters['fund_type'].value" inputId="real_fund" value="RealFund" class="w-4 h-4" />
                         <label for="real_fund">Real</label>
                     </div>
                 </div>
@@ -593,18 +543,20 @@ const exportReport = () => {
             <!-- Filter Status -->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by status
+                    {{ $t('public.filter_by_status') }}
                 </div>
                 <div class="flex flex-col gap-1 self-stretch">
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_success" value="Success"
-                                     class="w-4 h-4"/>
-                        <label for="status_success">Success</label>
+                        <RadioButton v-model="filters['status'].value" inputId="status_active" value="Active" class="w-4 h-4" />
+                        <label for="status_active">{{ $t('public.active') }}</label>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_rejected" value="Rejected"
-                                     class="w-4 h-4"/>
-                        <label for="status_rejected">Rejected</label>
+                        <RadioButton v-model="filters['status'].value" inputId="status_deleted" value="Deleted" class="w-4 h-4" />
+                        <label for="status_deleted">{{ $t('public.deleted') }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['status'].value" inputId="status_zero_balance" value="zero_balance" class="w-4 h-4" />
+                        <label for="status_zero_balance">{{ $t('public.zero_balance') }}</label>
                     </div>
                 </div>
             </div>
@@ -620,112 +572,4 @@ const exportReport = () => {
             </Button>
         </div>
     </Popover>
-
-    <Dialog
-        v-model:visible="visible"
-        modal
-        :header="$t('public.view_details')"
-        class="dialog-xs md:dialog-md"
-    >
-        <div class="flex flex-col items-center gap-4 divide-y dark:divide-gray-700 self-stretch">
-            <div class="flex flex-col-reverse md:flex-row md:items-center gap-3 self-stretch w-full">
-                <div class="flex flex-col items-start w-full">
-                    <span class="text-gray-950 dark:text-white text-sm font-medium">{{ detail.user.name }}</span>
-                    <span class="text-gray-500 text-xs">{{ detail.user.email }}</span>
-                </div>
-                <div class="min-w-[180px] text-gray-950 dark:text-white font-semibold text-xl md:text-right">
-                    $ {{ formatAmount(detail.amount ?? 0) }}
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-3 items-start w-full pt-4">
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.requested_date') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ dayjs(detail.created_at).format('DD/MM/YYYY HH:mm:ss') }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.approval_date') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ dayjs(detail.approval_at).format('DD/MM/YYYY HH:mm:ss') }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.from') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ $t(`public.${detail.from_wallet.type}`) }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.to') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ detail.payment_method }} - {{ detail.to_wallet_address }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.leader') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <div v-if="detail.first_leader_name" class="flex flex-col">
-                            <span class="font-semibold">{{ detail.first_leader_name }}</span>
-                            <span class="text-gray-400">{{ detail.first_leader_email }}</span>
-                        </div>
-                        <div v-else class="h-[37px] flex items-center self-stretch">
-                            -
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.transaction_no') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ detail.transaction_number }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.profit') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        $ {{ formatAmount(detail.profitAmount ?? 0) }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.bonus') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        $ {{ formatAmount(detail.bonusAmount ?? 0) }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.transaction_fee') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        $ {{ formatAmount(detail.transaction_charges ?? 0) }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.status') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <Tag :severity="getSeverity(detail.status)" :value="detail.status"/>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </Dialog>
 </template>

@@ -35,13 +35,16 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/getTopGroups', [DashboardController::class, 'getTopGroups'])->name('getTopGroups');
-    Route::get('/getTotalDepositByDays', [DashboardController::class, 'getTotalDepositByDays'])->name('getTotalDepositByDays');
-
+    // Select Options
     Route::get('getMasters', [SelectOptionController::class, 'getMasters']);
     Route::get('getLeaders', [SelectOptionController::class, 'getLeaders']);
     Route::get('getSettlementPeriods', [SelectOptionController::class, 'getSettlementPeriods']);
+    Route::get('getLeverages', [SelectOptionController::class, 'getLeverages']);
+    Route::get('getAccountTypes', [SelectOptionController::class, 'getAccountTypes']);
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/getTopGroups', [DashboardController::class, 'getTopGroups'])->name('getTopGroups');
+    Route::get('/getTotalDepositByDays', [DashboardController::class, 'getTotalDepositByDays'])->name('getTotalDepositByDays');
 
     /**
      * ==============================
@@ -68,15 +71,23 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/impersonate/{user}', [MemberController::class, 'impersonate'])->name('member.impersonate');
         Route::get('/affiliate_listing', [MemberController::class, 'affiliate_listing'])->name('member.affiliate_listing');
         Route::get('/getAffiliateSummaries', [MemberController::class, 'getAffiliateSummaries'])->name('member.getAffiliateSummaries');
+    });
 
-        // live trading
-        Route::get('/live_trading', [TradingController::class, 'liveTrading'])->name('member.live_trading');
-        Route::get('/getTradingAccount', [TradingController::class, 'getTradingAccount'])->name('member.getTradingAccount');
-        Route::post('/edit_leverage', [TradingController::class, 'edit_leverage'])->name('member.edit_leverage');
-        Route::post('/change_password', [TradingController::class, 'change_password'])->name('member.change_password');
-        Route::post('/balanceAdjustment', [TradingController::class, 'balanceAdjustment'])->name('member.balanceAdjustment');
-        Route::delete('/deleteAccount', [TradingController::class, 'deleteAccount'])->name('member.deleteAccount');
+    /**
+     * ==============================
+     *           Accounts
+     * ==============================
+     */
+    Route::prefix('account')->group(function () {
+        // Account Listing
+        Route::get('/account_listing', [TradingController::class, 'account_listing'])->name('account.account_listing');
+        Route::get('/getTradingAccount', [TradingController::class, 'getTradingAccount'])->name('account.getTradingAccount');
+        Route::get('/getAccountByMetaLogin', [TradingController::class, 'getAccountByMetaLogin'])->name('account.getAccountByMetaLogin');
 
+        Route::post('/edit_leverage', [TradingController::class, 'edit_leverage'])->name('account.edit_leverage');
+        Route::post('/change_password', [TradingController::class, 'change_password'])->name('account.change_password');
+        Route::post('/balanceAdjustment', [TradingController::class, 'balanceAdjustment'])->name('account.balanceAdjustment');
+        Route::delete('/deleteAccount', [TradingController::class, 'deleteAccount'])->name('account.deleteAccount');
     });
 
     /**

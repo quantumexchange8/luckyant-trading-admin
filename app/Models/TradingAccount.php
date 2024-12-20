@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
@@ -81,21 +84,31 @@ class TradingAccount extends Model
             ->dontSubmitEmptyLogs();
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    public function accountType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function accountType(): BelongsTo
     {
         return $this->belongsTo(AccountType::class, 'account_type', 'id');
     }
-   public function tradingUser(): \Illuminate\Database\Eloquent\Relations\HasOne
+   public function tradingUser(): HasOne
    {
        return $this->hasOne(TradingUser::class, 'meta_login', 'meta_login');
    }
 
-    public function subscriber(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function subscriber(): HasOne
     {
         return $this->hasOne(Subscriber::class, 'trading_account_id', 'id');
+    }
+
+    public function active_copy_trade(): HasMany
+    {
+        return $this->hasMany(SubscriptionBatch::class, 'trading_account_id', 'id')->where('status', 'Active');
+    }
+
+    public function active_pamm(): HasMany
+    {
+        return $this->hasMany(PammSubscription::class, 'meta_login', 'meta_login')->where('status', 'Active');
     }
 }

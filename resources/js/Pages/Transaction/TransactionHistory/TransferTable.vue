@@ -484,7 +484,7 @@ const exportReport = () => {
                     class="w-full"
                     filter
                     :filter-fields="['name', 'email']"
-                    :isLoading="loadingLeaders"
+                    :loading="loadingLeaders"
                 >
                     <template #value="slotProps">
                         <div v-if="slotProps.value" class="flex items-center">

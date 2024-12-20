@@ -149,7 +149,6 @@ const handleUpdateTotals = (data) => {
                 :selectedType="selectedType"
                 @update-totals="handleUpdateTotals"
             />
-            {{ tabs[activeIndex]?.title }}
         </div>
     </AuthenticatedLayout>
 </template>

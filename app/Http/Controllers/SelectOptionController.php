@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountType;
+use App\Models\AccountTypeToLeader;
 use App\Models\Master;
+use App\Models\SettingLeverage;
 use App\Models\SettingSettlementPeriod;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -76,5 +79,35 @@ class SelectOptionController extends Controller
             ->get();
 
         return response()->json($periods);
+    }
+
+    public function getLeverages()
+    {
+        $settingLeverages = SettingLeverage::where('status', 'Active')
+            ->get()->map(function ($settingLeverage) {
+                return [
+                    'label' => $settingLeverage->display,
+                    'value' => $settingLeverage->value,
+                ];
+            });
+
+        return response()->json($settingLeverages);
+    }
+
+    public function getAccountTypes()
+    {
+        $account_type_ids = AccountTypeToLeader::where('user_id', Auth::id())
+            ->pluck('account_type_id')
+            ->toArray();
+
+        $accountTypes = AccountType::select([
+            'id',
+            'name',
+            'slug'
+        ])
+            ->whereIn('id', $account_type_ids)
+            ->get();
+
+        return response()->json($accountTypes);
     }
 }
