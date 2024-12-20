@@ -18,11 +18,29 @@ const visible = ref(false);
 const leaders = ref();
 const selectedLeaders = ref();
 const loadingLeaders = ref(false);
+const leverages = ref();
+const selectedLeverages = ref();
+const loadingLeverages = ref(false);
 
 const openDialog = () => {
     visible.value = true;
     getLeaders();
+    getLeverages();
 }
+
+const getLeverages = async () => {
+    loadingLeverages.value = true;
+    try {
+        const response = await axios.get('/getLeverages');
+        leverages.value = response.data;
+        const selectedLeverageIds = props.accountType.leverages.map(leverage => leverage.setting_leverage_id);
+        selectedLeverages.value = leverages.value.filter(leverage => selectedLeverageIds.includes(leverage.id));
+    } catch (error) {
+        console.error('Error fetching leverages:', error);
+    } finally {
+        loadingLeverages.value = false;
+    }
+};
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -40,16 +58,18 @@ const getLeaders = async () => {
 
 const form = useForm({
     account_type_id: props.accountType.id,
-    maximum_account_number: props.accountType.maximum_account_number,
+    leverages: '',
     leaders: '',
 })
 
 const submitForm = () => {
+    form.leverages = selectedLeverages.value;
     form.leaders = selectedLeaders.value;
     form.post(route('setting.updateAccountType'), {
         onSuccess: () => {
             closeDialog();
             form.reset();
+            selectedLeverages.value = null
             selectedLeaders.value = null
         }
     })
@@ -87,19 +107,22 @@ const closeDialog = () => {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 w-full">
                     <div class="flex flex-col items-start gap-1 self-stretch">
                         <InputLabel
-                            for="maximum_account_number"
-                            value="Max Accounts"
+                            for="leverages"
+                            :value="$t('public.leverage')"
                         />
-                        <InputText
-                            id="maximum_account_number"
-                            type="number"
-                            class="block w-full"
-                            v-model="form.maximum_account_number"
-                            placeholder="Enter max accounts"
-                            :invalid="form.errors.maximum_account_number"
-                            autocomplete="off"
+                        <MultiSelect
+                            v-model="selectedLeverages"
+                            :options="leverages"
+                            optionLabel="display"
+                            filter
+                            :filter-fields="['display', 'value']"
+                            placeholder="Select leverages"
+                            :maxSelectedLabels="3"
+                            class="w-full"
+                            :invalid="!!form.errors.leverages"
+                            :loading="loadingLeverages"
                         />
-                        <InputError :message="form.errors.maximum_account_number" />
+                        <InputError :message="form.errors.leverages" />
                     </div>
                     <div class="flex flex-col items-start gap-1 self-stretch">
                         <InputLabel

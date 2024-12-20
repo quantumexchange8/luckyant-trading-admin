@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccountType;
+use App\Models\AccountTypeLeverage;
 use App\Models\AccountTypeToLeader;
 use App\Models\PaymentGateway;
 use App\Models\PaymentGatewayToLeader;
@@ -538,7 +539,10 @@ class SettingController extends Controller
 
     public function getAccountTypes()
     {
-        $accountTypes = AccountType::with('visibleLeaders')
+        $accountTypes = AccountType::with([
+            'visibleLeaders',
+            'leverages'
+        ])
             ->orderByDesc('id')
             ->get();
 
@@ -550,38 +554,65 @@ class SettingController extends Controller
     public function updateAccountType(Request $request)
     {
         Validator::make($request->all(), [
-            'maximum_account_number' => ['required'],
+            'leverages' => ['required'],
             'leaders' => ['required'],
         ])->setAttributeNames([
-            'maximum_account_number' => 'Max Accounts',
+            'leverages' => trans('public.leverage'),
             'leaders' => 'Visible To',
         ])->validate();
 
         $account_type = AccountType::find($request->account_type_id);
 
-        $account_type->update([
-            'maximum_account_number' => $request->maximum_account_number,
-        ]);
+        $leverages = $request->leverages;
+
+        if ($leverages) {
+            $existingLeverageIds = AccountTypeLeverage::where('account_type_id', $account_type->id)
+                ->pluck('setting_leverage_id')
+                ->toArray();
+
+            $newLeverageIds = array_column($leverages, 'id');
+
+            if (array_diff($existingLeverageIds, $newLeverageIds) || array_diff($newLeverageIds, $existingLeverageIds)) {
+                // Delete old leverages
+                AccountTypeLeverage::where('account_type_id', $account_type->id)->delete();
+
+                // Create new leverages
+                foreach ($leverages as $leverage) {
+                    AccountTypeLeverage::create([
+                        'account_type_id' => $account_type->id,
+                        'setting_leverage_id' => $leverage['id'],
+                    ]);
+                }
+            }
+        }
 
         $leaders = $request->leaders;
 
         if ($leaders) {
-            $existing_leaders = AccountTypeToLeader::where('account_type_id', $account_type->id)->get();
+            $existingLeaderIds = AccountTypeToLeader::where('account_type_id', $account_type->id)
+                ->pluck('user_id')
+                ->toArray();
 
-            foreach ($existing_leaders as $existing_leader) {
-                $existing_leader->delete();
-            }
+            $newLeaderIds = array_column($leaders, 'id');
 
-            foreach ($leaders as $leader) {
-                AccountTypeToLeader::create([
-                    'account_type_id' => $account_type->id,
-                    'user_id' => $leader['id'],
-                ]);
+            if (array_diff($existingLeaderIds, $newLeaderIds) || array_diff($newLeaderIds, $existingLeaderIds)) {
+                // Delete old leaders
+                AccountTypeToLeader::where('account_type_id', $account_type->id)->delete();
+
+                // Create new leaders
+                foreach ($leaders as $leader) {
+                    AccountTypeToLeader::create([
+                        'account_type_id' => $account_type->id,
+                        'user_id' => $leader['id'],
+                    ]);
+                }
             }
         }
 
-        return redirect()->back()
-            ->with('title', 'Updated Successfully')
-            ->with('success', 'Account Type has been updated successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans('public.toast_success_update_account_type_message'),
+            'type' => 'success',
+        ]);
     }
 }

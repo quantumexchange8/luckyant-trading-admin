@@ -195,4 +195,5 @@ return [
     "alpha" => "ALPHA",
     "standard_account" => "Standard Account",
     "ecn_account" => "ECN Account",
+    "toast_success_update_account_type_message" => "Successfully updated account type",
 ];

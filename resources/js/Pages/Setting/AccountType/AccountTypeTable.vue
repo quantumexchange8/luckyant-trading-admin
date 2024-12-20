@@ -4,12 +4,11 @@ import {onMounted, ref, watchEffect} from "vue";
 import {FilterMatchMode} from "@primevue/core/api";
 import {usePage} from "@inertiajs/vue3";
 import Column from "primevue/column";
-import InputText from "@/Components/Input.vue"
+import Tag from "primevue/tag";
 import { XCircleIcon, SearchIcon } from "@heroicons/vue/outline";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import Input from "@/Components/Input.vue";
 import Loading from "@/Components/Loading.vue";
-import {transactionFormat} from "@/Composables/index.js";
 import AccountTypeTableAction from "@/Pages/Setting/AccountType/Partials/AccountTypeTableAction.vue";
 
 const isLoading = ref(false);
@@ -128,19 +127,18 @@ watchEffect(() => {
                         <span class="block">Display</span>
                     </template>
                     <template #body="slotProps">
-                        <span class="uppercase">{{ slotProps.data.slug }}</span>
+                        <span class="uppercase">{{ $t(`public.${slotProps.data.slug}`) }}</span>
                     </template>
                 </Column>
                 <Column
-                    field="success_transactions_sum_amount"
-                    sortable
+                    field="status"
                     class="table-cell"
                 >
                     <template #header>
-                        <span class="block">Max Acc</span>
+                        <span class="block">{{ $t('public.status') }}</span>
                     </template>
                     <template #body="slotProps">
-                        {{ slotProps.data.maximum_account_number }}
+                        <Tag severity="success" value="Active" />
                     </template>
                 </Column>
                 <Column

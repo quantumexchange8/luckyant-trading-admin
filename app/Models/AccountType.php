@@ -27,4 +27,9 @@ class AccountType extends Model
     {
         return $this->hasMany(AccountTypeToLeader::class, 'account_type_id', 'id');
     }
+
+    public function leverages(): HasMany
+    {
+        return $this->hasMany(AccountTypeLeverage::class, 'account_type_id', 'id');
+    }
 }

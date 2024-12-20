@@ -182,8 +182,14 @@ class TradingController extends Controller
 
     public function edit_leverage(Request $request)
     {
+        if (is_array($request->margin_leverage)) {
+            $leverage = $request->margin_leverage['leverage']['value'];
+        } else {
+            $leverage = $request->margin_leverage;
+        }
+
         $metaService = new MetaFiveService();
-        $metaService->updateLeverage($request->meta_login, $request->margin_leverage);
+        $metaService->updateLeverage($request->meta_login, $leverage);
 
         return back()->with('toast', [
             'title' => trans("public.success"),

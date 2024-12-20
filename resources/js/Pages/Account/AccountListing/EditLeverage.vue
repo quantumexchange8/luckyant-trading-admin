@@ -22,7 +22,7 @@ const leverages = ref();
 const getLeverages = async () => {
     loadingLeverages.value = true;
     try {
-        const response = await axios.get('/getLeverages');
+        const response = await axios.get('/getLeveragesByAccountType?account_type_id=' + props.account.account_type.id);
         leverages.value = response.data;
     } catch (error) {
         console.error('Error fetching leverages:', error);
@@ -71,13 +71,24 @@ const closeDialog = () => {
                         input-id="margin_leverage"
                         v-model="form.margin_leverage"
                         :options="leverages"
-                        optionLabel="label"
-                        optionValue="value"
                         :placeholder="$t('public.select_leverage')"
                         class="w-full"
                         :loading="loadingLeverages"
                         :invalid="!!form.errors.margin_leverage"
-                    />
+                    >
+                        <template #value="slotProps">
+                            <div v-if="slotProps.value.leverage">
+                                <div>{{ slotProps.value.leverage.display }}</div>
+                            </div>
+                            <div v-else-if="slotProps.value">
+                                <div>{{ slotProps.value }}</div>
+                            </div>
+                            <span v-else>{{ slotProps.placeholder }}</span>
+                        </template>
+                        <template #option="slotProps">
+                            {{ slotProps.option.leverage.display }}
+                        </template>
+                    </Select>
                     <InputError :message="form.errors.margin_leverage" />
                 </div>
             </div>

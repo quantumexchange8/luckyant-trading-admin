@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccountType;
+use App\Models\AccountTypeLeverage;
 use App\Models\AccountTypeToLeader;
 use App\Models\Master;
 use App\Models\SettingLeverage;
@@ -84,20 +85,32 @@ class SelectOptionController extends Controller
     public function getLeverages()
     {
         $settingLeverages = SettingLeverage::where('status', 'Active')
-            ->get()->map(function ($settingLeverage) {
-                return [
-                    'label' => $settingLeverage->display,
-                    'value' => $settingLeverage->value,
-                ];
-            });
+            ->get();
 
         return response()->json($settingLeverages);
     }
 
     public function getAccountTypes()
     {
-        $account_type_ids = AccountTypeToLeader::where('user_id', Auth::id())
-            ->pluck('account_type_id')
+        $authUser = Auth::user();
+
+        $query = AccountTypeToLeader::query();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
+        $account_type_ids = $query->pluck('account_type_id')
             ->toArray();
 
         $accountTypes = AccountType::select([
@@ -106,6 +119,15 @@ class SelectOptionController extends Controller
             'slug'
         ])
             ->whereIn('id', $account_type_ids)
+            ->get();
+
+        return response()->json($accountTypes);
+    }
+
+    public function getLeveragesByAccountType(Request $request)
+    {
+        $accountTypes = AccountTypeLeverage::with('leverage')
+            ->where('account_type_id', $request->account_type_id)
             ->get();
 
         return response()->json($accountTypes);
