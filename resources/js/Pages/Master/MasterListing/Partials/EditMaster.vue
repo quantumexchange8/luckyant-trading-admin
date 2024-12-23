@@ -9,6 +9,8 @@ import Select from "primevue/select";
 import {onMounted, ref} from "vue";
 import Button from "primevue/button"
 import MultiSelect from "primevue/multiselect";
+import {IconX} from "@tabler/icons-vue";
+import Image from "primevue/image";
 
 const props = defineProps({
     master: Object
@@ -37,7 +39,8 @@ const form = useForm({
     can_top_up: props.master.can_top_up,
     can_revoke: props.master.can_revoke,
     delivery_requirement: props.master.delivery_requirement,
-    leaders: ''
+    leaders: '',
+    master_logo: null,
 })
 
 const roiOptions = ref([]);
@@ -79,7 +82,33 @@ const getLeaders = async () => {
 onMounted(() => {
     getSettlementPeriods();
     getLeaders();
-})
+});
+
+const selectedSlip = ref(null);
+const selectedSlipName = ref(null);
+const handleUploadSlip = (event) => {
+    const masterLogoInput = event.target;
+    const file = masterLogoInput.files[0];
+
+    if (file) {
+        // Display the selected image
+        const reader = new FileReader();
+        reader.onload = () => {
+            selectedSlip.value = reader.result;
+        };
+        reader.readAsDataURL(file);
+        selectedSlipName.value = file.name;
+        form.master_logo = event.target.files[0];
+    } else {
+        selectedSlip.value = null;
+    }
+};
+
+const removeSlip = () => {
+    selectedSlip.value = null;
+    form.master_logo = '';
+};
+
 
 const submitForm = () => {
     form.leaders = selectedLeaders.value;
@@ -553,12 +582,55 @@ const closeDialog = () => {
                 <span class="font-bold text-sm text-surface-950 dark:text-white w-full text-left">{{ $t('public.upload_image') }}</span>
                 <div class="flex flex-col items-start gap-3 self-stretch">
                     <span class="text-xs text-gray-500">{{ $t('public.upload_image_caption') }}</span>
-                    <div class="flex flex-col gap-3">
-                        <Button
-                            :label="$t('public.browse')"
-                            severity="info"
-                            variant="outlined"
-                        />
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <div class="flex flex-col gap-3">
+                            <input
+                                ref="masterLogoInput"
+                                id="master_logo"
+                                type="file"
+                                class="hidden"
+                                accept="image/*"
+                                @change="handleUploadSlip"
+                            />
+                            <Button
+                                type="button"
+                                :label="$t('public.browse')"
+                                severity="info"
+                                size="small"
+                                @click="$refs.masterLogoInput.click()"
+                            />
+                        </div>
+                        <InputError :message="form.errors.master_logo" />
+
+                        <div
+                            v-if="selectedSlip"
+                            class="relative w-full py-3 pl-4 flex items-center justify-between rounded-lg bg-primary-50 dark:bg-gray-800"
+                        >
+                            <div class="inline-flex items-center gap-3">
+                                <Image
+                                    :src="selectedSlip"
+                                    alt="Image"
+                                    imageClass="max-w-full h-9 object-contain rounded"
+                                    preview
+                                />
+                                <div class="text-sm text-surface-900 dark:text-white">
+                                    {{ selectedSlipName }}
+                                </div>
+                            </div>
+                            <Button
+                                type="button"
+                                severity="danger"
+                                text
+                                rounded
+                                aria-label="Remove"
+                                size="small"
+                                @click="removeSlip"
+                            >
+                                <template #icon>
+                                    <IconX size="16" />
+                                </template>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

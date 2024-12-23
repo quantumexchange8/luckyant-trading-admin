@@ -196,4 +196,5 @@ return [
     "standard_account" => "Standard Account",
     "ecn_account" => "ECN Account",
     "toast_success_update_account_type_message" => "Successfully updated account type",
+    "toast_success_update_master_message" => "Successfully updated master",
 ];

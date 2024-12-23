@@ -865,6 +865,13 @@ class MasterController extends Controller
                     ]);
                 }
             }
+        } else {
+            MasterToLeader::where('master_id', $master->id)->delete();
+        }
+
+        if ($request->master_logo) {
+            $master->clearMediaCollection('master_logo');
+            $master->addMedia($request->master_logo)->toMediaCollection('master_logo');
         }
 
         return back()->with('toast', [
@@ -964,7 +971,7 @@ class MasterController extends Controller
             // No applicable conditions, set whereIn to empty array
             $mastersQuery->whereIn('user_id', []);
         }
-        
+
         $masters = $mastersQuery->get()
             ->filter(function ($master) {
                 // Calculate total subscribers and filter only those with total > 0
