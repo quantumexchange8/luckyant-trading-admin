@@ -8,6 +8,7 @@ use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
 use App\Models\AccountTypeToLeader;
 use App\Models\Country;
+use App\Models\Master;
 use App\Models\MasterToLeader;
 use App\Models\PammSubscription;
 use App\Models\PaymentGatewayToLeader;
@@ -1232,6 +1233,32 @@ class MemberController extends Controller
                         'master_id' => $existing_master->master_id,
                         'user_id' => $user->id,
                     ]);
+                }
+            } else {
+                AccountTypeToLeader::create([
+                    'account_type_id' => 1,
+                    'user_id' => $user->id,
+                ]);
+
+                PaymentGatewayToLeader::create([
+                    'payment_gateway_id' => 1,
+                    'user_id' => $user->id,
+                ]);
+
+                if ($user->is_public) {
+                    $public_masters = Master::where([
+                        'strategy_type' => 'HOFI',
+                        'is_public' => 1,
+                        'status' => 'Active',
+                    ])
+                        ->get();
+
+                    foreach ($public_masters as $master) {
+                        MasterToLeader::create([
+                            'master_id' => $master->id,
+                            'user_id' => $user->id,
+                        ]);
+                    }
                 }
             }
 
