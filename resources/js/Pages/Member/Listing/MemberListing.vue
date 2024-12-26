@@ -17,7 +17,7 @@ const tabs = ref([
         title: 'all',
         type: 'All',
         value: '0',
-        count: props.kycCounts['Unverified'] + props.kycCounts['Verified'] + props.kycCounts['Pending']
+        count: props.kycCounts['Unverified'] + props.kycCounts['Verified'] + (props.kycCounts['Pending'] ?? 0)
     },
     {
         title: 'pending',
