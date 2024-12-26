@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\MediaLibrary\HasMedia;
@@ -54,47 +56,47 @@ class User extends Authenticatable implements HasMedia
             ->pluck('id')
             ->toArray();
     }
-    public function rank(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function rank(): BelongsTo
     {
         return $this->belongsTo(SettingRank::class, 'display_rank_id', 'id');
     }
 
-    public function ofCountry(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function ofCountry(): BelongsTo
     {
         return $this->belongsTo(Country::class,'country', 'id');
     }
 
-    public function upline(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function upline(): BelongsTo
     {
         return $this->belongsTo(User::class, 'upline_id', 'id');
     }
 
-    public function children(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function children(): HasMany
     {
         return $this->hasMany(User::class, 'upline_id', 'id');
     }
 
-    public function tradingAccounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function tradingAccounts(): HasMany
     {
         return $this->hasMany(TradingAccount::class, 'user_id', 'id');
     }
 
-    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function tradingUser(): HasMany
     {
         return $this->hasMany(TradingUser::class, 'user_id', 'id');
     }
 
-    public function wallets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function wallets(): HasMany
     {
         return $this->hasMany(Wallet::class, 'user_id', 'id');
     }
 
-    public function top_leader(): \Illuminate\Database\Eloquent\Relations\belongsTo
+    public function top_leader(): belongsTo
     {
         return $this->belongsTo(User::class, 'top_leader_id', 'id');
     }
 
-    public function walletLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function walletLogs(): HasMany
     {
         return $this->hasMany(WalletLog::class);
     }
@@ -104,19 +106,29 @@ class User extends Authenticatable implements HasMedia
         return $this->hasManyThrough(WalletLog::class, Wallet::class, 'user_id', 'wallet_id');
     }
 
-    public function transactions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
     }
 
-    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class, 'user_id', 'id');
     }
 
-    public function pammSubscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function pammSubscriptions(): HasMany
     {
         return $this->hasMany(PammSubscription::class, 'user_id', 'id');
+    }
+
+    public function active_copy_trade(): HasMany
+    {
+        return $this->hasMany(SubscriptionBatch::class, 'user_id', 'id')->where('status', 'Active');
+    }
+
+    public function active_pamm(): HasMany
+    {
+        return $this->hasMany(PammSubscription::class, 'user_id', 'id')->where('status', 'Active');
     }
 
     public function getFirstLeader()

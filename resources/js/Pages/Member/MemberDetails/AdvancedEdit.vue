@@ -145,15 +145,15 @@ const groupStatus = [
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <Label class="text-sm dark:text-white" for="leader_status" value="Leader Status" />
-                <div class="md:col-span-3">
-                    <BaseListbox
-                        v-model="memberInfo.leader_status"
-                        :options="leaderStatus"
-                    />
-                </div>
-            </div>
+<!--            <div class="space-y-2">-->
+<!--                <Label class="text-sm dark:text-white" for="leader_status" value="Leader Status" />-->
+<!--                <div class="md:col-span-3">-->
+<!--                    <BaseListbox-->
+<!--                        v-model="memberInfo.leader_status"-->
+<!--                        :options="leaderStatus"-->
+<!--                    />-->
+<!--                </div>-->
+<!--            </div>-->
 
             <div class="space-y-2">
                 <Label class="text-sm dark:text-white" for="group_status" value="Group Status" />

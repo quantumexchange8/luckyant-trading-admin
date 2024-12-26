@@ -1,55 +1,48 @@
 <script setup>
-import Card from "primevue/card"
-import Column from "primevue/column";
-import DataTable from "primevue/datatable";
-import Input from "@/Components/Input.vue";
-import InputIconWrapper from "@/Components/InputIconWrapper.vue";
-import {XCircleIcon} from "@heroicons/vue/outline";
-import Loading from "@/Components/Loading.vue";
 import {onMounted, ref, watch, watchEffect} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import {FilterMatchMode} from "@primevue/core/api";
+import debounce from "lodash/debounce.js";
 import {usePage} from "@inertiajs/vue3";
-import Button from "primevue/button";
-import {
-    SlidersOneIcon,
-    CloudDownloadIcon,
-    XIcon,
-    SearchLgIcon
-} from "@/Components/Icons/outline.jsx"
 import dayjs from "dayjs";
 import Popover from "primevue/popover";
+import {CloudDownloadIcon, SearchLgIcon, SlidersOneIcon, XIcon} from "@/Components/Icons/outline.jsx";
+import Loading from "@/Components/Loading.vue";
 import Select from "primevue/select";
-import DatePicker from "primevue/datepicker"
-import debounce from "lodash/debounce.js";
-import {IconFileSearch} from "@tabler/icons-vue";
-import Dialog from "primevue/dialog";
-import Tag from "primevue/tag";
+import InputIconWrapper from "@/Components/InputIconWrapper.vue";
+import Button from "primevue/button";
+import Column from "primevue/column";
 import RadioButton from "primevue/radiobutton";
+import Card from "primevue/card";
+import DataTable from "primevue/datatable";
+import DatePicker from "primevue/datepicker";
+import Tag from "primevue/tag";
+import Input from "@/Components/Input.vue";
+import {XCircleIcon} from "@heroicons/vue/outline";
+import {useLangObserver} from "@/Composables/localeObserver.js";
+import MemberTableAction from "@/Pages/Member/Listing/MemberTableAction.vue";
 
 const props = defineProps({
-    selectedType: String
-})
+    kycStatus: String
+});
 
 const isLoading = ref(false);
 const dt = ref(null);
-const transactions = ref([]);
+const users = ref([]);
 const exportTable = ref('no');
-const {formatAmount} = transactionFormat();
+const {formatAmount, formatType} = transactionFormat();
+const {locale} = useLangObserver();
 const totalRecords = ref(0);
 const first = ref(0);
-const totalAmount = ref();
-const successAmount = ref();
-const rejectedAmount = ref();
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    type: { value: props.selectedType, matchMode: FilterMatchMode.EQUALS },
+    kyc_status: { value: props.kycStatus, matchMode: FilterMatchMode.EQUALS },
     leader_id: { value: null, matchMode: FilterMatchMode.EQUALS },
     start_date: { value: null, matchMode: FilterMatchMode.EQUALS },
     end_date: { value: null, matchMode: FilterMatchMode.EQUALS },
-    fund_type: { value: null, matchMode: FilterMatchMode.EQUALS },
-    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    country: { value: null, matchMode: FilterMatchMode.EQUALS },
+    rank: { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
 const lazyParams = ref({});
@@ -69,19 +62,16 @@ const loadLazyData = (event) => {
                 lazyEvent: JSON.stringify(lazyParams.value)
             };
 
-            const url = route('transaction.getTransactionHistory', params);
+            const url = route('member.getMemberListingData', params);
             const response = await fetch(url);
             const results = await response.json();
 
-            transactions.value = results?.data?.data;
+            users.value = results?.data?.data;
             totalRecords.value = results?.data?.total;
-            totalAmount.value = results?.totalAmount;
-            successAmount.value = results?.successAmount;
-            rejectedAmount.value = results?.rejectedAmount;
             isLoading.value = false;
         }, 100);
     }  catch (e) {
-        transactions.value = [];
+        users.value = [];
         totalRecords.value = 0;
         isLoading.value = false;
     }
@@ -103,11 +93,12 @@ const op = ref();
 const toggle = (event) => {
     op.value.toggle(event);
     getLeaders();
+    getCountries();
+    getRanks();
 }
 
 const leaders = ref();
 const loadingLeaders = ref(false);
-const selectedDate = ref([]);
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -120,6 +111,8 @@ const getLeaders = async () => {
         loadingLeaders.value = false;
     }
 };
+
+const selectedDate = ref([]);
 
 const clearJoinDate = () => {
     selectedDate.value = [];
@@ -138,7 +131,37 @@ watch(selectedDate, (newDateRange) => {
 
 watch(selectedDate, () => {
     loadLazyData();
-})
+});
+
+const countries = ref();
+const loadingCountries = ref(false);
+
+const getCountries = async () => {
+    loadingCountries.value = true;
+    try {
+        const response = await axios.get('/getCountries');
+        countries.value = response.data;
+    } catch (error) {
+        console.error('Error fetching countries:', error);
+    } finally {
+        loadingCountries.value = false;
+    }
+};
+
+const ranks = ref();
+const loadingRanks = ref(false);
+
+const getRanks = async () => {
+    loadingRanks.value = true;
+    try {
+        const response = await axios.get('/getRanks');
+        ranks.value = response.data;
+    } catch (error) {
+        console.error('Error fetching ranks:', error);
+    } finally {
+        loadingRanks.value = false;
+    }
+};
 
 onMounted(() => {
     lazyParams.value = {
@@ -159,14 +182,21 @@ watch(
     }, 300)
 );
 
-watch([filters.value['type'], filters.value['leader_id'], filters.value['fund_type'], filters.value['status']], () => {
+watch(() => props.kycStatus, () => {
+    filters.value['kyc_status']['value'] = props.kycStatus;
+})
+
+watch([filters.value['kyc_status'], filters.value['leader_id'], filters.value['country'], filters.value['rank']], () => {
     loadLazyData()
 });
 
 const clearAll = () => {
     filters.value['global'].value = null;
     filters.value['leader_id'].value = null;
-    selectedDate.value = [];
+    filters.value['start_date'].value = null;
+    filters.value['end_date'].value = null;
+    filters.value['country'].value = null;
+    filters.value['rank'].value = null;
 };
 
 const clearFilterGlobal = () => {
@@ -175,40 +205,22 @@ const clearFilterGlobal = () => {
 
 watchEffect(() => {
     if (usePage().props.toast !== null) {
-        getResults();
+        loadLazyData();
     }
 });
-
-const visible = ref(false);
-const detail = ref(null);
-
-const openDialog = (data) => {
-    visible.value = true;
-    detail.value = data;
-}
 
 const getSeverity = (status) => {
     switch (status) {
-        case 'Rejected':
+        case 'Unverified':
             return 'danger';
 
-        case 'Success':
+        case 'Verified':
             return 'success';
 
-        case 'Processing':
+        case 'Pending':
             return 'info';
     }
 }
-
-const emit = defineEmits(['update-totals']);
-
-watch([totalAmount, successAmount, rejectedAmount], () => {
-    emit('update-totals', {
-        totalAmount: totalAmount.value,
-        successAmount: successAmount.value,
-        rejectedAmount: rejectedAmount.value,
-    });
-});
 
 const exportStatus = ref(false);
 
@@ -227,7 +239,7 @@ const exportReport = () => {
         exportStatus: true,
     };
 
-    const url = route('transaction.getTransactionHistory', params);  // Construct the export URL
+    const url = route('member.getMemberListingData', params);  // Construct the export URL
 
     try {
         // Send the request to the backend to trigger the export
@@ -248,7 +260,7 @@ const exportReport = () => {
                 class="w-full"
             >
                 <DataTable
-                    :value="transactions"
+                    :value="users"
                     :rowsPerPageOptions="[10, 20, 50, 100]"
                     lazy
                     paginator
@@ -265,10 +277,10 @@ const exportReport = () => {
                     @page="onPage($event)"
                     @sort="onSort($event)"
                     @filter="onFilter($event)"
-                    :globalFilterFields="['user.name', 'user.email', 'meta_login', 'master_meta_login']"
+                    :globalFilterFields="['name', 'email', 'username']"
                 >
                     <template #header>
-                        <div class="flex flex-col md:flex-row gap-3 items-center self-stretch md:pb-5">
+                        <div class="flex flex-col md:flex-row gap-3 items-center self-stretch pb-3 md:pb-5">
                             <div class="relative w-full md:w-60">
                                 <InputIconWrapper class="md:col-span-2">
                                     <template #icon>
@@ -317,32 +329,21 @@ const exportReport = () => {
                     </template>
                     <template #empty>
                         <div class="flex flex-col">
-                            <span>No transactions</span>
+                            <span>No users</span>
                         </div>
                     </template>
                     <template #loading>
                         <div class="flex flex-col gap-2 items-center justify-center">
                             <Loading />
-                            <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">Loading transactions</span>
+                            <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">Loading users</span>
                             <span v-else class="text-sm text-gray-700 dark:text-gray-300">Exporting Report</span>
                         </div>
                     </template>
-                    <template v-if="transactions?.length > 0">
+                    <template v-if="users?.length > 0">
                         <Column
-                            field="created_at"
+                            field="name"
                             sortable
                             frozen
-                            class="table-cell min-w-36"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.date') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('DD/MM/YYYY HH:mm:ss') }}</span>
-                            </template>
-                        </Column>
-                        <Column
-                            field="user.name"
                             class="table-cell"
                         >
                             <template #header>
@@ -350,9 +351,17 @@ const exportReport = () => {
                             </template>
                             <template #body="slotProps">
                                 <div class="flex items-center gap-2">
-                                    <div v-if="slotProps.data.user" class="flex flex-col">
-                                        <span class="font-semibold">{{ slotProps.data.user.name }}</span>
-                                        <span class="text-gray-400">{{ slotProps.data.user.email }}</span>
+                                    <div v-if="slotProps.data" class="flex flex-col">
+                                        <div class="flex gap-1 items-center">
+                                            <span class="font-semibold">{{ slotProps.data.name }}</span>
+                                            <Tag
+                                                v-if="slotProps.data.leader_status"
+                                                class="!text-xxs"
+                                                severity="info"
+                                                :value="$t('public.leader')"
+                                            />
+                                        </div>
+                                        <span class="text-gray-400">{{ slotProps.data.email }}</span>
                                     </div>
                                     <div v-else class="h-[37px] flex items-center self-stretch">
                                         -
@@ -361,8 +370,7 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="first_leader_id"
-                            show-filter-menu
+                            field="leader_id"
                             class="table-cell"
                         >
                             <template #header>
@@ -381,85 +389,97 @@ const exportReport = () => {
                             </template>
                         </Column>
                         <Column
-                            field="from_wallet_id"
-                            class="table-cell"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.from') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                <div class="flex flex-col">
-                                    <span>{{ slotProps.data.from_wallet.user.name }}</span>
-                                    <span class="text-gray-400">{{ slotProps.data.from_wallet.wallet_address }}</span>
-                                </div>
-                            </template>
-                        </Column>
-                        <Column
-                            field="to_wallet_id"
-                            class="table-cell"
-                        >
-                            <template #header>
-                                <span class="block">{{ $t('public.to') }}</span>
-                            </template>
-                            <template #body="slotProps">
-                                <div class="flex flex-col">
-                                    <span>{{ slotProps.data.to_wallet.user.name }}</span>
-                                    <span class="text-gray-400">{{ slotProps.data.to_wallet.wallet_address }}</span>
-                                </div>
-                            </template>
-                        </Column>
-                        <Column
-                            field="transaction_number"
+                            field="created_at"
                             sortable
                             class="table-cell"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.transaction_no') }}</span>
+                                <span class="block">{{ $t('public.date') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="font-semibold">{{ slotProps.data.transaction_number }}</span>
+                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('DD/MM/YYYY') }}</span>
                             </template>
                         </Column>
                         <Column
-                            field="amount"
-                            sortable
+                            field="upline_id"
                             class="table-cell min-w-40"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.amount') }}</span>
+                                <span class="block">{{ $t('public.referrer') }}</span>
                             </template>
                             <template #body="slotProps">
-                                $ {{ formatAmount(slotProps.data.amount ?? 0) }}
+                                <div class="flex items-center gap-2">
+                                    <div v-if="slotProps.data.upline" class="flex flex-col">
+                                        <span class="font-semibold">{{ slotProps.data.upline.name }}</span>
+                                        <span class="text-gray-400">{{ slotProps.data.upline.email }}</span>
+                                    </div>
+                                    <div v-else class="h-[37px] flex items-center self-stretch">
+                                        -
+                                    </div>
+                                </div>
                             </template>
                         </Column>
                         <Column
-                            field="status"
+                            field="active_fund"
+                            class="table-cell min-w-32"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.fund') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                <div class="font-bold">
+                                    $ {{ formatAmount((slotProps.data.active_pamm_sum_subscription_amount ?? 0) + (slotProps.data.active_copy_trade_sum_meta_balance)) }}
+                                </div>
+                            </template>
+                        </Column>
+                        <Column
+                            field="country"
+                            sortable
+                            class="table-cell"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.country') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                               {{ slotProps.data.of_country?.name }}
+                            </template>
+                        </Column>
+                        <Column
+                            field="rank"
+                            class="table-cell"
+                        >
+                            <template #header>
+                                <span class="block">{{ $t('public.rank') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                               <span class="uppercase text-xs font-semibold">{{ slotProps.data.rank?.name[locale] }}</span>
+                            </template>
+                        </Column>
+                        <Column
+                            field="kyc_approval"
                             class="table-cell"
                         >
                             <template #header>
                                 <span class="block">{{ $t('public.status') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <Tag :severity="getSeverity(slotProps.data.status)" :value="slotProps.data.status" />
+                               <Tag
+                                   :severity="getSeverity(slotProps.data.kyc_approval)"
+                                   :value="$t(`public.${formatType(slotProps.data.kyc_approval).toLowerCase().replace(/\s+/g, '_')}`)"
+                               />
                             </template>
                         </Column>
                         <Column
                             field="action"
                             class="table-cell"
-                            frozen
-                            align-frozen="right"
                         >
-                            <template #body="{data}">
-                                <Button
-                                    type="button"
-                                    rounded
-                                    size="small"
-                                    severity="secondary"
-                                    class="!p-2"
-                                    @click="openDialog(data)"
-                                >
-                                    <IconFileSearch size="14" />
-                                </Button>
+                            <template #header>
+                                <span class="block">{{ $t('public.action') }}</span>
+                            </template>
+                            <template #body="slotProps">
+                                <MemberTableAction
+                                    :user="slotProps.data"
+                                />
                             </template>
                         </Column>
                     </template>
@@ -512,7 +532,6 @@ const exportReport = () => {
                         class="w-full"
                         selectionMode="range"
                         placeholder="dd/mm/yyyy - dd/mm/yyyy"
-                        tim
                     />
                     <div
                         v-if="selectedDate && selectedDate.length > 0"
@@ -524,38 +543,58 @@ const exportReport = () => {
                 </div>
             </div>
 
-            <!-- Filter Fund -->
+            <!-- Filter Country -->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by fund
+                    {{ $t('public.filter_by_country') }}
                 </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['fund_type'].value" inputId="demo_fund" value="DemoFund" class="w-4 h-4" />
-                        <label for="demo_fund">Demo</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['fund_type'].value" inputId="real_fund" value="RealFund" class="w-4 h-4" />
-                        <label for="real_fund">Real</label>
-                    </div>
-                </div>
+                <Select
+                    v-model="filters['country'].value"
+                    :options="countries"
+                    optionLabel="name"
+                    :placeholder="$t('public.select_country')"
+                    class="w-full"
+                    filter
+                    :filter-fields="['name']"
+                    :loading="loadingCountries"
+                >
+                    <template #value="slotProps">
+                        <div v-if="slotProps.value" class="flex items-center">
+                            {{ slotProps.value.name }}
+                        </div>
+                        <span v-else>{{ slotProps.placeholder }}</span>
+                    </template>
+                    <template #option="slotProps">
+                        <div>{{ slotProps.option.name }}</div>
+                    </template>
+                </Select>
             </div>
 
             <!-- Filter Status -->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    Filter by status
+                    {{ $t('public.filter_by_rank') }}
                 </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_success" value="Success" class="w-4 h-4" />
-                        <label for="status_success">Success</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="filters['status'].value" inputId="status_rejected" value="Rejected" class="w-4 h-4" />
-                        <label for="status_rejected">Rejected</label>
-                    </div>
-                </div>
+                <Select
+                    v-model="filters['rank'].value"
+                    :options="ranks"
+                    optionLabel="name"
+                    :placeholder="$t('public.select_rank')"
+                    class="w-full"
+                    filter
+                    :filter-fields="['name']"
+                    :loading="loadingRanks"
+                >
+                    <template #value="slotProps">
+                        <div v-if="slotProps.value" class="flex items-center">
+                            {{ slotProps.value.name[locale] }}
+                        </div>
+                        <span v-else>{{ slotProps.placeholder }}</span>
+                    </template>
+                    <template #option="slotProps">
+                        <div>{{ slotProps.option.name[locale] }}</div>
+                    </template>
+                </Select>
             </div>
 
             <Button
@@ -569,86 +608,4 @@ const exportReport = () => {
             </Button>
         </div>
     </Popover>
-
-    <Dialog
-        v-model:visible="visible"
-        modal
-        :header="$t('public.view_details')"
-        class="dialog-xs md:dialog-md"
-    >
-        <div class="flex flex-col items-center gap-4 divide-y dark:divide-gray-700 self-stretch">
-            <div class="flex flex-col-reverse md:flex-row md:items-center gap-3 self-stretch w-full">
-                <div class="flex flex-col items-start w-full">
-                    <span class="text-gray-950 dark:text-white text-sm font-medium">{{ detail.user.name }}</span>
-                    <span class="text-gray-500 text-xs">{{ detail.user.email }}</span>
-                </div>
-                <div class="min-w-[180px] text-gray-950 dark:text-white font-semibold text-xl md:text-right">
-                    $ {{ formatAmount(detail.amount ?? 0) }}
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-3 items-start w-full pt-4">
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.date') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ dayjs(detail.created_at).format('DD/MM/YYYY HH:mm:ss') }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.from') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <div class="flex flex-col">
-                            <span class="font-semibold">{{ detail.from_wallet.user.name }}</span>
-                            <span class="text-gray-400">{{ detail.from_wallet.wallet_address }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.to') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <div class="flex flex-col">
-                            <span class="font-semibold">{{ detail.to_wallet.user.name }}</span>
-                            <span class="text-gray-400">{{ detail.to_wallet.wallet_address }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row items-start gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.leader') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <div v-if="detail.first_leader_name" class="flex flex-col">
-                            <span class="font-semibold">{{ detail.first_leader_name }}</span>
-                            <span class="text-gray-400">{{ detail.first_leader_email }}</span>
-                        </div>
-                        <div v-else class="h-[37px] flex items-center self-stretch">
-                            -
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.transaction_no') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ detail.transaction_number }}
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                    <div class="w-[140px] text-gray-500 text-xs font-medium">
-                        {{ $t('public.status') }}
-                    </div>
-                    <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        <Tag :severity="getSeverity(detail.status)" :value="detail.status" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </Dialog>
 </template>

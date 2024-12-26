@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AccountType;
 use App\Models\AccountTypeLeverage;
 use App\Models\AccountTypeToLeader;
+use App\Models\Country;
 use App\Models\Master;
 use App\Models\SettingLeverage;
+use App\Models\SettingRank;
 use App\Models\SettingSettlementPeriod;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -131,5 +133,30 @@ class SelectOptionController extends Controller
             ->get();
 
         return response()->json($accountTypes);
+    }
+
+    public function getCountries()
+    {
+        $countries = Country::select([
+            'id',
+            'name',
+            'phone_code',
+            'nationality',
+            'translations',
+        ])
+            ->get();
+
+        return response()->json($countries);
+    }
+
+    public function getRanks()
+    {
+        $ranks = SettingRank::select([
+            'id',
+            'name'
+        ])
+        ->get();
+
+        return response()->json($ranks);
     }
 }

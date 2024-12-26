@@ -359,7 +359,6 @@ const exportReport = () => {
                         </Column>
                         <Column
                             field="user.name"
-                            sortable
                             class="table-cell"
                         >
                             <template #header>

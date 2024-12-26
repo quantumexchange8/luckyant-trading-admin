@@ -6,12 +6,16 @@ use App\Exports\AffiliateSummaryExport;
 use App\Exports\MemberListingExport;
 use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
+use App\Models\AccountTypeToLeader;
 use App\Models\Country;
+use App\Models\MasterToLeader;
 use App\Models\PammSubscription;
+use App\Models\PaymentGatewayToLeader;
 use App\Models\RankingLog;
 use App\Models\SettingRank;
 use App\Models\TradingAccount;
 use App\Models\User;
+use App\Models\UserExtraBonus;
 use App\Models\Wallet;
 use App\Models\Transaction;
 use App\Models\PaymentAccount;
@@ -24,6 +28,8 @@ use App\Http\Requests\EditMemberRequest;
 use App\Http\Requests\PaymentAccountRequest;
 use App\Http\Requests\AddMemberRequest;
 use App\Services\SelectOptionService;
+use App\Services\UserService;
+use Illuminate\Support\Facades\Validator;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
@@ -43,12 +49,6 @@ class MemberController extends Controller
     public function index()
     {
         $authUser = Auth::user();
-        $rankLists = SettingRank::all()->map(function ($rank) {
-            return [
-                'value' => $rank->id,
-                'label' => $rank->name,
-            ];
-        });
 
         $kycQuery = User::whereNotIn('role', ['super-admin', 'admin'])
             ->whereIn('kyc_approval', ['Pending', 'Verified', 'Unverified']);
@@ -70,11 +70,8 @@ class MemberController extends Controller
             ->pluck('count', 'kyc_approval')
             ->toArray();
 
-        return Inertia::render('Member/MemberListing', [
-            'rankLists' => $rankLists,
+        return Inertia::render('Member/Listing/MemberListing', [
             'kycCounts' => $kycCounts,
-            'countries' => (new SelectOptionService())->getCountries(),
-            'nationalities' => (new SelectOptionService())->getNationalities(),
         ]);
     }
 
@@ -154,84 +151,127 @@ class MemberController extends Controller
         return redirect()->back()->with('title', 'New member added!')->with('success', 'The new member has been added successfully.');
     }
 
-    public function getMemberDetails(Request $request)
+    public function getMemberListingData(Request $request, UserService $userService)
     {
-        $authUser = Auth::user();
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
 
-        $members = User::query()
-            ->whereNotIn('role', ['super-admin', 'admin'])
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = $request->input('search');
-                $query->where(function ($innerQuery) use ($search) {
-                    $innerQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('username', 'like', "%{$search}%");
+            $query = User::query()
+                ->with([
+                    'ofCountry',
+                    'upline:id,name,email',
+                    'rank:id,name',
+                    'media'
+                ])
+                ->withSum('active_pamm', 'subscription_amount')
+                ->withSum('active_copy_trade', 'meta_balance')
+                ->withCount('children')
+                ->whereNotIn('role', ['super-admin', 'admin']);
+
+            if ($data['filters']['kyc_status']['value'] != 'All') {
+                $query->where('kyc_approval', $data['filters']['kyc_status']['value']);
+            }
+
+            if ($data['filters']['global']['value']) {
+                $query->where( function($q) use ($data) {
+                    $keyword = $data['filters']['global']['value'];
+
+                    $q->where('name', 'like', '%' . $keyword . '%')
+                        ->orWhere('email', 'like', '%' . $keyword . '%');
                 });
-            })
-            ->when($request->filled('type'), function ($query) use ($request) {
-                $type = $request->input('type');
-                $query->where(function ($innerQuery) use ($type) {
-                    $innerQuery->where('kyc_approval', $type);
-                });
-            })
-            ->when($request->filled('rank'), function ($query) use ($request) {
-                $rank_id = $request->input('rank');
-                $query->where(function ($innerQuery) use ($rank_id) {
-                    $innerQuery->where('display_rank_id', $rank_id);
-                });
-            })
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $date = $request->input('date');
-                $dateRange = explode(' - ', $date);
-                $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-                $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('id', $usersUnderLeader);
+            }
+
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
+
                 $query->whereBetween('created_at', [$start_date, $end_date]);
-            })
-            ->when($request->filled('sortType'), function($query) use ($request) {
-                $sortType = $request->input('sortType');
-                $sort = $request->input('sort');
-                $query->orderBy($sortType, $sort);
-            })
-            ->when($request->filled('leader'), function($query) use ($request) {
-                $leader = $request->input('leader');
-                $leaderUser = User::find($leader);
-                if ($leaderUser) {
-                    $query->whereIn('id', $leaderUser->getChildrenIds());
-                }
+            }
+
+            if ($data['filters']['country']['value']) {
+                $query->where('country', $data['filters']['country']['value']);
+            }
+
+            if ($data['filters']['rank']['value']) {
+                $query->where('display_rank_id', $data['filters']['rank']['value']);
+            }
+
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
+            } else {
+                $query->latest();
+            }
+
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('id', []);
+            }
+
+            // Export logic
+            if ($request->has('exportStatus') && $request->exportStatus) {
+                return Excel::download(new MemberListingExport($query), now() . '-member-report.xlsx');
+            }
+
+            $users = $query->paginate($data['rows']);
+
+            $userHierarchyLists = $users->pluck('hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            if ($leaderId > 0) {
+                $leaderQuery = User::where('id', $leaderId)
+                    ->where('leader_status', 1);
+            } else {
+                $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                    ->where('leader_status', 1);
+            }
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            $users->each(function ($user) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($user->hierarchyList, $leaders);
+
+                $user->first_leader_id = $firstLeader?->id;
+                $user->first_leader_name = $firstLeader?->name;
+                $user->first_leader_email = $firstLeader?->email;
+                $user->total_clients = count($user->getChildrenIds());
             });
 
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $members->whereIn('id', $authUser->getChildrenIds());
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $members->whereIn('id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $members->whereIn('id', []);
+            return response()->json([
+                'success' => true,
+                'data' => $users,
+            ]);
         }
 
-        $members = $members->with(['rank:id,name', 'ofCountry:id,name', 'tradingAccounts', 'tradingUser'])->latest();
-
-        if ($request->has('exportStatus')) {
-            return Excel::download(new MemberListingExport($members), Carbon::now() . '-report.xlsx');
-        }
-
-        $members = $members->paginate(10);
-
-        $members->each(function ($user) {
-            $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
-            $user->front_identity = $user->getFirstMediaUrl('front_identity');
-            $user->back_identity = $user->getFirstMediaUrl('back_identity');
-            $user->kyc_upload_date = $user->getMedia('back_identity')->first()->created_at ?? null;
-            $user->walletBalance = $user->wallets->sum('balance');
-            $user->top_leader = $user->top_leader->name ?? null;
-            $user->first_leader = $user->getFirstLeader() ?? null;
-            $user->country_name = $user->ofCountry->name ?? null;
-        });
-
-        return response()->json($members);
+        return response()->json(['success' => false, 'data' => []]);
     }
 
     public function validateKyc(EditMemberRequest $request)
@@ -239,10 +279,92 @@ class MemberController extends Controller
         $this->updateMember($request);
     }
 
-    public function verifyMember(KycApprovalRequest $request)
+    public function verifyMember(Request $request)
     {
-        $user = User::find($request->id);
-        $approvalType = $request->type;
+        Validator::make($request->all(), [
+            'name' => ['required'],
+            'username' => ['nullable'],
+            'dob' => ['required'],
+            'dial_code' => ['required'],
+            'phone' => ['required'],
+            'gender' => ['required'],
+            'address' => ['required'],
+            'country' => ['required'],
+            'nationality' => ['required'],
+            'identification_number' => ['required'],
+            'action' => ['required'],
+            'remarks' => ['required_if:action,reject'],
+        ])->setAttributeNames([
+            'name' => trans('public.name'),
+            'username' => trans('public.username'),
+            'dob' => trans('public.dob'),
+            'dial_code' => trans('public.phone'),
+            'phone' => trans('public.phone'),
+            'gender' => trans('public.gender'),
+            'address' => trans('public.address'),
+            'country' => trans('public.country'),
+            'nationality' => trans('public.nationality'),
+            'identification_number' => trans('public.identification_number'),
+            'action' => trans('public.action'),
+            'remarks' => trans('public.remarks'),
+        ])->validate();
+
+        $user = User::find($request->user_id);
+        $approvalType = $request->action;
+
+        $dial_code = $request->dial_code;
+        $phone = $request->phone;
+
+        // Remove leading '+' from dial code if present
+        $dial_code = ltrim($dial_code, '+');
+
+        // Remove leading '+' from phone number if present
+        $phone = ltrim($phone, '+');
+
+        // Check if phone number already starts with dial code
+        if (!str_starts_with($phone, $dial_code)) {
+            // Concatenate dial code and phone number
+            $phone_number = '+' . $dial_code . $phone;
+        } else {
+            // If phone number already starts with dial code, use the phone number directly
+            $phone_number = '+' . $phone;
+        }
+
+        $users = User::where('dial_code', $dial_code)
+            ->whereNot('id', $user->id)
+            ->where('status', 'Active')
+            ->get();
+
+        foreach ($users as $user_phone) {
+            if ($user_phone->phone == $phone_number) {
+                throw ValidationException::withMessages(['phone' => trans('public.invalid_mobile_phone')]);
+            }
+        }
+
+        $dobInput = $request->input('dob'); // Replace with actual input retrieval
+
+        // Check and process the DOB format
+        if (str_contains($dobInput, 'T')) {
+            // If the format includes a time component, parse it and add a day
+            $dob = Carbon::parse($dobInput)->addDay()->toDateString();
+        } else {
+            // If the format is already 'Y-m-d', no need to modify
+            $dob = Carbon::parse($dobInput)->toDateString();
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'username' => $request->username,
+            'email' => $request->email,
+            'dob' => $dob,
+            'country' => $request->country,
+            'dial_code' => $request->dial_code,
+            'phone' => $phone_number,
+            'nationality' => $request->nationality,
+            'gender' => $request->gender,
+            'address_1' => $request->address,
+            'identification_number' => $request->identification_number,
+        ]);
 
         $title = '';
         $message = '';
@@ -250,11 +372,11 @@ class MemberController extends Controller
         if ($approvalType == 'approve') {
             $user->update([
                 'kyc_approval' => 'Verified',
+                'kyc_approval_date' => now(),
                 'kyc_approval_description' => 'Approved by admin',
             ]);
 
-            $title = 'Member verified!';
-            $message = 'The member has been verified successfully.';
+            $message = 'toast_success_approve_kyc_message';
 
             Notification::route('mail', $user->email)
                 ->notify(new KycApprovalNotification($user));
@@ -262,15 +384,18 @@ class MemberController extends Controller
         } elseif ($approvalType == 'reject') {
             $user->update([
                 'kyc_approval' => 'Unverified',
-                'kyc_approval_description' => $request->remark,
+                'kyc_approval_date' => now(),
+                'kyc_approval_description' => $request->remarks,
             ]);
 
-            $title = 'Member unverified!';
-            $message = 'An email has been sent to the member to request updated KYC information.';
-
+            $message = 'toast_success_reject_kyc_message';
         }
 
-        return redirect()->back()->with('title', $title)->with('toast', $message);
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.$message"),
+            'type' => 'success',
+        ]);
     }
 
     public function viewMemberDetails($id)
@@ -282,7 +407,7 @@ class MemberController extends Controller
         $formattedRanks = $settingRanks->map(function ($rank) {
             return [
                 'value' => $rank->id,
-                'label' => $rank->getNameAttribute($rank->name),
+                'label' => $rank->name,
             ];
         });
 
@@ -339,7 +464,11 @@ class MemberController extends Controller
             $user->addMedia($request->profile_photo)->toMediaCollection('profile_photo');
         }
 
-        return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_member_message"),
+            'type' => 'success',
+        ]);
     }
 
     public function paymentAccount(PaymentAccountRequest $request)
@@ -356,7 +485,11 @@ class MemberController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->back()->with('title', 'Payment Account!')->with('toast', 'The payment account has been updated successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_payment_account_message"),
+            'type' => 'success',
+        ]);
     }
 
     public function advanceEditMember(Request $request)
@@ -489,7 +622,11 @@ class MemberController extends Controller
             $user->save();
         }
 
-        return redirect()->back()->with('title', 'Member updated!')->with('toast', 'The member has been updated successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_member_message"),
+            'type' => 'success',
+        ]);
     }
 
     public function wallet_adjustment(WalletAdjustmentRequest $request)
@@ -531,7 +668,11 @@ class MemberController extends Controller
             'balance' => $transaction->new_wallet_amount
         ]);
 
-        return redirect()->back()->with('title', 'Wallet Adjusted!')->with('success', 'This wallet has been adjusted successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_wallet_message"),
+            'type' => 'success',
+        ]);
     }
 
     protected function transferUpline($user, $upline_id)
@@ -703,7 +844,7 @@ class MemberController extends Controller
         $searchTerm = $request->input('search');
         $locale = app()->getLocale();
         $authUser = Auth::user();
-        
+
         if ($searchTerm) {
             $searchUserQuery = User::query();
 
@@ -719,7 +860,7 @@ class MemberController extends Controller
             } else {
                 $users->whereIn('id', []);
             }
-        
+
             $searchUser = $searchUserQuery
                 ->where(function ($query) use ($searchTerm) {
                     $query->where('name', 'like', '%' . $searchTerm . '%')
@@ -835,8 +976,9 @@ class MemberController extends Controller
     //         ->sum('amount');
     // }
 
-    public function impersonate(User $user)
+    public function impersonate($user_id)
     {
+        $user = User::find($user_id);
         $dataToHash = $user->name . $user->email . $user->id;
         $hashedToken = md5($dataToHash);
 
@@ -1005,5 +1147,125 @@ class MemberController extends Controller
         ]);
     }
 
+    public function getExtraBonus(Request $request)
+    {
+        $extraBonuses = UserExtraBonus::with('account_type')
+            ->where('user_id', $request->user_id)
+            ->get();
 
+        return response()->json($extraBonuses);
+    }
+
+    public function updateExtraBonus(Request $request)
+    {
+        Validator::make($request->all(), [
+            'account_type_id' => ['required'],
+            'extra_bonus' => ['nullable'],
+        ])->setAttributeNames([
+            'account_type_id' => trans('public.account_type'),
+            'extra_bonus' => trans('public.extra_bonus'),
+        ])->validate();
+
+        $extra_bonus = $request->extra_bonus;
+
+        if ($extra_bonus > 0) {
+            $user_extra_bonus = UserExtraBonus::where('user_id', $request->user_id)
+                ->where('account_type_id', $request->account_type_id)
+                ->first();
+
+            if ($user_extra_bonus) {
+                $user_extra_bonus->extra_bonus = $extra_bonus;
+                $user_extra_bonus->save();
+            } else {
+                UserExtraBonus::create([
+                    'user_id' => $request->user_id,
+                    'account_type_id' => $request->account_type_id,
+                    'extra_bonus' => $extra_bonus,
+                ]);
+            }
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_extra_bonus_message"),
+            'type' => 'success',
+        ]);
+    }
+
+    public function updateLeaderStatus(Request $request)
+    {
+        $user = User::find($request->user_id);
+        $action = $request->action;
+        $leader = $user->getFirstLeader();
+
+        if ($action == 'promote_member') {
+            $user->update([
+                'leader_status' => 1,
+            ]);
+
+            if ($leader) {
+                // Payment Gateway
+                $existing_payment_gateways = PaymentGatewayToLeader::where('user_id', $leader->id)->get();
+
+                foreach ($existing_payment_gateways as $existing_payment_gateway) {
+                    PaymentGatewayToLeader::create([
+                        'payment_gateway_id' => $existing_payment_gateway->payment_gateway_id,
+                        'user_id' => $user->id,
+                    ]);
+                }
+
+                // Account Type
+                $existing_account_types = AccountTypeToLeader::where('user_id', $leader->id)->get();
+
+                foreach ($existing_account_types as $existing_account_type) {
+                    AccountTypeToLeader::create([
+                        'account_type_id' => $existing_account_type->account_type_id,
+                        'user_id' => $user->id,
+                    ]);
+                }
+
+                // Master
+                $existing_masters = MasterToLeader::where('user_id', $leader->id)->get();
+
+                foreach ($existing_masters as $existing_master) {
+                    MasterToLeader::create([
+                        'master_id' => $existing_master->master_id,
+                        'user_id' => $user->id,
+                    ]);
+                }
+            }
+
+        } elseif ($action == 'demote_leader') {
+            $user->update([
+                'leader_status' => 0,
+            ]);
+
+            // Payment Gateway
+            $existing_payment_gateways = PaymentGatewayToLeader::where('user_id', $user->id)->get();
+
+            foreach ($existing_payment_gateways as $existing_payment_gateway) {
+                $existing_payment_gateway->delete();
+            }
+
+            // Account Type
+            $existing_account_types = AccountTypeToLeader::where('user_id', $user->id)->get();
+
+            foreach ($existing_account_types as $existing_account_type) {
+                $existing_account_type->delete();
+            }
+
+            // Master
+            $existing_masters = MasterToLeader::where('user_id', $user->id)->get();
+
+            foreach ($existing_masters as $existing_master) {
+                $existing_master->delete();
+            }
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_${action}_message"),
+            'type' => 'success',
+        ]);
+    }
 }

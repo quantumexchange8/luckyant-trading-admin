@@ -5,37 +5,52 @@ namespace App\Exports;
 use App\Models\Country;
 use App\Models\PammSubscription;
 use App\Models\SubscriptionBatch;
+use App\Models\User;
+use App\Services\UserService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
 class MemberListingExport implements FromCollection, WithHeadings
 {
-    private $members;
+    private $query;
 
-    public function __construct($members)
+    public function __construct($query)
     {
-        $this->members = $members;
+        $this->query = $query;
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public function collection()
+    public function collection(): Collection
     {
-        $records = $this->members->get();
+        $records = $this->query->get();
+
+        $userHierarchyLists = $records->pluck('hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1)
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $records->each(function ($user) use ($leaders) {
+            $userService = new UserService();
+            $firstLeader = $userService->getFirstLeader($user?->hierarchyList, $leaders);
+
+            $user->first_leader_name = $firstLeader?->name;
+        });
+
         $result = [];
 
         foreach ($records as $record) {
             // Check if $record is an array and has the necessary properties
-            $total_subcsription = SubscriptionBatch::where('user_id', $record->id)
-                ->where('status', 'Active')
-                ->sum('meta_balance');
-
-            $total_pamm_subscription = PammSubscription::where('user_id', $record->id)
-                ->where('status', 'Active')
-                ->sum('subscription_amount');
-
             $real_fund = SubscriptionBatch::where('user_id', $record->id)
                 ->where('status', 'Active')
                 ->sum('real_fund');
@@ -57,7 +72,7 @@ class MemberListingExport implements FromCollection, WithHeadings
                 'email' => $record->email,
                 'phone' => $record->phone,
                 'created_at' => Carbon::parse($record->created_at)->format('Y-m-d'),
-                'first_leader' => $record->getFirstLeader()->name ?? '',
+                'first_leader' => $record->first_leader_name,
                 'upline_email' => $record->upline->email ?? '',
                 'cash_wallet_balance' => $record->wallets->where('type', 'cash_wallet')->first()->balance ?? 0,
                 'bonus_wallet_balance' => $record->wallets->where('type', 'bonus_wallet')->first()->balance ?? 0,
@@ -65,7 +80,7 @@ class MemberListingExport implements FromCollection, WithHeadings
                 'country' => $record->ofCountry->name ?? '',
                 'rank' => $record->rank->name,
                 'kyc_approval' => $record->kyc_approval,
-                'total_deposit' => $total_subcsription + $total_pamm_subscription,
+                'total_deposit' => $record->active_pamm_sum_subscription_amount + $record->active_copy_trade_sum_meta_balance,
                 'real_fund' => $real_fund,
                 'demo_fund' => $demo_fund,
                 'total_group_deposit' => $total_group_deposit + $total_group_pamm_subscription,
@@ -86,7 +101,7 @@ class MemberListingExport implements FromCollection, WithHeadings
             'Upline Email',
             'Cash Balance',
             'Bonus Balance',
-            'Ewallet Balance',
+            'eWallet Balance',
             'Country',
             'Ranking',
             'Status',
