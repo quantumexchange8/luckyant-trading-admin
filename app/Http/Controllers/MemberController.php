@@ -841,39 +841,28 @@ class MemberController extends Controller
 
     public function getTreeData(Request $request, $id)
     {
-        $searchUser = null;
         $searchTerm = $request->input('search');
         $locale = app()->getLocale();
-        $authUser = Auth::user();
+        $childrenIds = User::find($id)->getChildrenIds();
+        $childrenIds[] = $id; // Include the given $id in the array
+
+        $searchUser = null;
 
         if ($searchTerm) {
-            $searchUserQuery = User::query();
-
-            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-                $childrenIds = $authUser->getChildrenIds();
-                $childrenIds[] = $authUser->id;
-                $searchUserQuery->whereIn('id', $childrenIds);
-            } elseif ($authUser->hasRole('super-admin')) {
-                // Super-admin can search all users
-            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-                $searchUserQuery->whereIn('id', $childrenIds);
-            } else {
-                $users->whereIn('id', []);
-            }
-
-            $searchUser = $searchUserQuery
-                ->where(function ($query) use ($searchTerm) {
-                    $query->where('name', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('email', 'like', '%' . $searchTerm . '%');
-                })
+            // Search for a user by name or email, restricted to children IDs
+            $searchUser = User::where(function ($query) use ($searchTerm) {
+                $query->where('name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            })
+                ->whereIn('id', $childrenIds) // Ensure the user is within the children IDs
                 ->first();
 
             if (!$searchUser) {
-                return response()->json(['error' => 'User not found for the given search term.'], 404);
+                return response()->json(['error' => 'User not found for the given search term or not within the allowed hierarchy.'], 404);
             }
         }
 
+        // Find the user by ID or use the searched user
         $user = $searchUser ?? User::find($id);
 
         $users = User::whereHas('upline', function ($query) use ($user) {
@@ -887,6 +876,7 @@ class MemberController extends Controller
 
         $level = 0;
         $rootNode = [
+            'id' => $user->id,
             'name' => $user->name,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
@@ -948,6 +938,7 @@ class MemberController extends Controller
         $translations = json_decode($rank->name, true);
 
         $mappedUser = [
+            'id' => $user->id,
             'name' => $user->name,
             'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
             'email' => $user->email,
