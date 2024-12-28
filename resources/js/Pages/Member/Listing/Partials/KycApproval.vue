@@ -31,7 +31,7 @@ const genders = [
 ];
 
 const countries = ref([]);
-const selectedDialCode = ref(props.user.dial_code);
+const selectedDialCode = ref(props.user.dial_code ?? null);
 const loadingCountries = ref(false);
 
 const getCountries = async () => {
@@ -79,7 +79,7 @@ const form = useForm({
     username: props.user.username,
     email: props.user.email,
     dob: '',
-    dial_code: props.user.dial_code,
+    dial_code: '',
     phone: props.user.phone,
     gender: '',
     address: props.user.address_1,
@@ -95,7 +95,9 @@ const emit = defineEmits(['update:visible'])
 const submitForm = (action) => {
     form.action = action;
     form.dob = selectedDate.value;
-    form.dial_code = selectedDialCode.value.value ? selectedDialCode.value.value : selectedDialCode.value;
+    if (selectedDialCode.value) {
+        form.dial_code = selectedDialCode.value.value ? selectedDialCode.value.value : selectedDialCode.value;
+    }
     form.country = selectedCountry.value.id;
     form.nationality = selectedNationality.value;
     form.gender = selectedGender.value;
@@ -180,7 +182,7 @@ const submitForm = (action) => {
                             :filter-fields="['label', 'value', 'code']"
                         >
                             <template #value="slotProps">
-                                <div v-if="slotProps.value.value">
+                                <div v-if="selectedDialCode && slotProps.value.value">
                                     <div>{{ slotProps.value.value }}</div>
                                 </div>
                                 <div v-else-if="slotProps.value">
@@ -209,7 +211,7 @@ const submitForm = (action) => {
                             :invalid="!!form.errors.phone"
                         />
                     </div>
-                    <InputError :message="form.errors.phone" />
+                    <InputError :message="form.errors.dial_code || form.errors.phone" />
                 </div>
 
                 <!-- Country -->
