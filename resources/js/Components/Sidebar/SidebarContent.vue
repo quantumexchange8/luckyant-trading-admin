@@ -28,6 +28,7 @@ const pendingKycCount = ref(page.props.pendingKycCount);
 const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCount);
 const pendingRenewalCount = ref(page.props.pendingRenewalCount);
 const pendingPammCount = ref(page.props.pendingPammCount);
+const pendingBalanceIn = ref(page.props.pendingBalanceIn);
 const { hasRole } = usePermission();
 </script>
 
@@ -91,14 +92,26 @@ const { hasRole } = usePermission();
         <SidebarCollapsible
             :title="$t('public.account')"
             :active="route().current('account.*')"
+            :pending-counts="pendingBalanceIn"
         >
             <template #icon>
-                <IconPasswordUser size="24" />
+                <IconPasswordUser size="24" stroke-width="1.5" />
             </template>
             <SidebarCollapsibleItem
                 :href="route('account.account_listing')"
                 :title="$t('public.account_listing')"
                 :active="route().current('account.account_listing')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('account.account_pending')"
+                :title="$t('public.pending')"
+                :active="route().current('account.account_pending')"
+                :pending-counts="pendingBalanceIn"
+            />
+            <SidebarCollapsibleItem
+                :href="route('account.transaction_report')"
+                :title="$t('public.transaction_report')"
+                :active="route().current('account.transaction_report')"
             />
         </SidebarCollapsible>
 

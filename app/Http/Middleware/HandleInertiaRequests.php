@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
             'pendingRenewalCount' => $sidebarService->getPendingRenewalCount(),
             'pendingSwitchMasterCount' => $sidebarService->getPendingSwitchMasterCount(),
             'pendingPammCount' => $sidebarService->getPendingPammCount(),
+            'pendingBalanceIn' => $sidebarService->pendingBalanceIn(),
             'locale' => session('locale') ? session('locale') : app()->getLocale(),
         ];
     }

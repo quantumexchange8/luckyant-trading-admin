@@ -398,7 +398,6 @@ class TransactionController extends Controller
                 $query->whereIn('user_id', []);
             }
 
-
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {
                 return Excel::download(new TransactionsExport($query), now() . '-'. $data['filters']['type']['value'] . 'report.xlsx');

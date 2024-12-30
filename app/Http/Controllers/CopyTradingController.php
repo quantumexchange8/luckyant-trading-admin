@@ -253,8 +253,6 @@ class CopyTradingController extends Controller
             ])
             ->where('status', 'Pending');
 
-        $authUser = Auth::user();
-
         $join_start_date = $request->query('joinStartDate');
         $join_end_date = $request->query('joinEndDate');
 
@@ -263,20 +261,6 @@ class CopyTradingController extends Controller
             $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
 
             $pendingQuery->whereBetween('created_at', [$start_date, $end_date]);
-        }
-
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $childrenIds = $authUser->getChildrenIds();
-            $childrenIds[] = $authUser->id;
-            $pendingQuery->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $pendingQuery->whereIn('user_id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $pendingQuery->whereIn('user_id', []);
         }
 
         $authUser = Auth::user();
@@ -490,7 +474,7 @@ class CopyTradingController extends Controller
     public function getTerminationOverview(Request $request)
     {
         $authUser = Auth::user();
-        
+
         // current month
         $endOfMonth = \Illuminate\Support\Carbon::now()->endOfMonth();
 

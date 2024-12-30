@@ -12,6 +12,7 @@ use App\Models\SubscriptionBatch;
 use App\Models\TradingUser;
 use App\Models\Transaction;
 use App\Models\Mt5DeleteLog;
+use App\Models\Wallet;
 use App\Notifications\AddTradingAccountNotification;
 use App\Services\dealAction;
 use App\Services\RunningNumberService;
@@ -509,7 +510,7 @@ class TradingController extends Controller
         $balanceInCount = Transaction::where([
             'category' => 'trading_account',
             'transaction_type' => 'BalanceIn',
-            'status' => 'Pending',
+            'status' => 'Processing',
         ])
             ->count();
 
@@ -531,7 +532,7 @@ class TradingController extends Controller
             ->where([
             'category' => 'trading_account',
             'transaction_type' => $request->transaction_type,
-            'status' => 'Pending',
+            'status' => 'Processing',
         ]);
 
         $authUser = Auth::user();
@@ -648,6 +649,8 @@ class TradingController extends Controller
 
                     $dealId = $deal['deal_Id'] ?? null;
 
+                    $wallet = Wallet::find($transaction->from_wallet_id);
+
                     $transaction->update([
                         'ticket' => $dealId,
                         'status' => 'Success',
@@ -655,7 +658,13 @@ class TradingController extends Controller
                         'comment' => $comment,
                         'remarks' => 'Admin approved',
                         'handle_by' => Auth::id(),
+                        'new_wallet_amount' => $wallet->balance - $transaction->amount,
                     ]);
+
+                    $wallet->update([
+                        'balance' => $wallet->balance - $transaction->amount
+                    ]);
+
                 } catch (\Exception $e) {
                     \Log::error('Error fetching trading accounts: ' . $e->getMessage());
                 }
@@ -699,36 +708,9 @@ class TradingController extends Controller
                 'from_meta_login:id,meta_login',
                 'to_meta_login:id,meta_login',
             ])
+                ->where('category', 'trading_account')
                 ->where('transaction_type', $data['filters']['type']['value'])
                 ->whereNot('status', 'Processing');
-
-            if ($data['filters']['type']['value'] == 'BalanceOut') {
-                $query->addSelect([
-                    'profitAmount' => DB::table('wallet_logs')
-                        ->selectRaw('SUM(amount)')
-                        ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
-                        ->where('wallet_logs.purpose', 'ProfitSharing'),
-
-                    'bonusAmount' => DB::table('wallet_logs')
-                        ->selectRaw('SUM(amount)')
-                        ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
-                        ->whereIn('wallet_logs.purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate']),
-                ]);
-
-                if (!empty($data['filters']['start_approval_date']['value']) && !empty($data['filters']['end_approval_date']['value'])) {
-                    $start_date = Carbon::parse($data['filters']['start_approval_date']['value'])->addDay()->startOfDay();
-                    $end_date = Carbon::parse($data['filters']['end_approval_date']['value'])->addDay()->endOfDay();
-
-                    $query->whereBetween('approval_at', [$start_date, $end_date]);
-                }
-            }
-
-            if ($data['filters']['type']['value'] == 'Transfer') {
-                $query->with([
-                    'from_wallet.user:id,name',
-                    'to_wallet.user:id,name',
-                ]);
-            }
 
             if ($data['filters']['global']['value']) {
                 $query->whereHas('user', function($q) use ($data) {
@@ -792,7 +774,6 @@ class TradingController extends Controller
                 $query->whereIn('user_id', []);
             }
 
-
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {
                 return Excel::download(new TransactionsExport($query), now() . '-'. $data['filters']['type']['value'] . 'report.xlsx');
@@ -840,47 +821,5 @@ class TradingController extends Controller
         }
 
         return response()->json(['success' => false, 'data' => []]);
-    }
-
-    // Delete after use
-    public function resendCreateAccountEmail(Request $request)
-    {
-        $resendAccounts = TradingAccount::where('meta_login', '>', 459351)
-            ->whereNot('meta_login', 459371)
-            ->get();
-
-        foreach ($resendAccounts as $resendAccount) {
-            $metaAccount = [
-                'meta_login' => $resendAccount->meta_login,
-                'leverage' => $resendAccount->margin_leverage,
-                'server' => 'LuckyAntTradingLtd-Live',
-                'login' => $resendAccount->meta_login,
-                'mainPassword' => \Str::random(11),
-                'investPassword' => \Str::random(11),
-            ];
-
-            $balance = 0;
-
-            $user = User::find($resendAccount->user_id);
-
-            try {
-                Notification::route('mail', $user->email)
-                    ->notifyNow(new AddTradingAccountNotification($metaAccount, $balance, $user));
-
-                Log::info('Notification sent successfully', [
-                    'email' => $user->email,
-                    'meta_login' => $metaAccount['meta_login'],
-                    'user_id' => $user->id,
-                    'balance' => $balance,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Failed to send notification', [
-                    'email' => $user->email,
-                    'meta_login' => $metaAccount['meta_login'],
-                    'user_id' => $user->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
     }
 }

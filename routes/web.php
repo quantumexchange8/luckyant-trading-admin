@@ -98,10 +98,6 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/balanceAdjustment', [TradingController::class, 'balanceAdjustment'])->name('account.balanceAdjustment');
         Route::delete('/deleteAccount', [TradingController::class, 'deleteAccount'])->name('account.deleteAccount');
 
-        // Delete after use
-        Route::post('/resendCreateAccountEmail', [TradingController::class, 'resendCreateAccountEmail'])->name('account.resendCreateAccountEmail');
-        //
-
         // Pending
         Route::get('/pending', [TradingController::class, 'account_pending'])->name('account.account_pending');
         Route::get('/getAccountPendingData', [TradingController::class, 'getAccountPendingData'])->name('account.getAccountPendingData');
@@ -110,6 +106,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
 
         // Transaction Report
         Route::get('transaction_report', [TradingController::class, 'transaction_report'])->name('account.transaction_report');
+        Route::get('getAccountTransactionHistory', [TradingController::class, 'getAccountTransactionHistory'])->name('account.getAccountTransactionHistory');
     });
 
     /**

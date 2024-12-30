@@ -156,4 +156,30 @@ class SidebarService {
 
         return $pending_pamm->count();
     }
+
+    public function pendingBalanceIn(): int
+    {
+        $authUser = \Auth::user();
+        $query = Transaction::where([
+            'category' => 'trading_account',
+            'transaction_type' => 'BalanceIn',
+            'status' => 'Processing',
+        ]);
+
+        if (!empty($authUser) && $authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif (!empty($authUser) && $authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser) && !empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
+        return $query->count();
+    }
 }
