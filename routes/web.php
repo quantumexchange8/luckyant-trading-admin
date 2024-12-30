@@ -97,6 +97,19 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/change_password', [TradingController::class, 'change_password'])->name('account.change_password');
         Route::post('/balanceAdjustment', [TradingController::class, 'balanceAdjustment'])->name('account.balanceAdjustment');
         Route::delete('/deleteAccount', [TradingController::class, 'deleteAccount'])->name('account.deleteAccount');
+
+        // Delete after use
+        Route::post('/resendCreateAccountEmail', [TradingController::class, 'resendCreateAccountEmail'])->name('account.resendCreateAccountEmail');
+        //
+
+        // Pending
+        Route::get('/pending', [TradingController::class, 'account_pending'])->name('account.account_pending');
+        Route::get('/getAccountPendingData', [TradingController::class, 'getAccountPendingData'])->name('account.getAccountPendingData');
+
+        Route::patch('/accountPendingApproval', [TradingController::class, 'accountPendingApproval'])->name('account.accountPendingApproval');
+
+        // Transaction Report
+        Route::get('transaction_report', [TradingController::class, 'transaction_report'])->name('account.transaction_report');
     });
 
     /**

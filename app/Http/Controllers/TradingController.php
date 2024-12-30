@@ -11,6 +11,7 @@ use App\Models\SubscriptionBatch;
 use App\Models\TradingUser;
 use App\Models\Transaction;
 use App\Models\Mt5DeleteLog;
+use App\Notifications\AddTradingAccountNotification;
 use App\Services\dealAction;
 use App\Services\RunningNumberService;
 use App\Services\UserService;
@@ -499,5 +500,216 @@ class TradingController extends Controller
 
         $account = $tradingAccount;
         return response()->json($account);
+    }
+
+    public function account_pending()
+    {
+        $balanceInCount = Transaction::where([
+            'category' => 'trading_account',
+            'transaction_type' => 'BalanceIn',
+            'status' => 'Pending',
+        ])
+            ->count();
+
+        return Inertia::render('Account/AccountPending/AccountPending', [
+            'pendingBalanceInCount' => $balanceInCount
+        ]);
+    }
+
+    public function getAccountPendingData(Request $request, UserService $userService)
+    {
+        $query = Transaction::with([
+            'user:id,name,email,hierarchyList',
+            'from_wallet:id,type,name,wallet_address',
+//            'to_wallet:id,type,name,wallet_address',
+//            'from_meta_login:id,meta_login',
+            'to_meta_login:id,meta_login,account_type',
+            'to_meta_login.accountType:id,name,slug',
+        ])
+            ->where([
+            'category' => 'trading_account',
+            'transaction_type' => $request->transaction_type,
+            'status' => 'Pending',
+        ]);
+
+        $authUser = Auth::user();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
+        if ($request->export == 'yes') {
+            if ($request->master_meta_login) {
+                $query->where('master_meta_login', $request->master_meta_login);
+            }
+
+            if ($request->first_leader_id) {
+                $first_leader = User::find($request->first_leader_id);
+                $childrenIds = $first_leader->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            }
+
+            return Excel::download(new PendingSubscriberExport($query), Carbon::now() . '-pending-' . $request->transaction_type . '-report.xlsx');
+        }
+
+        $pendings = $query->select([
+            'id',
+            'user_id',
+            'from_wallet_id',
+            'to_meta_login',
+            'transaction_number',
+            'fund_type',
+            'amount',
+            'transaction_charges',
+            'transaction_amount',
+            'created_at',
+        ])
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $pendings->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $pendings->each(function ($pending) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($pending->user?->hierarchyList, $leaders);
+
+            $pending->first_leader_id = $firstLeader?->id;
+            $pending->first_leader_name = $firstLeader?->name;
+            $pending->first_leader_email = $firstLeader?->email;
+        });
+
+        return response()->json([
+            'pendings' => $pendings
+        ]);
+    }
+
+    public function accountPendingApproval(Request $request)
+    {
+        Validator::make($request->all(), [
+            'remarks' => ['required_if:action,reject'],
+        ])->setAttributeNames([
+            'remarks' => trans('public.remarks'),
+        ])->validate();
+
+        $transaction = Transaction::find($request->transaction_id);
+
+        $checkSubscriptionAcc = Subscription::where('meta_login', $transaction->to_meta_login)
+            ->where('status', 'Active')
+            ->first();
+
+        $checkSubscriptionBatchAcc = SubscriptionBatch::where('meta_login', $transaction->to_meta_login)
+            ->where('status', 'Active')
+            ->first();
+
+        $checkPammAcc = PammSubscription::where('meta_login', $transaction->to_meta_login)
+            ->where('status', 'Active')
+            ->first();
+
+        if ($checkPammAcc || $checkSubscriptionAcc || $checkSubscriptionBatchAcc) {
+            return back()->with('toast', [
+                'title' => trans("public.invalid_action"),
+                'message' => trans("public.try_again_later"),
+                'type' => 'warning',
+            ]);
+        }
+
+        if ($request->action == 'approve') {
+            $connection = (new MetaFiveService())->getConnectionStatus();
+
+            $trading_account = TradingAccount::firstWhere('meta_login', $transaction->to_meta_login);
+
+            if ($connection == 0) {
+                try {
+                    $comment = 'Deposit to trading account';
+                    $deal = (new MetaFiveService())->createDeal($trading_account->meta_login, $transaction->amount, $comment, dealAction::DEPOSIT);
+
+                    $dealId = $deal['deal_Id'] ?? null;
+
+                    $transaction->update([
+                        'ticket' => $dealId,
+                        'status' => 'Success',
+                        'approval_at' => now(),
+                        'comment' => $comment,
+                        'remarks' => 'Admin approved',
+                        'handle_by' => Auth::id(),
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Error fetching trading accounts: ' . $e->getMessage());
+                }
+            } else {
+                return back()->with('toast', [
+                    'title' => trans("public.connection_error"),
+                    'message' => trans("public.try_again_later"),
+                    'type' => 'warning',
+                ]);
+            }
+        } else {
+            $transaction->update([
+                'status' => 'Rejected',
+                'approval_at' => now(),
+                'remarks' => $request->remarks,
+                'handle_by' => Auth::id(),
+            ]);
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_{$request->action}_deposit_message"),
+            'type' => 'success',
+        ]);
+    }
+
+    public function transaction_report(Request $request)
+    {
+        return Inertia::render('Account/AccountTransaction/AccountTransaction', [
+
+        ]);
+    }
+
+    // Delete after use
+    public function resendCreateAccountEmail(Request $request)
+    {
+        $resendAccounts = TradingAccount::where('meta_login', '>', 459351)
+            ->whereNot('meta_login', 459371)
+            ->get();
+
+        foreach ($resendAccounts as $resendAccount) {
+            $metaAccount = [
+                'meta_login' => $resendAccount->meta_login,
+                'leverage' => $resendAccount->margin_leverage,
+                'server' => 'LuckyAntTradingLtd-Live',
+                'login' => $resendAccount->meta_login,
+                'mainPassword' => \Str::random(11),
+                'investPassword' => \Str::random(11),
+            ];
+
+            $balance = 0;
+
+            $user = User::find($resendAccount->user_id);
+
+            Notification::route('mail', $user->email)
+                ->notify(new AddTradingAccountNotification($metaAccount, $balance, $user));
+        }
     }
 }
