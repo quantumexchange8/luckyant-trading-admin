@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TransactionsExport;
 use App\Http\Requests\BalanceAdjustmentRequest;
 use App\Models\CopyTradeTransaction;
 use App\Models\PammSubscription;
@@ -17,6 +18,7 @@ use App\Services\RunningNumberService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use App\Models\TradingAccount;
@@ -682,9 +684,162 @@ class TradingController extends Controller
 
     public function transaction_report(Request $request)
     {
-        return Inertia::render('Account/AccountTransaction/AccountTransaction', [
+        return Inertia::render('Account/AccountTransaction/AccountTransaction');
+    }
 
-        ]);
+    public function getAccountTransactionHistory(Request $request, UserService $userService)
+    {
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
+
+            $query = Transaction::with([
+                'user',
+                'from_wallet:id,type,name,wallet_address',
+                'to_wallet:id,type,name,wallet_address',
+                'from_meta_login:id,meta_login',
+                'to_meta_login:id,meta_login',
+            ])
+                ->where('transaction_type', $data['filters']['type']['value'])
+                ->whereNot('status', 'Processing');
+
+            if ($data['filters']['type']['value'] == 'BalanceOut') {
+                $query->addSelect([
+                    'profitAmount' => DB::table('wallet_logs')
+                        ->selectRaw('SUM(amount)')
+                        ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
+                        ->where('wallet_logs.purpose', 'ProfitSharing'),
+
+                    'bonusAmount' => DB::table('wallet_logs')
+                        ->selectRaw('SUM(amount)')
+                        ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
+                        ->whereIn('wallet_logs.purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate']),
+                ]);
+
+                if (!empty($data['filters']['start_approval_date']['value']) && !empty($data['filters']['end_approval_date']['value'])) {
+                    $start_date = Carbon::parse($data['filters']['start_approval_date']['value'])->addDay()->startOfDay();
+                    $end_date = Carbon::parse($data['filters']['end_approval_date']['value'])->addDay()->endOfDay();
+
+                    $query->whereBetween('approval_at', [$start_date, $end_date]);
+                }
+            }
+
+            if ($data['filters']['type']['value'] == 'Transfer') {
+                $query->with([
+                    'from_wallet.user:id,name',
+                    'to_wallet.user:id,name',
+                ]);
+            }
+
+            if ($data['filters']['global']['value']) {
+                $query->whereHas('user', function($q) use ($data) {
+                    $q->where(function ($query) use ($data) {
+                        $keyword = $data['filters']['global']['value'];
+
+                        $query->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%');
+                    });
+                });
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('created_at', [$start_date, $end_date]);
+            }
+
+            if ($data['filters']['fund_type']['value']) {
+                $query->where('fund_type', $data['filters']['fund_type']['value']);
+            }
+
+            if ($data['filters']['status']['value']) {
+                $query->where('status', $data['filters']['status']['value']);
+            }
+
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
+            } else {
+                $query->latest();
+            }
+
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('user_id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('user_id', []);
+            }
+
+
+            // Export logic
+            if ($request->has('exportStatus') && $request->exportStatus) {
+                return Excel::download(new TransactionsExport($query), now() . '-'. $data['filters']['type']['value'] . 'report.xlsx');
+            }
+
+            // Calculate totals before pagination
+            $totalAmount = (clone $query)->sum('amount');
+            $successAmount = (clone $query)->where('status', 'Success')->sum('amount');
+            $rejectedAmount = (clone $query)->where('status', 'Rejected')->sum('amount');
+
+            $transactions = $query->paginate($data['rows']);
+
+            $userHierarchyLists = $transactions->pluck('user.hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            if ($leaderId > 0) {
+                $leaderQuery = User::where('id', $leaderId)
+                    ->where('leader_status', 1);
+            } else {
+                $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                    ->where('leader_status', 1);
+            }
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            $transactions->each(function ($transaction) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($transaction->user?->hierarchyList, $leaders);
+
+                $transaction->first_leader_id = $firstLeader?->id;
+                $transaction->first_leader_name = $firstLeader?->name;
+                $transaction->first_leader_email = $firstLeader?->email;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $transactions,
+                'totalAmount' => $totalAmount,
+                'successAmount' => $successAmount,
+                'rejectedAmount' => $rejectedAmount,
+            ]);
+        }
+
+        return response()->json(['success' => false, 'data' => []]);
     }
 
     // Delete after use
@@ -708,8 +863,24 @@ class TradingController extends Controller
 
             $user = User::find($resendAccount->user_id);
 
-            Notification::route('mail', $user->email)
-                ->notify(new AddTradingAccountNotification($metaAccount, $balance, $user));
+            try {
+                Notification::route('mail', $user->email)
+                    ->notifyNow(new AddTradingAccountNotification($metaAccount, $balance, $user));
+
+                Log::info('Notification sent successfully', [
+                    'email' => $user->email,
+                    'meta_login' => $metaAccount['meta_login'],
+                    'user_id' => $user->id,
+                    'balance' => $balance,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to send notification', [
+                    'email' => $user->email,
+                    'meta_login' => $metaAccount['meta_login'],
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 }
