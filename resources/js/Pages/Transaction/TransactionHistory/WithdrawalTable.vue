@@ -136,7 +136,10 @@ watch(selectedDate, (newDateRange) => {
         const [startDate, endDate] = newDateRange;
         filters.value['start_date'].value = startDate;
         filters.value['end_date'].value = endDate;
-        loadLazyData();
+
+        if (startDate !== null && endDate !== null) {
+            loadLazyData();
+        }
     } else {
         console.warn('Invalid date range format:', newDateRange);
     }
@@ -147,7 +150,10 @@ watch(selectedApprovalDate, (newDateRange) => {
         const [startDate, endDate] = newDateRange;
         filters.value['start_approval_date'].value = startDate;
         filters.value['end_approval_date'].value = endDate;
-        loadLazyData();
+
+        if (startDate !== null && endDate !== null) {
+            loadLazyData();
+        }
     } else {
         console.warn('Invalid date range format:', newDateRange);
     }

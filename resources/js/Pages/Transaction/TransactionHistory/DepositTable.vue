@@ -130,14 +130,13 @@ watch(selectedDate, (newDateRange) => {
         const [startDate, endDate] = newDateRange;
         filters.value['start_date'].value = startDate;
         filters.value['end_date'].value = endDate;
-        loadLazyData();
+
+        if (startDate !== null && endDate !== null) {
+            loadLazyData();
+        }
     } else {
         console.warn('Invalid date range format:', newDateRange);
     }
-})
-
-watch(selectedDate, () => {
-    loadLazyData();
 })
 
 onMounted(() => {
@@ -168,6 +167,8 @@ const clearAll = () => {
     filters.value['leader_id'].value = null;
     filters.value['start_date'].value = null;
     filters.value['end_date'].value = null;
+
+    selectedDate.value = [];
 };
 
 const clearFilterGlobal = () => {
