@@ -246,18 +246,21 @@ const submitForm = () => {
                     <span class="text-xl font-semibold dark:text-gray-400">Slip</span>
                 </div>
 
-                <div v-if="transaction.transaction_type === 'Deposit' && transaction.receipt_url" class="grid grid-cols-3 items-start gap-2 pb-2 w-full">
+                <div v-if="transaction.transaction_type === 'Deposit' && transaction.media" class="grid grid-cols-3 items-start gap-2 pb-2 w-full">
                     <span class="text-sm font-semibold dark:text-gray-400">Payment Slip</span>
                     <div class="flex gap-2 col-span-2 items-center self-stretch">
-                        <Image
-                            :src="transaction.receipt_url"
-                            alt="Image"
-                            imageClass="max-w-full h-12 object-contain rounded"
-                            preview
-                        />
+                        <div
+                            v-for="media in transaction.media"
+                        >
+                            <Image
+                                :src="media.original_url"
+                                alt="Image"
+                                imageClass="max-w-full h-12 object-contain rounded"
+                                preview
+                            />
+                        </div>
                     </div>
                 </div>
-
             </div>
             <div v-if="transaction.transaction_type === 'Withdrawal'">
                 <div class="grid grid-cols-3 items-center gap-2">

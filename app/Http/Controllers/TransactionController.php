@@ -52,7 +52,7 @@ class TransactionController extends Controller
         $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
         $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
 
-        $query = Transaction::query()->with(['user:id,name,email,upline_id,hierarchyList,leader_status,role', 'from_wallet', 'to_wallet', 'payment_account'])
+        $query = Transaction::query()->with(['user:id,name,email,upline_id,hierarchyList,leader_status,role', 'from_wallet', 'to_wallet', 'payment_account', 'media'])
             ->where('status', 'Processing');
 
         if ($request->filled('date')) {
@@ -125,7 +125,6 @@ class TransactionController extends Controller
         $results->each(function ($transaction) {
             $transaction->user->first_leader = $transaction->user->getFirstLeader()->name ?? '-';
             $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
-            $transaction->receipt_url = $transaction->getFirstMediaUrl('receipt');
             $transaction->payment_type = strtolower($transaction->payment_method);
 
             $profit = WalletLog::where('user_id', $transaction->user_id)
