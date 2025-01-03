@@ -208,15 +208,23 @@ class TransactionController extends Controller
                 }
 
             } elseif ($transaction->transaction_type == 'Withdrawal') {
+                $anotherTransactions = Transaction::with('user')
+                    ->where([
+                        'transaction_number' => $transaction->transaction_number,
+                        'status' => 'Processing'
+                    ])
+                    ->get();
 
-                $transaction->update([
-                    'status' => 'Success',
-                    'approval_at' => now(),
-                    'handle_by' => Auth::user()->id,
-                ]);
+                foreach ($anotherTransactions as $anotherTransaction) {
+                    $anotherTransaction->update([
+                        'status' => 'Success',
+                        'approval_at' => now(),
+                        'handle_by' => Auth::id(),
+                    ]);
 
-                if (App::environment('production')) {
-                    Notification::route('mail', $transaction->user->email)->notify(new WithdrawalConfirmationNotification($transaction));
+                    if (App::environment('production')) {
+                        Notification::route('mail', $anotherTransaction->user->email)->notify(new WithdrawalConfirmationNotification($anotherTransaction));
+                    }
                 }
             }
         }
@@ -275,18 +283,25 @@ class TransactionController extends Controller
             }
 
             if ($transaction->transaction_type == 'Withdrawal') {
+                $anotherTransactions = Transaction::where([
+                        'transaction_number' => $transaction->transaction_number,
+                        'status' => 'Processing'
+                    ])
+                    ->get();
 
-                $transaction->update([
-                    'status' => 'Rejected',
-                    'approval_at' => now(),
-                    'remarks'=> $request->remarks,
-                    'new_wallet_amount' => $transaction->new_wallet_amount += $transaction->amount,
-                    'handle_by' => Auth::user()->id,
-                ]);
+                foreach ($anotherTransactions as $anotherTransaction) {
+                    $anotherTransaction->update([
+                        'status' => 'Rejected',
+                        'approval_at' => now(),
+                        'remarks'=> $request->remarks,
+                        'new_wallet_amount' => $anotherTransaction->new_wallet_amount += $anotherTransaction->amount,
+                        'handle_by' => Auth::user()->id,
+                    ]);
 
-                $wallet = Wallet::find($transaction->from_wallet_id);
-                $wallet->balance += $transaction->amount;
-                $wallet->save();
+                    $wallet = Wallet::find($anotherTransaction->from_wallet_id);
+                    $wallet->balance += $anotherTransaction->amount;
+                    $wallet->save();
+                }
             }
         }
 
