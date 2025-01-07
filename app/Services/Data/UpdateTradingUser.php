@@ -16,9 +16,11 @@ class UpdateTradingUser
 
     public function updateTradingUser($meta_login, $data): TradingUser
     {
-        $tradingUser = TradingUser::query()->where('meta_login', $meta_login)->first();
+        $tradingUser = TradingUser::with('from_account_type')
+            ->where('meta_login', $meta_login)
+            ->first();
 
-        if ($tradingUser->acc_status === "Active" && $tradingUser->account_type === 1){
+        if ($tradingUser->acc_status === "Active" && $tradingUser->from_account_type->slug != 'virtual') {
             $tradingUser->name = $data['name'];
             $tradingUser->company = $data['company'];
             $tradingUser->leverage = $data['leverage'];

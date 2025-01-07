@@ -22,7 +22,6 @@ import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
 import Tag from "primevue/tag"
-import PendingSubscriptionAction from "@/Pages/CopyTrading/Pending/PendingSubscription/PendingSubscriptionAction.vue";
 import PendingAction from "@/Pages/Account/AccountPending/PendingAction.vue";
 
 const props = defineProps({
@@ -232,17 +231,17 @@ watchEffect(() => {
                                     <SlidersOneIcon class="w-4 h-4" />
                                     Filter
                                 </Button>
-                                <div class="w-full flex justify-end">
-                                    <Button
-                                        class="w-full md:w-28 flex gap-2"
-                                        severity="secondary"
-                                        @click="exportReport"
-                                        :disabled="exportTable==='yes'"
-                                    >
-                                        <CloudDownloadIcon class="w-4 h-4" />
-                                        Export
-                                    </Button>
-                                </div>
+<!--                                <div class="w-full flex justify-end">-->
+<!--                                    <Button-->
+<!--                                        class="w-full md:w-28 flex gap-2"-->
+<!--                                        severity="secondary"-->
+<!--                                        @click="exportReport"-->
+<!--                                        :disabled="exportTable==='yes'"-->
+<!--                                    >-->
+<!--                                        <CloudDownloadIcon class="w-4 h-4" />-->
+<!--                                        Export-->
+<!--                                    </Button>-->
+<!--                                </div>-->
                             </div>
                         </div>
                     </template>
