@@ -22,7 +22,7 @@ class MasterConfigurationRequest extends FormRequest
             'estimated_monthly_returns' => ['required'],
             'estimated_lot_size' => ['required'],
             'join_period' => ['required'],
-            'total_fund' => ['required'],
+            'extra_fund' => ['nullable'],
         ];
     }
 
@@ -68,7 +68,7 @@ class MasterConfigurationRequest extends FormRequest
             'estimated_monthly_returns' => trans('public.estimated_monthly_returns'),
             'estimated_lot_size' => trans('public.estimated_lot_size'),
             'join_period' => trans('public.join_period'),
-            'total_fund' => trans('public.total_fund'),
+            'extra_fund' => trans('public.extra_fund'),
         ];
     }
 }

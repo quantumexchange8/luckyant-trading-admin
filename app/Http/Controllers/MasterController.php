@@ -829,17 +829,13 @@ class MasterController extends Controller
             'join_period' => $request->join_period,
             'roi_period' => $request->roi_period,
             'total_subscribers' => $request->total_subscribers,
+            'extra_fund' => $request->extra_fund,
             'max_drawdown' => $request->max_drawdown,
             'is_public' => $request->is_public,
             'can_top_up' => $request->can_top_up,
             'can_revoke' => $request->can_revoke,
             'delivery_requirement' => $request->delivery_requirement,
         ]);
-
-        if ($master->category == 'copy_trade') {
-            $master->total_fund = $request->total_fund;
-            $master->save();
-        }
 
         if ($master->strategy_type == 'Alpha') {
             $master->max_fund_percentage = $request->max_fund_percentage;

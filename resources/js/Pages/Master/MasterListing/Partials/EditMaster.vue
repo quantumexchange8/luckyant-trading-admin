@@ -30,7 +30,7 @@ const form = useForm({
     company_profit: props.master.company_profit,
     join_period: props.master.join_period,
     roi_period: props.master.roi_period,
-    total_fund: props.master.total_fund,
+    extra_fund: props.master.extra_fund,
     estimated_monthly_returns: props.master.estimated_monthly_returns,
     estimated_lot_size: props.master.estimated_lot_size,
     total_subscribers: props.master.total_subscribers,
@@ -216,19 +216,18 @@ const closeDialog = () => {
                         <InputError :message="form.errors.type" />
                     </div>
 
-                    <!-- Total Fund -->
+                    <!-- Extra Fund -->
                     <div
-                        v-if="form.category === 'copy_trade'"
                         class="flex flex-col items-start gap-1 self-stretch"
                     >
                         <InputLabel
-                            for="total_fund"
-                            :value="$t('public.total_fund')"
-                            :invalid="!!form.errors.total_fund"
+                            for="extra_fund"
+                            :value="$t('public.extra_fund')"
+                            :invalid="!!form.errors.extra_fund"
                         />
                         <InputNumber
-                            v-model="form.total_fund"
-                            inputId="total_fund"
+                            v-model="form.extra_fund"
+                            inputId="extra_fund"
                             class="w-full"
                             :min="0"
                             :step="100"
@@ -236,9 +235,9 @@ const closeDialog = () => {
                             mode="currency"
                             currency="USD"
                             locale="en-US"
-                            :invalid="!!form.errors.min_investment"
+                            :invalid="!!form.errors.extra_fund"
                         />
-                        <InputError :message="form.errors.total_fund" />
+                        <InputError :message="form.errors.extra_fund" />
                     </div>
 
                     <!-- Estimated Monthly Return -->
@@ -284,12 +283,12 @@ const closeDialog = () => {
                             :value="$t('public.total_subscribers')"
                             :invalid="!!form.errors.total_subscribers"
                         />
-                        <InputText
-                            id="total_subscribers"
-                            type="text"
-                            class="block w-full"
+                        <InputNumber
                             v-model="form.total_subscribers"
-                            :placeholder="$t('public.total_subscribers_placeholder')"
+                            inputId="total_subscribers"
+                            class="w-full"
+                            :min="0"
+                            fluid
                             :invalid="!!form.errors.total_subscribers"
                         />
                         <InputError :message="form.errors.total_subscribers" />
