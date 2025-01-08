@@ -7,6 +7,7 @@ import Tabs from "primevue/tabs";
 import {h, ref, watch} from "vue";
 import MemberTable from "@/Pages/Member/Listing/MemberTable.vue";
 import Badge from "primevue/badge";
+import AddMember from "@/Pages/Member/Listing/Partials/AddMember.vue";
 
 const props = defineProps({
     kycCounts: Object,
@@ -75,11 +76,8 @@ watch(activeIndex, (newIndex) => {
                         </Tab>
                     </TabList>
                 </Tabs>
-<!--                <Button-->
-<!--                    size="small"-->
-<!--                    label="Add member"-->
-<!--                    class="w-full md:max-w-32"-->
-<!--                />-->
+
+                <AddMember />
             </div>
 
             <MemberTable

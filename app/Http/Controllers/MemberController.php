@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\AffiliateSummaryExport;
 use App\Exports\MemberListingExport;
-use App\Http\Requests\KycApprovalRequest;
 use App\Http\Requests\WalletAdjustmentRequest;
 use App\Models\AccountTypeToLeader;
 use App\Models\Country;
@@ -21,28 +20,24 @@ use App\Models\Wallet;
 use App\Models\Transaction;
 use App\Models\PaymentAccount;
 use App\Models\Subscription;
-use App\Models\WalletLog;
 use App\Notifications\KycApprovalNotification;
+use App\Notifications\NewUserWelcomeNotification;
 use App\Services\MetaFiveService;
 use App\Services\RunningNumberService;
 use App\Http\Requests\EditMemberRequest;
 use App\Http\Requests\PaymentAccountRequest;
 use App\Http\Requests\AddMemberRequest;
-use App\Services\SelectOptionService;
 use App\Services\UserService;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Validation\Rule;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class MemberController extends Controller
@@ -76,51 +71,76 @@ class MemberController extends Controller
         ]);
     }
 
-    public function addMember(AddMemberRequest $request)
+    public function addMember(Request $request)
     {
+        $upline_id = $request->upline_id;
+        $top_leader_id = null;
+        $hierarchyList = null;
+        $enable_bank_withdrawal = 0;
+        $is_public = 1;
 
-        $upline_id = $request->upline_id['value'];
-        $upline = User::find($upline_id);
-
-        if(empty($upline->hierarchyList)) {
-            $hierarchyList = "-" . $upline_id . "-";
-        } else {
-            $hierarchyList = $upline->hierarchyList . $upline_id . "-";
-        }
-
-        $topLead = User::find($upline_id);
-
-        if ($topLead) {
-            if ($topLead->top_leader_id == null) {
-
-                $topLead = $topLead->id;
-
+        if ($upline_id) {
+            $upline = User::find($upline_id);
+            if(empty($upline->hierarchyList)) {
+                $hierarchyList = "-" . $upline_id . "-";
             } else {
-
-                $topLead = $topLead->top_leader_id;
-
+                $hierarchyList = $upline->hierarchyList . $upline_id . "-";
             }
 
+            if ($upline->top_leader_id == null) {
+                $top_leader_id = $upline->id;
+            } else {
+                $top_leader_id = $upline->top_leader_id;
+            }
+            $enable_bank_withdrawal = 1;
+            $is_public = $upline->is_public;
         }
 
-        $dialCode = Country::find($request->country);
+        $dial_code = $request->dial_code;
+        $phone = $request->phone;
+
+        // Remove leading '+' from dial code if present
+        $dial_code = ltrim($dial_code, '+');
+
+        // Remove leading '+' from phone number if present
+        $phone = ltrim($phone, '+');
+
+        // Check if phone number already starts with dial code
+        if (!str_starts_with($phone, $dial_code)) {
+            // Concatenate dial code and phone number
+            $phone_number = '+' . $dial_code . $phone;
+        } else {
+            // If phone number already starts with dial code, use the phone number directly
+            $phone_number = '+' . $phone;
+        }
+
+        $users = User::where('dial_code', $request->dial_code)
+            ->get();
+
+        foreach ($users as $user_phone) {
+            if ($user_phone->phone == $phone_number) {
+                throw ValidationException::withMessages(['phone' => trans('public.invalid_mobile_phone')]);
+            }
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'country' => $request->country,
-            'dial_code' => '+' . $dialCode->phone_code,
-            'phone' => '+' . $dialCode->phone_code . $request->phone,
+            'dial_code' => $request->dial_code,
+            'phone' => $phone_number,
             'upline_id' => $upline_id,
-            'top_leader_id' => $topLead,
-            'dob' => $request->dob,
+            'top_leader_id' => $top_leader_id,
+            'dob' => Carbon::parse($request->dob)->addDay()->toDateString(),
             'hierarchyList' => $hierarchyList,
-            'setting_rank_id' => $request->ranking,
-            'display_rank_id' => $request->ranking,
+            'setting_rank_id' => $request->rank,
+            'display_rank_id' => $request->rank,
             'password' => Hash::make($request->password),
-            'identification_number' => $request->identity_number,
+            'identification_number' => $request->identification_number,
             'role' => 'user',
             'kyc_approval' => 'Unverified',
+            'is_public' => $is_public,
+            'enable_bank_withdrawal' => $enable_bank_withdrawal,
         ]);
 
         $user->setReferralId();
@@ -146,10 +166,16 @@ class MemberController extends Controller
             'wallet_address' => RunningNumberService::getID('e_wallet'),
         ]);
 
-
         $user->setReferralId();
 
-        return redirect()->back()->with('title', 'New member added!')->with('success', 'The new member has been added successfully.');
+        Notification::route('mail', $user->email)
+            ->notify(new NewUserWelcomeNotification($user));
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_add_member_message"),
+            'type' => 'success',
+        ]);
     }
 
     public function getMemberListingData(Request $request, UserService $userService)
@@ -331,7 +357,7 @@ class MemberController extends Controller
             $phone_number = '+' . $phone;
         }
 
-        $users = User::where('dial_code', $dial_code)
+        $users = User::where('dial_code', $request->dial_code)
             ->whereNot('id', $user->id)
             ->where('status', 'Active')
             ->get();

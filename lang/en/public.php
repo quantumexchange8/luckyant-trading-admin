@@ -255,4 +255,5 @@ return [
     "select_upline" => "Select Upline",
     "credentials" => "Credentials",
     "extra_fund" => "Extra Fund",
+    "toast_success_add_member_message" => "Successfully added member",
 ];

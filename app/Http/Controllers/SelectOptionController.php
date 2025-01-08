@@ -140,6 +140,7 @@ class SelectOptionController extends Controller
         $countries = Country::select([
             'id',
             'name',
+            'iso2',
             'phone_code',
             'nationality',
             'translations',
@@ -158,5 +159,44 @@ class SelectOptionController extends Controller
         ->get();
 
         return response()->json($ranks);
+    }
+
+    public function getUsers(Request $request)
+    {
+        $query = User::whereNotIn('role', [
+            'super-admin',
+            'admin'
+        ])
+            ->select([
+                'id',
+                'name',
+                'email'
+            ]);
+
+        $authUser = Auth::user();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('id', []);
+        }
+
+        if ($request->user_type == 'leader') {
+            $query->where('leader_status', 1);
+        } elseif ($request->user_type == 'user') {
+            $query->where('leader_status', 0);
+        }
+
+        $users = $query->get();
+
+        return response()->json($users);
     }
 }

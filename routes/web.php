@@ -44,6 +44,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
     Route::get('getLeveragesByAccountType', [SelectOptionController::class, 'getLeveragesByAccountType']);
     Route::get('getCountries', [SelectOptionController::class, 'getCountries']);
     Route::get('getRanks', [SelectOptionController::class, 'getRanks']);
+    Route::get('getUsers', [SelectOptionController::class, 'getUsers']);
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/getTopGroups', [DashboardController::class, 'getTopGroups'])->name('getTopGroups');
