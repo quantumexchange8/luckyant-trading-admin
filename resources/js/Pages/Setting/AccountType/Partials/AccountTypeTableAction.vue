@@ -9,6 +9,7 @@ import InputLabel from "@/Components/Label.vue";
 import InputText from "@/Components/Input.vue";
 import InputError from "@/Components/InputError.vue";
 import {useForm} from "@inertiajs/vue3";
+import ToggleSwitch from 'primevue/toggleswitch';
 
 const props = defineProps({
     accountType: Object
@@ -60,6 +61,7 @@ const form = useForm({
     account_type_id: props.accountType.id,
     leverages: '',
     leaders: '',
+    allow_trade: props.accountType.allow_trade,
 })
 
 const submitForm = () => {
@@ -142,6 +144,14 @@ const closeDialog = () => {
                             :loading="loadingLeaders"
                         />
                         <InputError :message="form.errors.leaders" />
+                    </div>
+                    <div class="flex flex-col items-start gap-1 self-stretch">
+                        <InputLabel
+                            for="allow_trade"
+                            value="Allow Trade"
+                        />
+                        <ToggleSwitch v-model="form.allow_trade" />
+                        <InputError :message="form.errors.allow_trade" />
                     </div>
                 </div>
             </div>

@@ -563,6 +563,12 @@ class SettingController extends Controller
 
         $account_type = AccountType::find($request->account_type_id);
 
+        if ($account_type->allow_trade != $request->allow_trade) {
+            $account_type->update([
+                'allow_trade' => $request->allow_trade,
+            ]);
+        }
+
         $leverages = $request->leverages;
 
         if ($leverages) {
