@@ -3,7 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Payment;
+use App\Models\User;
+use App\Services\UserService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -17,18 +20,40 @@ class PendingDepositExport implements FromCollection, WithHeadings
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public function collection(): \Illuminate\Support\Collection
+    public function collection(): Collection
     {
-        $records = $this->query->get();
+        $records = $this->query
+            ->orderByDesc('created_at')
+            ->get();
+
+        $userHierarchyLists = $records->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1)
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $records->each(function ($subscriptionQuery) use ($leaders) {
+            $userService = new UserService();
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+        });
+
         $result = array();
         foreach($records as $deposits){
 
             $result[] = array(
                 'name' => $deposits->user->name,
                 'email' => $deposits->user->email,
-                'first_leader' => $deposits->user->getFirstLeader()->name ?? '-',
+                'first_leader' => $row->first_leader_name,
                 'category' => $deposits->category,
                 'asset' => $deposits->to_wallet->name,
                 'type' => $deposits->transaction_type,

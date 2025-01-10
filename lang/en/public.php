@@ -256,4 +256,9 @@ return [
     "credentials" => "Credentials",
     "extra_fund" => "Extra Fund",
     "toast_success_add_member_message" => "Successfully added member",
+    "pending_transaction" => "Pending Transaction",
+    "method" => "Method",
+    "receive" => "Receive",
+    "toast_success_approve_transaction_message" => "The transaction request has been approved successfully.",
+    "toast_success_reject_transaction_message" => "The transaction request has been rejected successfully.",
 ];

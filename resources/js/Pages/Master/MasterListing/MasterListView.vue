@@ -386,13 +386,13 @@ watchEffect(() => {
                                     <div class="py-1 flex items-center gap-3 self-stretch w-full text-gray-500">
                                         <IconUserDollar size="20" stroke-width="1.25" />
                                         <div class="text-gray-950 dark:text-white text-sm font-medium">
-                                            {{ master.active_copy_trades_count + master.active_pamm_count }} {{ $t('public.investors') }}
+                                            {{ Number(master.active_copy_trades_count) + Number(master.active_pamm_count) + Number(master.total_subscribers) }} {{ $t('public.investors') }}
                                         </div>
                                     </div>
                                     <div class="py-1 flex items-center gap-3 self-stretch text-gray-500">
                                         <IconPremiumRights size="20" stroke-width="1.25" />
                                         <div class="text-gray-950 dark:text-white text-sm font-medium">
-                                            <span class="text-primary-500">$ {{ formatAmount(master.active_copy_trades_sum_subscribe_amount ?? 0 + master.active_pamm_sum_subscription_amount ?? 0) }}</span> {{ $t('public.fund_capital') }}
+                                            <span class="text-primary-500">$ {{ formatAmount(Number(master.active_copy_trades_sum_subscribe_amount ?? 0) + Number(master.active_pamm_sum_subscription_amount ?? 0) + Number(master.extra_fund)) }}</span> {{ $t('public.fund_capital') }}
                                         </div>
                                     </div>
                                     <div class="py-1 flex items-center gap-3 self-stretch">

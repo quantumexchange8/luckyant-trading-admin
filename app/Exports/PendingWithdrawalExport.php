@@ -3,7 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Payment;
+use App\Models\User;
+use App\Services\UserService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -17,20 +20,45 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
-    public function collection(): \Illuminate\Support\Collection
+    public function collection(): Collection
     {
-        $records = $this->query->get();
+        $records = $this->query
+            ->orderByDesc('created_at')
+            ->get();
+
+        $userHierarchyLists = $records->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
+
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1)
+            ->get()
+            ->keyBy('id');
+
+        // Attach the first leader details
+        $records->each(function ($subscriptionQuery) use ($leaders) {
+            $userService = new UserService();
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+        });
+
         $result = array();
         foreach($records as $row){
+            $active_copy_trade_fund = User::find($row->user_id)->active_copy_trade()->sum('meta_balance');
+
+            $active_pamm_fund = User::find($row->user_id)->active_pamm()->sum('subscription_amount');
 
             $result[] = array(
                 'name' => $row->user->name,
                 'email' => $row->user->email,
-                'first_leader' => $row->user->getFirstLeader()->name ?? '-',
+                'first_leader' => $row->first_leader_name,
                 'category' => $row->category,
-                'asset' => $row->from_wallet->name,
+                'from' => $row->from_wallet->name,
                 'type' => $row->transaction_type,
                 'fund_type' => $row->fund_type,
                 'transaction_id' => $row->transaction_number,
@@ -46,6 +74,9 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
                 'transaction_charges' =>  number_format((float)$row->transaction_charges, 2, '.', ''),
                 'transaction_amount' =>  number_format((float)$row->transaction_amount, 2, '.', ''),
                 'conversion_amount' =>  number_format((float)$row->conversion_amount, 2, '.', ''),
+                'profit' =>  number_format((float)$row->profitAmount, 2, '.', ''),
+                'bonus' =>  number_format((float)$row->bonusAmount, 2, '.', ''),
+                'active_fund' =>  $active_copy_trade_fund + $active_pamm_fund,
                 'status' => $row->status,
                 'remarks' => $row->remarks,
             );
@@ -61,7 +92,7 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
             'Email',
             'First Leader',
             'Category',
-            'Asset',
+            'From',
             'Transaction Type',
             'Fund Type',
             'Transaction ID',
@@ -77,6 +108,9 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
             'Payment Charges',
             'Transaction Amount',
             'Conversion Amount',
+            'Profit',
+            'Bonus',
+            'Active Fund',
             'Status',
             'Remarks',
         ];

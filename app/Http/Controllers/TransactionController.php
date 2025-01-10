@@ -32,7 +32,15 @@ class TransactionController extends Controller
 {
     public function pendingTransaction()
     {
-        return Inertia::render('Transaction/TransactionPending/TransactionPending');
+        $query = Transaction::where([
+            'category' => 'wallet',
+            'status' => 'Processing',
+        ]);
+
+        return Inertia::render('Transaction/PendingTransaction/PendingTransaction', [
+            'pendingDepositCounts' => (clone $query)->where('transaction_type', 'Deposit')->count(),
+            'pendingWithdrawalCounts' => (clone $query)->where('transaction_type', 'Withdrawal')->count(),
+        ]);
     }
 
     public function transactionHistory()
@@ -42,27 +50,44 @@ class TransactionController extends Controller
         ]);
     }
 
-    public function getPendingTransaction(Request $request, $type)
+    public function getPendingTransaction(Request $request, UserService $userService)
     {
-        $authUser = Auth::user();
-        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
-        // Decode the JSON
-        $decodedColumnName = json_decode(urldecode($columnName), true);
+        $query = Transaction::with([
+            'user:id,name,email,hierarchyList',
+            'from_wallet:id,type,name,wallet_address',
+            'to_wallet:id,type,name,wallet_address',
+            'from_meta_login:id,meta_login',
+            'to_meta_login:id,meta_login,account_type',
+            'to_meta_login.accountType:id,name,slug',
+            'payment_account'
+        ])
 
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
-        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+            ->where([
+                'category' => 'wallet',
+                'transaction_type' => $request->type,
+                'status' => 'Processing',
+            ]);
 
-        $query = Transaction::query()->with(['user:id,name,email,upline_id,hierarchyList,leader_status,role', 'from_wallet', 'to_wallet', 'payment_account', 'media'])
-            ->where('status', 'Processing');
+        if ($request->type == 'Withdrawal') {
+            $query->addSelect([
+                'profitAmount' => DB::table('wallet_logs')
+                    ->selectRaw('SUM(amount)')
+                    ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
+                    ->where('wallet_logs.purpose', 'ProfitSharing'),
 
-        if ($request->filled('date')) {
-            $date = $request->input('date');
-            $dateRange = explode(' - ', $date);
-            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
-
-            $query->whereBetween('created_at', [$start_date, $end_date]);
+                'bonusAmount' => DB::table('wallet_logs')
+                    ->selectRaw('SUM(amount)')
+                    ->whereColumn('wallet_logs.user_id', 'transactions.user_id')
+                    ->whereIn('wallet_logs.purpose', [
+                        'PerformanceIncentive',
+                        'SameLevelRewards',
+                        'LotSizeRebate',
+                        'ExtraBonus'
+                    ]),
+            ]);
         }
+
+        $authUser = Auth::user();
 
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
@@ -78,71 +103,58 @@ class TransactionController extends Controller
             $query->whereIn('user_id', []);
         }
 
-        $totalPendingDepositsQuery = clone $query;
-        $totalPendingWithdrawalsQuery = clone $query;
+        $join_start_date = $request->query('joinStartDate');
+        $join_end_date = $request->query('joinEndDate');
 
-        $query = $query->where('transaction_type', $type);
+        if ($join_start_date && $join_end_date) {
+            $start_date = Carbon::createFromFormat('Y-m-d', $join_start_date)->startOfDay();
+            $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
 
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search)
-                        ->orWhere('email', 'like', $search);
-                })
-                    ->orWhereHas('to_wallet', function ($to_wallet) use ($search) {
-                        $to_wallet->where('name', 'like', $search);
-                    })
-                    ->orWhereHas('from_wallet', function ($from_wallet) use ($search) {
-                        $from_wallet->where('name', 'like', $search);
-                    })
-                    ->orWhere('transaction_number', 'like', $search)
-                    ->orWhere('amount', 'like', $search);
-            });
+            $query->whereBetween('created_at', [$start_date, $end_date]);
         }
 
-        if ($request->filled('leader')) {
-            $leader = $request->input('leader');
-            $leaderUser = User::find($leader);
-            if ($leaderUser) {
-                $query->whereIn('user_id', $leaderUser->getChildrenIds());
+        if ($request->first_leader_id) {
+            $first_leader = User::find($request->first_leader_id);
+            $childrenIds = $first_leader->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        }
+
+        if ($request->export == 'yes') {
+            if ($request->type == 'Withdrawal') {
+                return Excel::download(new PendingWithdrawalExport($query), Carbon::now() . '-pending-withdrawal-report.xlsx');
+            } elseif ($request->type == 'Deposit') {
+                return Excel::download(new PendingDepositExport($query), Carbon::now() . '-pending-deposit-report.xlsx');
             }
         }
 
-        if ($request->has('exportStatus')) {
+        $pendings = $query
+            ->orderByDesc('created_at')
+            ->get();
 
-            if ($type == 'Deposit') {
-                return Excel::download(new PendingDepositExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
-            } elseif ($type == 'Withdrawal') {
-                return Excel::download(new PendingWithdrawalExport($query), Carbon::now() . '-Pending_' . $type . '-report.xlsx');
-            }
-        }
+        // Extract all hierarchy IDs from users' hierarchyLists
+        $userHierarchyLists = $pendings->pluck('user.hierarchyList')
+            ->filter()
+            ->flatMap(fn($list) => explode('-', trim($list, '-')))
+            ->unique()
+            ->toArray();
 
-        $results = $query
-            ->orderBy($column == null ? 'created_at' : $column, $sortOrder)
-            ->paginate($request->input('paginate', 10));
+        // Load all potential leaders in bulk
+        $leaders = User::whereIn('id', $userHierarchyLists)
+            ->where('leader_status', 1) // Only load users with leader_status == 1
+            ->get()
+            ->keyBy('id');
 
-        $results->each(function ($transaction) {
-            $transaction->user->first_leader = $transaction->user->getFirstLeader()->name ?? '-';
-            $transaction->user->profile_photo_url = $transaction->user->getFirstMediaUrl('profile_photo');
-            $transaction->payment_type = strtolower($transaction->payment_method);
+        // Attach the first leader details
+        $pendings->each(function ($subscriptionQuery) use ($userService, $leaders) {
+            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
 
-            $profit = WalletLog::where('user_id', $transaction->user_id)
-                ->where('purpose', 'ProfitSharing')
-                ->sum('amount');
-
-            $bonus = WalletLog::where('user_id', $transaction->user_id)
-                ->whereIn('purpose', ['PerformanceIncentive', 'SameLevelRewards', 'LotSizeRebate'])
-                ->sum('amount');
-            $transaction->profit_amount = $profit;
-            $transaction->bonus_amount = $bonus;
-            $transaction->currency_symbol = $transaction->payment_account->of_country->currency_symbol ?? null;
+            $subscriptionQuery->first_leader_id = $firstLeader?->id;
+            $subscriptionQuery->first_leader_name = $firstLeader?->name;
+            $subscriptionQuery->first_leader_email = $firstLeader?->email;
         });
 
         return response()->json([
-            $type => $results,
-            'totalPendingDeposits' => $totalPendingDepositsQuery->where('transaction_type', 'Deposit')->sum('transaction_amount'),
-            'totalPendingWithdrawals' => $totalPendingWithdrawalsQuery->where('transaction_type', 'Withdrawal')->sum('transaction_amount'),
+            'pendings' => $pendings
         ]);
     }
 
@@ -186,9 +198,11 @@ class TransactionController extends Controller
             $wallet = Wallet::find($transaction->to_wallet_id);
 
             if ($transaction->status == 'Success') {
-                return redirect()->back()
-                    ->with('title', trans('public.invalid_action'))
-                    ->with('warning', trans('public.try_again_later'));
+                return back()->with('toast', [
+                    'title' => trans("public.invalid_action"),
+                    'message' => trans("public.try_again_later"),
+                    'type' => 'warning',
+                ]);
             }
 
             if ($transaction->transaction_type == 'Deposit') {
@@ -228,7 +242,11 @@ class TransactionController extends Controller
             }
         }
 
-        return redirect()->back()->with('title', 'Approved successfully')->with('success', 'The transaction request has been approved successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_approve_transaction_message"),
+            'type' => 'success',
+        ]);
     }
 
     public function rejectTransaction(Request $request)
@@ -265,9 +283,11 @@ class TransactionController extends Controller
             $transaction = Transaction::find($request->id);
 
             if ($transaction->status == 'Rejected') {
-                return redirect()->back()
-                    ->with('title', trans('public.invalid_action'))
-                    ->with('warning', trans('public.try_again_later'));
+                return back()->with('toast', [
+                    'title' => trans("public.invalid_action"),
+                    'message' => trans("public.try_again_later"),
+                    'type' => 'warning',
+                ]);
             }
 
             if ($transaction->transaction_type == 'Deposit') {
@@ -304,7 +324,11 @@ class TransactionController extends Controller
             }
         }
 
-        return redirect()->back()->with('title', 'Rejected successfully')->with('success', 'The transaction request has been rejected successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_reject_transaction_message"),
+            'type' => 'success',
+        ]);
     }
 
     public function getTransactionHistory(Request $request, UserService $userService)
