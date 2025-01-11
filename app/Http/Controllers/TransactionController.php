@@ -37,6 +37,22 @@ class TransactionController extends Controller
             'status' => 'Processing',
         ]);
 
+        $authUser = Auth::user();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('user_id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no need to apply whereIn
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        } else {
+            // No applicable conditions, set whereIn to empty array
+            $query->whereIn('user_id', []);
+        }
+
         return Inertia::render('Transaction/PendingTransaction/PendingTransaction', [
             'pendingDepositCounts' => (clone $query)->where('transaction_type', 'Deposit')->count(),
             'pendingWithdrawalCounts' => (clone $query)->where('transaction_type', 'Withdrawal')->count(),
