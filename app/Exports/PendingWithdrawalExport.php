@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Models\Payment;
 use App\Models\User;
 use App\Services\UserService;
 use Carbon\Carbon;

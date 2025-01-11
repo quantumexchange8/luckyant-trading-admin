@@ -22,7 +22,6 @@ import dayjs from "dayjs";
 import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker";
-import Tag from "primevue/tag";
 import PendingTransactionTableAction from "@/Pages/Transaction/PendingTransaction/PendingTransactionTableAction.vue";
 import Dialog from "primevue/dialog";
 
@@ -370,7 +369,7 @@ const closeDialog = () => {
                     v-if="selectedPendings?.length"
                     class="flex gap-3 flex-col pt-5"
                 >
-                    <div class="font-bold text-lg">
+                    <div class="font-bold text-lg dark:text-white">
                         {{ $t('public.total_amount') }}: $ {{ formatAmount(totalAmount)}}
                     </div>
                     <div class="flex items-center gap-2">

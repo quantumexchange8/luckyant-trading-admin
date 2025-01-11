@@ -33,14 +33,21 @@ const pendings = ref([]);
 const exportTable = ref('no');
 const {formatAmount, formatType} = transactionFormat();
 
-const getResults = async (filterJoinDate = null) => {
+const getResults = async () => {
     isLoading.value = true;
     try {
-        let url = `/account/getAccountPendingData?transaction_type=BalanceIn&export=${exportTable.value}`;
+        let url = `/account/getAccountPendingData?transaction_type=BalanceIn`;
 
-        if (filterJoinDate?.length > 0) {
-            const [startDate, endDate] = filterJoinDate;
-            url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+        if (selectedLeader.value) {
+            url += `&first_leader_id=${selectedLeader.value.id}`;
+        }
+
+        if (joinDatePicker.value.length > 0 && Array.isArray(joinDatePicker.value)) {
+            const [startDate, endDate] = joinDatePicker.value;
+
+            if (startDate !== null && endDate !== null) {
+                url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+            }
         }
 
         const response = await axios.get(url);
@@ -58,8 +65,6 @@ onMounted(() => {
 
 const filters = ref({
     global: {value: null, matchMode: FilterMatchMode.CONTAINS},
-    master_meta_login: {value: null, matchMode: FilterMatchMode.EQUALS},
-    "first_leader_id": {value: null, matchMode: FilterMatchMode.EQUALS},
 });
 
 const clearFilterGlobal = () => {
@@ -112,13 +117,17 @@ const getLeaders = async () => {
     }
 };
 
-watch([selectedMaster, selectedLeader], ([newMaster, newLeader]) => {
-    if (newMaster) {
-        filters.value['master_meta_login'].value = newMaster.meta_login;
+watch([selectedLeader, joinDatePicker], ([newLeader, newDateRange]) => {
+    if (newLeader) {
+        getResults();
     }
 
-    if (newLeader) {
-        filters.value['first_leader_id'].value = newLeader.id
+    if (Array.isArray(newDateRange)) {
+        const [startDate, endDate] = newDateRange;
+
+        if (startDate !== null && endDate !== null) {
+            getResults();
+        }
     }
 });
 
@@ -126,44 +135,22 @@ const clearJoinDate = () => {
     joinDatePicker.value = [];
 }
 
-watch(joinDatePicker, (newDateRange) => {
-    if (Array.isArray(newDateRange)) {
-        const [startDate, endDate] = newDateRange;
-
-        if (startDate && endDate) {
-            getResults([startDate, endDate]);
-        } else if (startDate || endDate) {
-            getResults([startDate || endDate, endDate || startDate]);
-        } else {
-            getResults();
-        }
-    } else {
-        console.warn('Invalid date range format:', newDateRange);
-    }
-})
-
 const clearAll = () => {
-    filters.value['master_meta_login'].value = null;
-    filters.value['first_leader_id'].value = null;
-    selectedMaster.value = null;
+    filters.value['global'].value = null;
     selectedLeader.value = null;
     joinDatePicker.value = [];
 }
 
 const exportReport = () => {
-    let url = `/copy_trading/getPendingSubscription?export=yes`;
+    let url = `/account/getAccountPendingData?transaction_type=BalanceIn&export=yes`;
+
+    if (selectedLeader.value) {
+        url += `&first_leader_id=${selectedLeader.value.id}`;
+    }
 
     if (joinDatePicker.value?.length > 0) {
         const [startDate, endDate] = joinDatePicker.value;
         url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-    }
-
-    if (selectedMaster.value) {
-        url += `&master_meta_login=${selectedMaster.value.meta_login}`;
-    }
-
-    if (selectedLeader.value) {
-        url += `&first_leader_id=${selectedLeader.value.id}`;
     }
 
     window.location.href = url;
@@ -193,7 +180,7 @@ watchEffect(() => {
                     tableStyle="md:min-width: 50rem"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                    :globalFilterFields="['user.name', 'user.email', 'meta_login', 'master_meta_login']"
+                    :globalFilterFields="['user.name', 'user.email', 'to_meta_login.meta_login', 'transaction_number']"
                     ref="dt"
                     :loading="isLoading"
                 >
@@ -231,17 +218,17 @@ watchEffect(() => {
                                     <SlidersOneIcon class="w-4 h-4" />
                                     Filter
                                 </Button>
-<!--                                <div class="w-full flex justify-end">-->
-<!--                                    <Button-->
-<!--                                        class="w-full md:w-28 flex gap-2"-->
-<!--                                        severity="secondary"-->
-<!--                                        @click="exportReport"-->
-<!--                                        :disabled="exportTable==='yes'"-->
-<!--                                    >-->
-<!--                                        <CloudDownloadIcon class="w-4 h-4" />-->
-<!--                                        Export-->
-<!--                                    </Button>-->
-<!--                                </div>-->
+                                <div class="w-full flex justify-end">
+                                    <Button
+                                        class="w-full md:w-28 flex gap-2"
+                                        severity="secondary"
+                                        @click="exportReport"
+                                        :disabled="exportTable ==='yes'"
+                                    >
+                                        <CloudDownloadIcon class="w-4 h-4" />
+                                        Export
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -335,7 +322,7 @@ watchEffect(() => {
                             </template>
                         </Column>
                         <Column
-                            field="to_meta_login"
+                            field="to_meta_login.meta_login"
                             class="table-cell min-w-40"
                         >
                             <template #header>
@@ -385,35 +372,6 @@ watchEffect(() => {
 
     <Popover ref="op">
         <div class="flex flex-col gap-6 w-60">
-            <!-- Filter Role-->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    {{ $t('public.filter_by_master') }}
-                </div>
-                <Select
-                    v-model="selectedMaster"
-                    :options="masters"
-                    optionLabel="trading_user.name"
-                    placeholder="Select a master"
-                    class="w-full"
-                    filter
-                    :filter-fields="['trading_user.name', 'meta_login']"
-                    :loading="loadingMasters"
-                >
-                    <template #value="slotProps">
-                        <div v-if="slotProps.value" class="flex items-center">
-                            {{ slotProps.value.trading_user.name }}
-                        </div>
-                        <span v-else>{{ slotProps.placeholder }}</span>
-                    </template>
-                    <template #option="slotProps">
-                        <div class="flex items-center gap-1 max-w-[220px] truncate">
-                            <span>{{ slotProps.option.trading_user.name }}</span> <span class="text-gray-400">{{ slotProps.option.meta_login }}</span>
-                        </div>
-                    </template>
-                </Select>
-            </div>
-
             <!-- Filter Leader-->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">

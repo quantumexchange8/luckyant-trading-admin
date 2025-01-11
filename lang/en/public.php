@@ -261,4 +261,5 @@ return [
     "receive" => "Receive",
     "toast_success_approve_transaction_message" => "The transaction request has been approved successfully.",
     "toast_success_reject_transaction_message" => "The transaction request has been rejected successfully.",
+    "total_amount" => "Total Amount",
 ];

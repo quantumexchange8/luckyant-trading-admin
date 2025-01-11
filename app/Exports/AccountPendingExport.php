@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class PendingDepositExport implements FromCollection, WithHeadings
+class AccountPendingExport implements FromCollection, WithHeadings
 {
     private $query;
 
@@ -50,21 +50,17 @@ class PendingDepositExport implements FromCollection, WithHeadings
         foreach($records as $record){
 
             $result[] = array(
+                'date' => Carbon::parse($record->created_at)->format('Y-m-d'),
                 'name' => $record->user->name,
                 'email' => $record->user->email,
                 'first_leader' => $record->first_leader_name,
-                'category' => $record->category,
-                'asset' => $record->to_wallet->name,
                 'type' => $record->transaction_type,
-                'fund_type' => $record->fund_type,
+                'from' => $record->from_wallet->name,
+                'to' => $record->to_meta_login()->first()->meta_login,
+                'account_type' => $record->to_meta_login()->first()->accountType->name,
                 'transaction_id' => $record->transaction_number,
-                'txn_hash' => $record->txn_hash,
-                'to_wallet_address' => $record->to_wallet_address,
-                'payment_method' => $record->payment_method,
-                'payment_account_name' => $record->setting_payment->payment_account_name ?? '',
-                'account_number' => $record->setting_payment->account_no ?? '',
-                'date' => Carbon::parse($record->created_at)->format('Y-m-d'),
                 'amount' =>  number_format((float)$record->amount, 2, '.', ''),
+                'fund_type' => $record->fund_type,
                 'status' => $record->status,
                 'remarks' => $record->remarks,
             );
@@ -76,21 +72,17 @@ class PendingDepositExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
+            'Date',
             'Name',
             'Email',
             'First Leader',
-            'Category',
-            'Asset',
-            'Transaction Type',
-            'Fund Type',
+            'Type',
+            'From',
+            'To',
+            'Account Type',
             'Transaction ID',
-            'Transaction Hash',
-            'To Wallet Address',
-            'Payment Method',
-            'Payment Account Name',
-            'Account',
-            'Date',
             'Amount',
+            'Fund Type',
             'Status',
             'Remarks',
         ];

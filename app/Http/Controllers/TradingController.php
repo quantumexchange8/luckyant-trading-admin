@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AccountPendingExport;
 use App\Exports\TransactionsExport;
 use App\Http\Requests\BalanceAdjustmentRequest;
 use App\Models\CopyTradeTransaction;
@@ -551,18 +552,14 @@ class TradingController extends Controller
             $query->whereIn('user_id', []);
         }
 
+        if ($request->first_leader_id) {
+            $first_leader = User::find($request->first_leader_id);
+            $childrenIds = $first_leader->getChildrenIds();
+            $query->whereIn('user_id', $childrenIds);
+        }
+
         if ($request->export == 'yes') {
-            if ($request->master_meta_login) {
-                $query->where('master_meta_login', $request->master_meta_login);
-            }
-
-            if ($request->first_leader_id) {
-                $first_leader = User::find($request->first_leader_id);
-                $childrenIds = $first_leader->getChildrenIds();
-                $query->whereIn('user_id', $childrenIds);
-            }
-
-            return Excel::download(new PendingSubscriberExport($query), Carbon::now() . '-pending-' . $request->transaction_type . '-report.xlsx');
+            return Excel::download(new AccountPendingExport($query), Carbon::now() . '-pending-' . $request->transaction_type . '-report.xlsx');
         }
 
         $pendings = $query->select([
