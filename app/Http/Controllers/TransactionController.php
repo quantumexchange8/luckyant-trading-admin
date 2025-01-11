@@ -59,7 +59,8 @@ class TransactionController extends Controller
             'from_meta_login:id,meta_login',
             'to_meta_login:id,meta_login,account_type',
             'to_meta_login.accountType:id,name,slug',
-            'payment_account'
+            'payment_account',
+            'media'
         ])
 
             ->where([

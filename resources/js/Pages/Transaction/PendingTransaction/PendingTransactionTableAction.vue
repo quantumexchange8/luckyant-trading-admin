@@ -8,7 +8,7 @@ import {
 import {ref} from "vue";
 import {transactionFormat} from "@/Composables/index.js";
 import dayjs from "dayjs";
-import Tag from "primevue/tag";
+import Image from "primevue/image";
 import Textarea from "primevue/textarea";
 import InputLabel from "@/Components/Label.vue";
 import {useForm} from "@inertiajs/vue3";
@@ -180,6 +180,24 @@ const closeDialog = () => {
                     <div class="flex flex-col text-gray-950 dark:text-white text-sm font-medium">
                         <span>{{ pending.first_leader_name }}</span>
                         <span class="text-gray-400">{{ pending.first_leader_email }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="pending.transaction_type === 'Deposit' && pending.media.length > 0" class="flex flex-col md:flex-row md:items-start gap-1 self-stretch pt-5">
+                <div class="w-[140px] text-gray-500 text-xs font-medium">
+                    {{ $t('public.payment_slip') }}
+                </div>
+                <div class="flex gap-2 col-span-2 items-center self-stretch">
+                    <div
+                        v-for="media in pending.media"
+                    >
+                        <Image
+                            :src="media.original_url"
+                            alt="Image"
+                            imageClass="max-w-full h-12 object-contain rounded"
+                            preview
+                        />
                     </div>
                 </div>
             </div>
