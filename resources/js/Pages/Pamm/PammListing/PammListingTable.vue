@@ -28,19 +28,29 @@ const subscriptions = ref([]);
 const exportTable = ref('no');
 const {formatAmount} = transactionFormat();
 
-const getResults = async (filterJoinDate = null, filterTerminationDate = null, filterFundType = null) => {
+const getResults = async (filterFundType = null) => {
     isLoading.value = true;
     try {
         let url = `/pamm/getPammListingData?export=${exportTable.value}`;
 
-        if (filterJoinDate?.length > 0) {
-            const [startDate, endDate] = filterJoinDate;
-            url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+        if (selectedLeader.value) {
+            url += `&first_leader_id=${selectedLeader.value.id}`;
         }
 
-        if (filterTerminationDate?.length > 0) {
-            const [startDate, endDate] = filterTerminationDate;
-            url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+        if (joinDatePicker.value.length > 0 && Array.isArray(joinDatePicker.value)) {
+            const [startDate, endDate] = joinDatePicker.value;
+
+            if (startDate !== null && endDate !== null) {
+                url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+            }
+        }
+
+        if (terminateDatePicker.value.length > 0 && Array.isArray(terminateDatePicker.value)) {
+            const [startDate, endDate] = terminateDatePicker.value;
+
+            if (startDate !== null && endDate !== null) {
+                url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
+            }
         }
 
         if (filterFundType) {
@@ -63,7 +73,6 @@ onMounted(() => {
 const filters = ref({
     global: {value: null, matchMode: FilterMatchMode.CONTAINS},
     master_meta_login: {value: null, matchMode: FilterMatchMode.EQUALS},
-    "first_leader_id": {value: null, matchMode: FilterMatchMode.EQUALS},
     status: {value: null, matchMode: FilterMatchMode.EQUALS},
 });
 
@@ -72,7 +81,7 @@ const clearFilterGlobal = () => {
 }
 
 watchEffect(() => {
-    if (usePage().props.title !== null) {
+    if (usePage().props.toast !== null) {
         getResults();
     }
 });
@@ -80,6 +89,9 @@ watchEffect(() => {
 const getSeverity = (status) => {
     switch (status) {
         case 'Terminated':
+            return 'danger';
+
+        case 'Rejected':
             return 'danger';
 
         case 'Active':
@@ -120,7 +132,7 @@ const leaders = ref();
 const loadingLeaders = ref(false);
 const selectedLeader = ref();
 const joinDatePicker = ref([]);
-const terminateDatePicker = ref();
+const terminateDatePicker = ref([]);
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -134,13 +146,29 @@ const getLeaders = async () => {
     }
 };
 
-watch([selectedMaster, selectedLeader], ([newMaster, newLeader]) => {
+watch([selectedMaster, selectedLeader, joinDatePicker, terminateDatePicker], ([newMaster, newLeader, newDateRange, newTerminateRange], [oldMaster, oldLeader, oldDateRange, oldTerminateRange]) => {
     if (newMaster) {
         filters.value['master_meta_login'].value = newMaster.meta_login;
     }
 
     if (newLeader) {
-        filters.value['first_leader_id'].value = newLeader.id
+        getResults();
+    }
+
+    if (Array.isArray(newDateRange) && newDateRange !== oldDateRange) {
+        const [startDate, endDate] = newDateRange;
+
+        if (startDate !== null && endDate !== null) {
+            getResults();
+        }
+    }
+
+    if (Array.isArray(newTerminateRange) && newTerminateRange !== oldTerminateRange) {
+        const [startDate, endDate] = newTerminateRange;
+
+        if (startDate !== null && endDate !== null) {
+            getResults();
+        }
     }
 });
 
@@ -148,51 +176,18 @@ const clearJoinDate = () => {
     joinDatePicker.value = [];
 }
 
-watch(joinDatePicker, (newDateRange) => {
-    if (Array.isArray(newDateRange)) {
-        const [startDate, endDate] = newDateRange;
-
-        if (startDate && endDate) {
-            getResults([startDate, endDate], terminateDatePicker.value, selectedFundType.value);
-        } else if (startDate || endDate) {
-            getResults([startDate || endDate, endDate || startDate], terminateDatePicker.value, selectedFundType.value);
-        } else {
-            getResults();
-        }
-    } else {
-        console.warn('Invalid date range format:', newDateRange);
-    }
-})
-
 const clearTerminateDate = () => {
     terminateDatePicker.value = [];
 }
 
-watch(terminateDatePicker, (newDateRange) => {
-    if (Array.isArray(newDateRange)) {
-        const [startDate, endDate] = newDateRange;
-
-        if (startDate && endDate) {
-            getResults(null, [startDate, endDate], selectedFundType.value);
-        } else if (startDate || endDate) {
-            getResults(null, [startDate || endDate, endDate || startDate], selectedFundType.value);
-        } else {
-            getResults();
-        }
-    } else {
-        console.warn('Invalid date range format:', newDateRange);
-    }
-})
-
 const selectedFundType = ref('');
 
 watch(selectedFundType, (newFundType) => {
-    getResults(joinDatePicker.value, terminateDatePicker.value, newFundType);
+    getResults(newFundType);
 })
 
 const clearAll = () => {
     filters.value['master_meta_login'].value = null;
-    filters.value['first_leader_id'].value = null;
     filters.value['status'].value = null;
     selectedMaster.value = null;
     selectedLeader.value = null;

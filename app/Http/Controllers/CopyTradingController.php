@@ -157,6 +157,12 @@ class CopyTradingController extends Controller
             }
         }
 
+        if ($request->first_leader_id) {
+            $first_leader = User::find($request->first_leader_id);
+            $childrenIds = $first_leader->getChildrenIds();
+            $subscriptionQuery->whereIn('user_id', $childrenIds);
+        }
+
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
@@ -174,12 +180,6 @@ class CopyTradingController extends Controller
         if ($request->export == 'yes') {
             if ($request->master_meta_login) {
                 $subscriptionQuery->where('master_meta_login', $request->master_meta_login);
-            }
-
-            if ($request->first_leader_id) {
-                $first_leader = User::find($request->first_leader_id);
-                $childrenIds = $first_leader->getChildrenIds();
-                $subscriptionQuery->whereIn('user_id', $childrenIds);
             }
 
             if ($request->status) {
@@ -576,6 +576,12 @@ class CopyTradingController extends Controller
             $terminationQuery->whereBetween('termination_date', [$start_date, $end_date]);
         }
 
+        if ($request->first_leader_id) {
+            $first_leader = User::find($request->first_leader_id);
+            $childrenIds = $first_leader->getChildrenIds();
+            $terminationQuery->whereIn('user_id', $childrenIds);
+        }
+
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
             $childrenIds = $authUser->getChildrenIds();
             $childrenIds[] = $authUser->id;
@@ -593,12 +599,6 @@ class CopyTradingController extends Controller
         if ($request->export == 'yes') {
             if ($request->master_meta_login) {
                 $terminationQuery->where('master_meta_login', $request->master_meta_login);
-            }
-
-            if ($request->first_leader_id) {
-                $first_leader = User::find($request->first_leader_id);
-                $childrenIds = $first_leader->getChildrenIds();
-                $terminationQuery->whereIn('user_id', $childrenIds);
             }
 
             return Excel::download(new TerminationFeeExport($terminationQuery), Carbon::now() . '-copy-trade-terminate-report.xlsx');
