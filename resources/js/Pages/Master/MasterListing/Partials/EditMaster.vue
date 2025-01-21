@@ -22,15 +22,14 @@ const form = useForm({
     master_id: props.master.id,
     category: props.master.category,
     type: props.master.type,
-    strategy_type: props.master.strategy_type,
     max_fund_percentage: props.master.max_fund_percentage,
-    min_investment: props.master.min_join_equity,
-    sharing_profit: props.master.sharing_profit,
-    market_profit: props.master.market_profit,
-    company_profit: props.master.company_profit,
+    min_investment: Number(props.master.min_join_equity),
+    sharing_profit: Number(props.master.sharing_profit),
+    market_profit: Number(props.master.market_profit),
+    company_profit: Number(props.master.company_profit),
     join_period: props.master.join_period,
     roi_period: props.master.roi_period,
-    extra_fund: props.master.extra_fund,
+    extra_fund: Number(props.master.extra_fund),
     estimated_monthly_returns: props.master.estimated_monthly_returns,
     estimated_lot_size: props.master.estimated_lot_size,
     total_subscribers: props.master.total_subscribers,
@@ -128,7 +127,7 @@ const closeDialog = () => {
     <form>
         <div class="flex flex-col gap-6 items-center self-stretch">
             <div class="flex flex-col gap-3 items-center self-stretch">
-                <span class="font-bold text-sm text-surface-950 dark:text-white w-full text-left">{{ $t('public.basics') }}</span>
+                <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.basics') }}</span>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 w-full">
                     <div class="flex flex-col items-start gap-1 self-stretch">
                         <InputLabel
@@ -155,34 +154,6 @@ const closeDialog = () => {
                             </div>
                         </div>
                         <InputError :message="form.errors.category" />
-                    </div>
-
-                    <!-- Strategy Type -->
-                    <div class="flex flex-col items-start gap-1 self-stretch">
-                        <InputLabel
-                            for="strategy_type"
-                            :value="$t('public.strategy_type')"
-                            :invalid="!!form.errors.strategy_type"
-                        />
-                        <div class="flex flex-wrap gap-4">
-                            <div class="flex items-center">
-                                <RadioButton
-                                    v-model="form.strategy_type"
-                                    inputId="strategy_type_hofi"
-                                    value="HOFI"
-                                />
-                                <InputLabel for="strategy_type_hofi" class="ml-2">HOFI</InputLabel>
-                            </div>
-                            <div class="flex items-center">
-                                <RadioButton
-                                    v-model="form.strategy_type"
-                                    inputId="strategy_type_alpha"
-                                    value="Alpha"
-                                />
-                                <InputLabel for="strategy_type_alpha" class="ml-2">Alpha</InputLabel>
-                            </div>
-                        </div>
-                        <InputError :message="form.errors.strategy_type" />
                     </div>
 
                     <!-- PAMM Type -->
@@ -419,7 +390,7 @@ const closeDialog = () => {
             </div>
 
             <div class="flex flex-col gap-3 items-center self-stretch">
-                <span class="font-bold text-sm text-surface-950 dark:text-white w-full text-left">{{ $t('public.join_setting') }}</span>
+                <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.join_setting') }}</span>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 w-full">
                     <!-- Min Investment -->
                     <div class="flex flex-col items-start gap-1 self-stretch">
@@ -551,34 +522,11 @@ const closeDialog = () => {
                         />
                         <InputError :message="form.errors.join_period" />
                     </div>
-
-                    <!-- Max Fund Percentage -->
-                    <div
-                        v-if="form.strategy_type === 'Alpha'"
-                        class="flex flex-col items-start gap-1 self-stretch"
-                    >
-                        <InputLabel
-                            for="max_fund_percentage"
-                            :value="$t('public.max_fund_percentage')"
-                            :invalid="!!form.errors.max_fund_percentage"
-                        />
-                        <InputNumber
-                            v-model="form.max_fund_percentage"
-                            inputId="max_fund_percentage"
-                            class="w-full"
-                            :min="0"
-                            fluid
-                            placeholder="eg. 20%"
-                            suffix="%"
-                            :invalid="!!form.errors.max_fund_percentage"
-                        />
-                        <InputError :message="form.errors.max_fund_percentage" />
-                    </div>
                 </div>
             </div>
 
             <div class="flex flex-col gap-3 items-center self-stretch">
-                <span class="font-bold text-sm text-surface-950 dark:text-white w-full text-left">{{ $t('public.upload_image') }}</span>
+                <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.upload_image') }}</span>
                 <div class="flex flex-col items-start gap-3 self-stretch">
                     <span class="text-xs text-gray-500">{{ $t('public.upload_image_caption') }}</span>
                     <div class="flex flex-col gap-1 items-start self-stretch">

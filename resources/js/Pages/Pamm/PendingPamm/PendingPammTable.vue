@@ -344,14 +344,15 @@ watchEffect(() => {
                             </template>
                         </Column>
                         <Column
-                            field="strategy"
-                            class="table-cell"
+                            field="platform"
+                            sortable
+                            class="table-cell min-w-52"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.strategy') }}</span>
+                                <span class="block">{{ $t('public.account_type') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ slotProps.data.strategy_type }}</span>
+                                <span class="text-xs font-semibold uppercase">{{ $t(`public.${slotProps.data.master.trading_user.from_account_type.slug}`) }}</span>
                             </template>
                         </Column>
                         <Column

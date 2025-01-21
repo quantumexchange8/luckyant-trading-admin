@@ -38,8 +38,9 @@ class PammController extends Controller
         $pendingQuery = PammSubscription::query()
             ->with([
                 'user:id,name,email,hierarchyList',
-                'master:id,meta_login,strategy_type',
-                'master.tradingUser:id,meta_login,name,company'
+                'master:id,meta_login',
+                'master.tradingUser:id,meta_login,name,company,account_type',
+                'master.tradingUser.from_account_type',
             ])
             ->where('status', 'Pending');
 
@@ -90,7 +91,6 @@ class PammController extends Controller
             'subscription_amount',
             'master_id',
             'master_meta_login',
-            'strategy_type',
             'created_at',
         ])
             ->orderByDesc('created_at')
@@ -216,8 +216,9 @@ class PammController extends Controller
     {
         $subscriptionQuery = PammSubscription::with([
             'user:id,name,email,hierarchyList',
-            'master:id,meta_login,type,strategy_type',
-            'master.tradingUser:id,meta_login,name,company'
+            'master:id,meta_login',
+            'master.tradingUser:id,meta_login,name,company,account_type',
+            'master.tradingUser.from_account_type',
         ]);
 
         $authUser = Auth::user();
@@ -291,7 +292,6 @@ class PammController extends Controller
             'id',
             'user_id',
             'meta_login',
-            'strategy_type',
             'subscription_amount',
             'demo_fund',
             'master_id',

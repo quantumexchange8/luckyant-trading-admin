@@ -22,6 +22,22 @@ const getJoinedDays = (data) => {
 
     return endDate.diff(approvalDate, 'day'); // Calculate the difference in days
 };
+
+const getSeverity = (status) => {
+    switch (status) {
+        case 'hofi':
+            return 'warn';
+
+        case 'alpha':
+            return 'info';
+
+        case 'standard_account':
+            return 'success';
+
+        case 'ecn_account':
+            return 'secondary';
+    }
+}
 </script>
 
 <template>
@@ -76,10 +92,13 @@ const getJoinedDays = (data) => {
                         {{ $t('public.master') }}
                     </div>
                     <div class="flex flex-col text-gray-950 dark:text-white text-sm font-medium">
-                        <span>{{ termination.master.trading_user.name }} <Tag
-                            :severity="termination.master.strategy_type === 'HOFI' ? 'warn' : 'info'"
-                            :value="termination.master.strategy_type"
-                        /></span>
+                        <div>
+                            {{ termination.master.trading_user.name }}
+                            <Tag
+                                :severity="getSeverity(termination.master.trading_user.from_account_type.slug)"
+                                :value="$t(`public.${termination.master.trading_user.from_account_type.slug}`)"
+                            />
+                        </div>
                         <span class="text-gray-400">{{ termination.master_meta_login }}</span>
                     </div>
                 </div>

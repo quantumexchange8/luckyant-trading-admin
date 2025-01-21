@@ -1263,11 +1263,14 @@ class MemberController extends Controller
                 ]);
 
                 if ($user->is_public) {
-                    $public_masters = Master::where([
-                        'strategy_type' => 'HOFI',
-                        'is_public' => 1,
-                        'status' => 'Active',
-                    ])
+                    $public_masters = Master::query()
+                        ->whereHas('trading_account', function ($query) {
+                            $query->where('account_type', 1);
+                        })
+                        ->where([
+                            'is_public' => 1,
+                            'status' => 'Active',
+                        ])
                         ->get();
 
                     foreach ($public_masters as $master) {

@@ -119,8 +119,9 @@ class CopyTradingController extends Controller
     {
         $subscriptionQuery = SubscriptionBatch::with([
             'user:id,name,email,hierarchyList',
-            'master:id,meta_login,strategy_type',
-            'master.tradingUser:id,meta_login,name,company'
+            'master:id,meta_login',
+            'master.tradingUser:id,meta_login,name,company,account_type',
+            'master.tradingUser.from_account_type',
         ]);
 
         $authUser = Auth::user();
@@ -200,7 +201,6 @@ class CopyTradingController extends Controller
             'master_id',
             'master_meta_login',
             'type',
-            'strategy_type',
             'approval_date',
             'termination_date',
             'status',
@@ -248,8 +248,9 @@ class CopyTradingController extends Controller
         $pendingQuery = Subscriber::query()
             ->with([
                 'user:id,name,email,hierarchyList',
-                'master:id,meta_login,strategy_type',
-                'master.tradingUser:id,meta_login,name,company'
+                'master:id,meta_login',
+                'master.tradingUser:id,meta_login,name,company,account_type',
+                'master.tradingUser.from_account_type'
             ])
             ->where('status', 'Pending');
 
@@ -389,7 +390,6 @@ class CopyTradingController extends Controller
                 'meta_balance' => $subscription_amount,
                 'master_id' => $subscriber->master_id,
                 'type' => $subscriber->master->type,
-                'strategy_type' => $subscriber->master->strategy_type,
                 'subscription_number' => $subscription_number,
                 'subscription_period' => $subscriber->roi_period,
                 'transaction_id' => $subscriber->transaction_id,
@@ -429,7 +429,6 @@ class CopyTradingController extends Controller
                 'master_id' => $subscriber->master_id,
                 'master_meta_login' => $subscriber->master_meta_login,
                 'type' => $subscriber->master->type,
-                'strategy_type' => $subscriber->master->strategy_type,
                 'subscriber_id' => $subscriber->id,
                 'subscription_id' => $subscription->id,
                 'subscription_number' => $subscription_number,
@@ -546,8 +545,9 @@ class CopyTradingController extends Controller
 
         $terminationQuery = SubscriptionPenaltyLog::with([
             'user:id,name,email,hierarchyList',
-            'master:id,meta_login,type,strategy_type',
-            'master.tradingUser:id,meta_login,name,company',
+            'master:id,meta_login,type',
+            'master.tradingUser:id,meta_login,name,company,account_type',
+            'master.tradingUser.from_account_type',
             'master.masterManagementFee',
         ])
             ->whereHas('master', function ($query) use ($category) {
@@ -669,9 +669,9 @@ class CopyTradingController extends Controller
     {
         $switchQuery = SwitchMaster::with([
             'user:id,name,email,hierarchyList',
-            'old_master:id,meta_login,type,strategy_type',
+            'old_master:id,meta_login,type',
             'old_master.tradingUser:id,meta_login,name,company',
-            'new_master:id,meta_login,type,strategy_type',
+            'new_master:id,meta_login,type',
             'new_master.tradingUser:id,meta_login,name,company',
         ])
             ->whereNot('status', 'Pending');

@@ -34,7 +34,6 @@ const selectedSort = ref('latest');
 const isLoading = ref(false);
 const tag = ref();
 const masterType = ref();
-const strategyType = ref();
 const pammType= ref();
 const status = ref();
 const currentPage = ref(1);
@@ -52,6 +51,7 @@ const op = ref();
 const toggle = (event) => {
     op.value.toggle(event);
     getLeaders();
+    getAccountTypes();
 }
 
 const leaders = ref();
@@ -67,6 +67,22 @@ const getLeaders = async () => {
         console.error('Error fetching leaders:', error);
     } finally {
         loadingLeaders.value = false;
+    }
+};
+
+const selectedAccountType = ref();
+const accountTypes = ref([]);
+const loadingAccountTypes = ref(false);
+
+const getAccountTypes = async () => {
+    loadingAccountTypes.value = true;
+    try {
+        const response = await axios.get('/getAccountTypes');
+        accountTypes.value = response.data;
+    } catch (error) {
+        console.error('Error fetching account types:', error);
+    } finally {
+        loadingAccountTypes.value = false;
     }
 };
 
@@ -93,8 +109,8 @@ const getResults = async (page = 1, rowsPerPage = 12) => {
             url += `&category=${masterType.value}`;
         }
 
-        if (strategyType.value) {
-            url += `&strategy_type=${strategyType.value}`;
+        if (selectedAccountType.value) {
+            url += `&account_type=${selectedAccountType.value.id}`;
         }
 
         if (pammType.value) {
@@ -132,7 +148,7 @@ watch(search, debounce(() => {
     getResults(currentPage.value, rowsPerPage.value);
 }, 300));
 
-watch([selectedSort, selectedLeaders, tag, masterType, strategyType, pammType, status], () => {
+watch([selectedSort, selectedLeaders, tag, masterType, selectedAccountType, pammType, status], () => {
     getResults(currentPage.value, rowsPerPage.value);
 });
 
@@ -144,7 +160,7 @@ const clearAll = () => {
     selectedLeaders.value = [];
     tag.value = null;
     masterType.value = null;
-    strategyType.value = null;
+    selectedAccountType.value = null;
     pammType.value = null;
     status.value = null;
 }
@@ -154,6 +170,22 @@ watchEffect(() => {
         getResults(currentPage.value, rowsPerPage.value);
     }
 });
+
+const getSeverity = (status) => {
+    switch (status) {
+        case 'hofi':
+            return 'warn';
+
+        case 'alpha':
+            return 'info';
+
+        case 'standard_account':
+            return 'success';
+
+        case 'ecn_account':
+            return 'secondary';
+    }
+}
 </script>
 
 <template>
@@ -336,8 +368,8 @@ watchEffect(() => {
                                     {{ formatAmount(master.sharing_profit, 0) + '%&nbsp;' + $t('public.profit') }}
                                 </Tag>
                                 <Tag
-                                    :severity="master.strategy_type === 'HOFI' ? 'warn' : 'info'"
-                                    :value="master.strategy_type"
+                                    :severity="getSeverity(master.trading_user.from_account_type.slug)"
+                                    :value="$t(`public.${master.trading_user.from_account_type.slug}`)"
                                 />
                             </div>
 
@@ -438,6 +470,34 @@ watchEffect(() => {
                 />
             </div>
 
+            <!-- Filter Account Types -->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_by_type')}}
+                </div>
+                <Select
+                    v-model="selectedAccountType"
+                    :options="accountTypes"
+                    filter
+                    optionLabel="name"
+                    :placeholder="$t('public.select_account_type')"
+                    class="w-full"
+                    :loading="loadingAccountTypes"
+                >
+                    <template #value="slotProps">
+                        <div v-if="slotProps.value" class="flex items-center">
+                            <div>{{ slotProps.value.name }} ({{ $t(`public.${slotProps.value.slug}`)}})</div>
+                        </div>
+                        <span v-else>{{ slotProps.placeholder }}</span>
+                    </template>
+                    <template #option="slotProps">
+                        <div class="flex items-center gap-1 w-full truncate">
+                            <span>{{ slotProps.option.name }} ({{ $t(`public.${slotProps.option.slug}`)}})</span>
+                        </div>
+                    </template>
+                </Select>
+            </div>
+
             <!-- Filter tags -->
             <div class="flex flex-col gap-2 items-center self-stretch">
                 <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
@@ -472,23 +532,6 @@ watchEffect(() => {
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
                         <RadioButton v-model="masterType" inputId="master_type_pamm" value="pamm" class="w-4 h-4" />
                         <label for="master_type_pamm">PAMM</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter strategy -->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    {{ $t('public.filter_by_strategy')}}
-                </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="strategyType" inputId="strategy_type_hofi" value="HOFI" class="w-4 h-4" />
-                        <label for="strategy_type_hofi">HOFI</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="strategyType" inputId="strategy_type_alpha" value="Alpha" class="w-4 h-4" />
-                        <label for="strategy_type_alpha">Alpha</label>
                     </div>
                 </div>
             </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\MasterExport;
+use App\Models\AccountType;
 use App\Models\Group;
 use App\Models\Master;
 use App\Models\MasterLeader;
@@ -508,14 +509,15 @@ class MasterController extends Controller
         $leaders = $request->input('leaders');
         $tag = $request->input('tag', '');
         $masterType = $request->input('category', '');
-        $strategy_type = $request->input('strategy_type', '');
+        $account_type = $request->input('account_type', '');
         $pamm_type = $request->input('pamm_type', '');
         $status = $request->input('status', '');
 
         // Fetch paginated masters
         $mastersQuery = Master::query()
             ->with([
-                'tradingUser:id,meta_login,name',
+                'tradingUser:id,meta_login,name,account_type',
+                'tradingUser.from_account_type',
                 'leaders:user_id,name',
                 'media'
             ])
@@ -607,8 +609,10 @@ class MasterController extends Controller
         }
 
         // Apply strategy type filter
-        if (!empty($strategy_type)) {
-            $mastersQuery->where('strategy_type', $strategy_type);
+        if (!empty($account_type)) {
+            $mastersQuery->whereHas('tradingUser', function ($account) use ($account_type) {
+                $account->where('account_type', $account_type);
+            });
         }
 
         // Apply pamm type filter
@@ -664,8 +668,7 @@ class MasterController extends Controller
             'leader' => ['required'],
             'category' => ['required'],
             'type' => ['required_if:category,pamm'],
-            'strategy_type' => ['required'],
-            'max_fund_percentage' => ['required_if:strategy_type,Alpha'],
+            'account_type_id' => ['required'],
             'estimated_monthly_return' => ['required'],
             'estimated_lot_size' => ['required'],
             'max_drawdown' => ['required'],
@@ -677,8 +680,7 @@ class MasterController extends Controller
             'leader' => trans('public.leader'),
             'category' => trans('public.type'),
             'type' => trans('public.pamm_type'),
-            'strategy_type' => trans('public.strategy_type'),
-            'max_fund_percentage' => trans('public.max_fund_percentage'),
+            'account_type_id' => trans('public.account_type'),
             'estimated_monthly_return' => trans('public.estimated_monthly_returns'),
             'estimated_lot_size' => trans('public.estimated_lot_size'),
             'max_drawdown' => trans('public.max_drawdown'),
@@ -737,7 +739,6 @@ class MasterController extends Controller
             'user_id' => $user['id'],
             'category' => $request->category,
             'type' => $request->type ?? 'CopyTrade',
-            'strategy_type' => $request->strategy_type,
             'min_join_equity' => $request->min_investment,
             'sharing_profit' => $request->sharing_profit,
             'market_profit' => $request->market_profit,
@@ -758,10 +759,6 @@ class MasterController extends Controller
             'status' => 'Active',
         ]);
 
-        if ($master->strategy_type == 'Alpha') {
-            $master->max_fund_percentage = $request->max_fund_percentage;
-        }
-
         $metaService = new MetaFiveService();
         $connection = $metaService->getConnectionStatus();
 
@@ -774,8 +771,8 @@ class MasterController extends Controller
         }
 
         $userModel = User::find($user['id']);
-        $group = Group::firstWhere('display', $master->strategy_type);
-        $metaAccount = $metaService->createUser($userModel, $group, 500);
+        $account_type = AccountType::find($request->account_type_id);
+        $metaAccount = $metaService->createUser($userModel, $account_type->name, 500);
         $trading_account = TradingAccount::firstWhere('meta_login', $metaAccount['login']);
 
         $master->trading_account_id = $trading_account->id;
@@ -792,15 +789,17 @@ class MasterController extends Controller
         }
         $master->save();
 
-        $managementFees = $request->input('management_fee', []);
+        $managementFees = $request->input('management_fee');
 
-        foreach ($managementFees as $fee) {
-            MasterManagementFee::create([
-                'master_id' => $master->id,
-                'meta_login' => $master->meta_login,
-                'penalty_days' => $fee['days'],
-                'penalty_percentage' => $fee['percentage'],
-            ]);
+        if ($managementFees) {
+            foreach ($managementFees as $fee) {
+                MasterManagementFee::create([
+                    'master_id' => $master->id,
+                    'meta_login' => $master->meta_login,
+                    'penalty_days' => $fee['days'],
+                    'penalty_percentage' => $fee['percentage'],
+                ]);
+            }
         }
 
         return back()->with('toast', [
@@ -817,7 +816,6 @@ class MasterController extends Controller
         $master->update([
             'category' => $request->category,
             'type' => $request->type,
-            'strategy_type' => $request->strategy_type,
             'min_join_equity' => $request->min_investment,
             'sharing_profit' => $request->sharing_profit,
             'market_profit' => $request->market_profit,
@@ -836,11 +834,6 @@ class MasterController extends Controller
             'can_revoke' => $request->can_revoke,
             'delivery_requirement' => $request->delivery_requirement,
         ]);
-
-        if ($master->strategy_type == 'Alpha') {
-            $master->max_fund_percentage = $request->max_fund_percentage;
-            $master->save();
-        }
 
         $leaders = $request->leaders;
 

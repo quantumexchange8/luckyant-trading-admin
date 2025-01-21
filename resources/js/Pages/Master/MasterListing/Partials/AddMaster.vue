@@ -33,9 +33,26 @@ const managementFee = ref();
 
 const openDialog = () => {
     visible.value = true;
+    getAccountTypes();
     getLeaders();
     getSettlementPeriods();
 }
+
+const selectedAccountType = ref();
+const accountTypes = ref([]);
+const loadingAccountTypes = ref(false);
+
+const getAccountTypes = async () => {
+    loadingAccountTypes.value = true;
+    try {
+        const response = await axios.get('/getAccountTypes');
+        accountTypes.value = response.data;
+    } catch (error) {
+        console.error('Error fetching account types:', error);
+    } finally {
+        loadingAccountTypes.value = false;
+    }
+};
 
 const getLeaders = async () => {
     loadingUsers.value = true;
@@ -54,7 +71,7 @@ const initialFormState = {
     leader: '',
     type: '',
     category: 'copy_trade',
-    strategy_type: '',
+    account_type_id: '',
     estimated_monthly_return: '',
     estimated_lot_size: '',
     max_drawdown: '',
@@ -62,9 +79,9 @@ const initialFormState = {
     max_fund_percentage: null,
     total_subscribers: '',
     min_investment: null,
-    sharing_profit: '',
-    market_profit: '',
-    company_profit: '',
+    sharing_profit: null,
+    market_profit: null,
+    company_profit: null,
     join_period: null,
     roi_period: '',
     delivery_requirement: '',
@@ -85,6 +102,9 @@ const resetForm = () => {
 
 const handleContinue = () => {
     form.step = activeStep.value;
+    if (selectedAccountType.value) {
+        form.account_type_id = selectedAccountType.value.id;
+    }
     form.leader = selectedUser.value;
     form.leaders = selectedLeaders.value;
     form.management_fee = managementFee.value;
@@ -150,7 +170,7 @@ const getSettlementPeriods = async () => {
                     <StepPanel :value="1">
                         <div class="flex flex-col gap-6 items-center self-stretch">
                             <div class="flex flex-col gap-3 items-center self-stretch">
-                                <span class="font-bold text-sm text-surface-950 dark:text-white w-full text-left">{{ $t('public.basics') }}</span>
+                                <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.basics') }}</span>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5 w-full">
                                     <div class="flex flex-col items-start gap-1 self-stretch">
                                         <InputLabel
@@ -184,29 +204,33 @@ const getSettlementPeriods = async () => {
                                         class="flex flex-col items-start gap-1 self-stretch"
                                     >
                                         <InputLabel
-                                            for="strategy_type"
-                                            :value="$t('public.strategy_type')"
-                                            :invalid="!!form.errors.strategy_type"
+                                            for="account_type"
+                                            :value="$t('public.account_type')"
+                                            :invalid="!!form.errors.account_type_id"
                                         />
-                                        <div class="flex flex-wrap gap-4">
-                                            <div class="flex items-center">
-                                                <RadioButton
-                                                    v-model="form.strategy_type"
-                                                    inputId="strategy_type_hofi"
-                                                    value="HOFI"
-                                                />
-                                                <InputLabel for="strategy_type_hofi" class="ml-2">HOFI</InputLabel>
-                                            </div>
-                                            <div class="flex items-center">
-                                                <RadioButton
-                                                    v-model="form.strategy_type"
-                                                    inputId="strategy_type_alpha"
-                                                    value="Alpha"
-                                                />
-                                                <InputLabel for="strategy_type_alpha" class="ml-2">Alpha</InputLabel>
-                                            </div>
-                                        </div>
-                                        <InputError :message="form.errors.strategy_type" />
+                                        <Select
+                                            v-model="selectedAccountType"
+                                            :options="accountTypes"
+                                            filter
+                                            optionLabel="name"
+                                            :placeholder="$t('public.select_account_type')"
+                                            class="w-full"
+                                            :loading="loadingAccountTypes"
+                                            :invalid="!!form.errors.account_type_id"
+                                        >
+                                            <template #value="slotProps">
+                                                <div v-if="slotProps.value" class="flex items-center">
+                                                    <div>{{ slotProps.value.name }} ({{ $t(`public.${slotProps.value.slug}`)}})</div>
+                                                </div>
+                                                <span v-else>{{ slotProps.placeholder }}</span>
+                                            </template>
+                                            <template #option="slotProps">
+                                                <div class="flex items-center gap-1 w-full truncate">
+                                                    <span>{{ slotProps.option.name }} ({{ $t(`public.${slotProps.option.slug}`)}})</span>
+                                                </div>
+                                            </template>
+                                        </Select>
+                                        <InputError :message="form.errors.account_type_id" />
                                     </div>
 
                                     <!-- PAMM Type -->
@@ -351,29 +375,6 @@ const getSettlementPeriods = async () => {
                                         <InputError :message="form.errors.total_fund" />
                                     </div>
 
-                                    <!-- Max Fund Percentage -->
-                                    <div
-                                        v-if="form.strategy_type === 'Alpha'"
-                                        class="flex flex-col items-start gap-1 self-stretch"
-                                    >
-                                        <InputLabel
-                                            for="max_fund_percentage"
-                                            :value="$t('public.max_fund_percentage')"
-                                            :invalid="!!form.errors.max_fund_percentage"
-                                        />
-                                        <InputNumber
-                                            v-model="form.max_fund_percentage"
-                                            inputId="max_fund_percentage"
-                                            class="w-full"
-                                            :min="0"
-                                            fluid
-                                            placeholder="eg. 20%"
-                                            suffix="%"
-                                            :invalid="!!form.errors.max_fund_percentage"
-                                        />
-                                        <InputError :message="form.errors.max_fund_percentage" />
-                                    </div>
-
                                     <!-- Total Subscribers -->
                                     <div class="flex flex-col items-start gap-1 self-stretch">
                                         <InputLabel
@@ -395,7 +396,7 @@ const getSettlementPeriods = async () => {
                             </div>
 
                             <div class="flex flex-col gap-3 items-center self-stretch">
-                                <span class="font-bold text-sm text-surface-950 dark:text-white w-full text-left">{{ $t('public.upload_image') }}</span>
+                                <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.upload_image') }}</span>
                                 <div class="flex flex-col items-start gap-3 self-stretch">
                                     <span class="text-xs text-gray-500">{{ $t('public.upload_image_caption') }}</span>
                                     <div class="flex flex-col gap-3">
@@ -427,7 +428,7 @@ const getSettlementPeriods = async () => {
                     <StepPanel :value="2">
                         <div class="flex flex-col items-center gap-8 self-stretch">
                             <div class="flex flex-col items-center gap-3 self-stretch">
-                                <span class="self-stretch text-surface-950 dark:text-white text-sm font-bold">{{ $t('public.join_setting') }}</span>
+                                <span class="self-stretch text-gray-950 dark:text-white text-sm font-bold">{{ $t('public.join_setting') }}</span>
                                 <div class="w-full grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <div class="flex flex-col items-start gap-1 self-stretch md:flex-grow">
                                         <InputLabel
@@ -562,7 +563,7 @@ const getSettlementPeriods = async () => {
                             </div>
 
                             <div class="flex flex-col items-center gap-3 self-stretch">
-                                <span class="self-stretch text-surface-950 dark:text-white text-sm font-bold">{{ $t('public.master_settings') }}</span>
+                                <span class="self-stretch text-gray-950 dark:text-white text-sm font-bold">{{ $t('public.master_settings') }}</span>
                                 <div class="w-full grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <!-- Visible To -->
                                     <div class="flex flex-col items-start gap-1 self-stretch">
@@ -702,7 +703,7 @@ const getSettlementPeriods = async () => {
                     <!-- Step 3 -->
                     <StepPanel :value="3">
                         <div class="flex flex-col items-center gap-3 self-stretch">
-                            <span class="self-stretch text-surface-950 dark:text-white text-sm font-bold">{{ $t('public.management_fee') }}</span>
+                            <span class="self-stretch text-gray-950 dark:text-white text-sm font-bold">{{ $t('public.management_fee') }}</span>
 
                             <ManagementFeeSetting
                                 @get:management_fee="managementFee = $event"

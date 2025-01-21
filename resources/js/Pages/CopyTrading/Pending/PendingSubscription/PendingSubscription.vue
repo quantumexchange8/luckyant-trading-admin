@@ -350,7 +350,7 @@ watchEffect(() => {
                                 <span class="block">{{ $t('public.strategy') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ slotProps.data.master.strategy_type }}</span>
+                                <span class="text-xs font-semibold uppercase">{{ $t(`public.${slotProps.data.master.trading_user.from_account_type.slug}`) }}</span>
                             </template>
                         </Column>
                         <Column

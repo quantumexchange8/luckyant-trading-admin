@@ -2,25 +2,19 @@
 
 namespace App\Services\Data;
 
-use App\Models\AccountType;
 use App\Models\TradingAccount;
-use App\Models\TradingUser;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class UpdateTradingAccount
 {
     public function execute($meta_login, $data): TradingAccount
     {
-        \Log::debug($data);
         return $this->updateTradingAccount($meta_login, $data);
     }
 
     public function updateTradingAccount($meta_login, $data): TradingAccount
     {
-        $tradingAccount = TradingAccount::with('accountType')
-            ->where('meta_login', $meta_login)
-            ->first();
+        $tradingAccount = TradingAccount::with('accountType')->firstWhere('meta_login', $meta_login);
 
         $tradingUser = $tradingAccount->tradingUser;
 
@@ -31,6 +25,7 @@ class UpdateTradingAccount
             $tradingAccount->margin_leverage = $data['marginLeverage'];
             $tradingAccount->equity = $data['equity'];
             $tradingAccount->floating = $data['floating'];
+            $tradingAccount->account_type = $tradingUser->account_type;
             DB::transaction(function () use ($tradingAccount) {
                 $tradingAccount->save();
             });

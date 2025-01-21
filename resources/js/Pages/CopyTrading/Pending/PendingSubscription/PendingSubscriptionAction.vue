@@ -46,6 +46,22 @@ const submitForm = () => {
 const closeDialog = () => {
     visible.value = false;
 }
+
+const getSeverity = (status) => {
+    switch (status) {
+        case 'hofi':
+            return 'warn';
+
+        case 'alpha':
+            return 'info';
+
+        case 'standard_account':
+            return 'success';
+
+        case 'ecn_account':
+            return 'secondary';
+    }
+}
 </script>
 
 <template>
@@ -112,10 +128,13 @@ const closeDialog = () => {
                         {{ $t('public.master') }}
                     </div>
                     <div class="flex flex-col text-gray-950 dark:text-white text-sm font-medium">
-                        <span>{{ subscriber.master.trading_user.name }} <Tag
-                            :severity="subscriber.master.strategy_type === 'HOFI' ? 'warn' : 'info'"
-                            :value="subscriber.master.strategy_type"
-                        /></span>
+                        <div>
+                            {{ subscriber.master.trading_user.name }}
+                            <Tag
+                                :severity="getSeverity(subscriber.master.trading_user.from_account_type.slug)"
+                                :value="$t(`public.${subscriber.master.trading_user.from_account_type.slug}`)"
+                            />
+                        </div>
                         <span class="text-gray-400">{{ subscriber.master_meta_login }}</span>
                     </div>
                 </div>

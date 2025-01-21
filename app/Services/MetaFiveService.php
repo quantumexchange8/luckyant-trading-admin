@@ -59,7 +59,7 @@ class MetaFiveService {
     {
         $accountResponse = Http::acceptJson()->post($this->baseURL . "/create_user", [
             'name' => $user->name,
-            'group' => $group->value,
+            'group' => $group,
             'leverage' => $leverage,
             'eMail' => $user->email,
         ]);

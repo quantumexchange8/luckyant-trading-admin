@@ -403,10 +403,10 @@ const exportReport = () => {
                             class="table-cell"
                         >
                             <template #header>
-                                <span class="block">{{ $t('public.strategy') }}</span>
+                                <span class="block">{{ $t('public.type') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ slotProps.data.strategy_type ?? 'HOFI' }}</span>
+                                <span class="text-xs font-semibold uppercase">{{ $t(`public.${slotProps.data.master.trading_user.from_account_type.slug}`) }}</span>
                             </template>
                         </Column>
                         <Column
