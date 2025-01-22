@@ -293,7 +293,6 @@ const checkExportStatus = async () => {
             exportStatus.value = false;
         } else if (response.data.status === 'failed') {
             clearInterval(checkInterval);
-            statusMessage.value = 'Export failed. Please try again.';
             exportingFile.value = false;
             exportStatus.value = false;
         } else {
@@ -319,8 +318,6 @@ const downloadFile = () => {
         anchor.target = '_blank'; // Open in a new tab if needed
         anchor.click();
 
-        // Call the backend to delete the file
-        const fileName = downloadLink.value.split('/').pop(); // Extract the file name from URL
         axios.delete(route('member.deleteReport'))
             .then(response => {
                 downloadLink.value = null;
