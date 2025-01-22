@@ -63,6 +63,10 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/getMemberListingData', [MemberController::class, 'getMemberListingData'])->name('member.getMemberListingData');
         Route::get('/member_details/{id}', [MemberController::class, 'viewMemberDetails'])->name('member.viewMemberDetails');
         Route::get('/getExtraBonus', [MemberController::class, 'getExtraBonus'])->name('member.getExtraBonus');
+        Route::get('checkExportStatus', [MemberController::class, 'checkExportStatus'])->name('member.checkExportStatus');
+        Route::get('downloadMemberReport', [MemberController::class, 'downloadMemberReport'])->name('member.downloadMemberReport');
+
+        Route::delete('/export/delete', [MemberController::class, 'deleteReport'])->name('member.deleteReport');
 
         Route::post('/updateExtraBonus', [MemberController::class, 'updateExtraBonus'])->name('member.updateExtraBonus');
         Route::post('/updateLeaderStatus', [MemberController::class, 'updateLeaderStatus'])->name('member.updateLeaderStatus');

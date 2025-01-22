@@ -2,92 +2,70 @@
 
 namespace App\Exports;
 
-use App\Models\Country;
 use App\Models\PammSubscription;
 use App\Models\SubscriptionBatch;
 use App\Models\User;
 use App\Services\UserService;
 use Carbon\Carbon;
+use DB;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class MemberListingExport implements FromCollection, WithHeadings
+class MemberListingExport implements FromQuery, WithHeadings, WithMapping
 {
-    private $query;
+    use Exportable;
 
-    public function __construct($query)
+    protected $ids;
+
+    public function __construct($ids)
     {
-        $this->query = $query;
+        $this->ids = $ids;
     }
 
-    /**
-     * @return Collection
-     */
-    public function collection(): Collection
+    public function query()
     {
-        $records = $this->query->get();
+        return User::query()
+            ->with([
+                'upline:id,name,email',
+                'ofCountry:id,name',
+                'rank:id,name',
+                'wallets',
+            ])
+            ->withSum('active_pamm', 'subscription_amount')
+            ->withSum('active_copy_trade', 'meta_balance')
+            ->whereIn('id', $this->ids)
+            ->latest();
+    }
 
-        $userHierarchyLists = $records->pluck('hierarchyList')
-            ->filter()
-            ->flatMap(fn($list) => explode('-', trim($list, '-')))
-            ->unique()
-            ->toArray();
+    public function getFirstLeaderFromHierarchy($hierarchyList): ?array
+    {
+        // Get the hierarchy IDs
+        $ids = array_reverse(array_filter(explode('-', trim($hierarchyList, '-'))));
 
-        $leaders = User::whereIn('id', $userHierarchyLists)
+        // Fetch all leaders once (those with leader_status = 1)
+        $leaders = User::whereIn('id', $ids)
             ->where('leader_status', 1)
             ->get()
             ->keyBy('id');
 
-        // Attach the first leader details
-        $records->each(function ($user) use ($leaders) {
-            $userService = new UserService();
-            $firstLeader = $userService->getFirstLeader($user?->hierarchyList, $leaders);
-
-            $user->first_leader_name = $firstLeader?->name;
-        });
-
-        $result = [];
-
-        foreach ($records as $record) {
-            // Check if $record is an array and has the necessary properties
-            $real_fund = SubscriptionBatch::where('user_id', $record->id)
-                ->where('status', 'Active')
-                ->sum('real_fund');
-
-            $demo_fund = SubscriptionBatch::where('user_id', $record->id)
-                ->where('status', 'Active')
-                ->sum('demo_fund');
-
-            $total_group_deposit = SubscriptionBatch::whereIn('user_id', $record->getChildrenIds())
-                ->where('status', 'Active')
-                ->sum('meta_balance');
-
-            $total_group_pamm_subscription = PammSubscription::whereIn('user_id', $record->getChildrenIds())
-                ->where('status', 'Active')
-                ->sum('subscription_amount');
-
-            $result[] = [
-                'name' => $record->name,
-                'email' => $record->email,
-                'phone' => $record->phone,
-                'created_at' => Carbon::parse($record->created_at)->format('Y-m-d'),
-                'first_leader' => $record->first_leader_name,
-                'upline_email' => $record->upline->email ?? '',
-                'cash_wallet_balance' => $record->wallets->where('type', 'cash_wallet')->first()->balance ?? 0,
-                'bonus_wallet_balance' => $record->wallets->where('type', 'bonus_wallet')->first()->balance ?? 0,
-                'e_wallet_balance' => $record->wallets->where('type', 'e_wallet')->first()->balance ?? 0,
-                'country' => $record->ofCountry->name ?? '',
-                'rank' => $record->rank->name,
-                'kyc_approval' => $record->kyc_approval,
-                'total_deposit' => $record->active_pamm_sum_subscription_amount + $record->active_copy_trade_sum_meta_balance,
-                'real_fund' => $real_fund,
-                'demo_fund' => $demo_fund,
-                'total_group_deposit' => $total_group_deposit + $total_group_pamm_subscription,
-            ];
+        // Iterate through the hierarchy list to find the first leader
+        foreach ($ids as $id) {
+            if (isset($leaders[$id])) {
+                return [
+                    'name' => $leaders[$id]->name,
+                    'email' => $leaders[$id]->email,
+                ];
+            }
         }
 
-        return collect($result);
+        // Return null if no leader is found
+        return null;
     }
 
     public function headings(): array
@@ -97,18 +75,51 @@ class MemberListingExport implements FromCollection, WithHeadings
             'Email',
             'Contact Number',
             'Joining Date',
-            'First Leader',
+            'First Leader Name',
+            'First Leader Email',
+            'Upline Name',
             'Upline Email',
-            'Cash Balance',
-            'Bonus Balance',
-            'eWallet Balance',
+            'Cash Wallet',
+            'Bonus Wallet',
+            'eWallet',
             'Country',
-            'Ranking',
+            'Rank',
             'Status',
-            'Total Deposit',
-            'Real Fund',
-            'Demo Fund',
-            'Total Group Deposit',
+            'Active Fund',
+            'Group Active Fund',
+        ];
+    }
+
+    public function map($user): array
+    {
+        // Get the hierarchy list and process the leader lookup
+        $firstLeader = $this->getFirstLeaderFromHierarchy($user->hierarchyList);
+
+        $total_group_deposit = SubscriptionBatch::whereIn('user_id', $user->getChildrenIds())
+            ->where('status', 'Active')
+            ->sum('meta_balance');
+
+        $total_group_pamm_subscription = PammSubscription::whereIn('user_id', $user->getChildrenIds())
+            ->where('status', 'Active')
+            ->sum('subscription_amount');
+
+        return [
+            $user->name,
+            $user->email,
+            $user->phone,
+            Carbon::parse($user->created_at)->format('Y-m-d'),
+            $firstLeader['name'] ?? '-',
+            $firstLeader['email'] ?? '-',
+            $user->upline?->name,
+            $user->upline?->email,
+            $user->wallets->where('type', 'cash_wallet')->first()->balance ?? '0.00',
+            $user->wallets->where('type', 'bonus_wallet')->first()->balance ?? '0.00',
+            $user->wallets->where('type', 'e_wallet')->first()->balance ?? '0.00',
+            $user->ofCountry?->name,
+            $user->rank?->name,
+            $user->kyc_approval,
+            $user->active_pamm_sum_subscription_amount + $user->active_copy_trade_sum_meta_balance,
+            $total_group_deposit + $total_group_pamm_subscription,
         ];
     }
 }

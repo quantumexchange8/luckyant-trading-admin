@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\AffiliateSummaryExport;
 use App\Exports\MemberListingExport;
 use App\Http\Requests\WalletAdjustmentRequest;
+use App\Jobs\ExportMemberReportJob;
 use App\Models\AccountTypeToLeader;
 use App\Models\Country;
 use App\Models\Master;
@@ -28,6 +29,7 @@ use App\Http\Requests\EditMemberRequest;
 use App\Http\Requests\PaymentAccountRequest;
 use App\Http\Requests\AddMemberRequest;
 use App\Services\UserService;
+use DB;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
@@ -39,6 +41,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
+use Storage;
 
 class MemberController extends Controller
 {
@@ -261,7 +264,13 @@ class MemberController extends Controller
 
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {
-                return Excel::download(new MemberListingExport($query), now() . '-member-report.xlsx');
+                $ids = $query->latest()->pluck('id')->toArray();
+                ExportMemberReportJob::dispatch($ids);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Exporting report. Please wait..',
+                ]);
             }
 
             $users = $query->paginate($data['rows']);
@@ -1314,5 +1323,72 @@ class MemberController extends Controller
             'message' => trans("public.toast_success_${action}_message"),
             'type' => 'success',
         ]);
+    }
+
+    public function checkExportStatus()
+    {
+        sleep(10);
+
+        // Check the jobs table for the job ID and queue name
+        $job = DB::table('jobs')
+            ->where('queue', 'member-export')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($job) {
+            return response()->json([
+                'status' => 'in_progress',
+                'message' => 'Export is still processing.',
+            ]);
+        }
+
+        // Check the failed_jobs table if the job is not in the jobs table
+        $failedJob = DB::table('failed_jobs')
+            ->where('queue', 'member-export')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($failedJob) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Export job failed.',
+            ]);
+        }
+
+        $filePath = storage_path('app/public/member-report.xlsx');
+
+        // Check if the file exists
+        if (file_exists($filePath)) {
+            return response()->json([
+                'status' => 'completed',
+                'message' => 'Export is complete. You can download the file.',
+                'file_url' => asset('storage/member-report.xlsx'),
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'failed',
+            ]);
+        }
+    }
+
+    public function deleteReport()
+    {
+        $filePath = 'member-report.xlsx';
+
+        // Check if the file exists in the 'public' disk
+        if (Storage::disk('public')->exists($filePath)) {
+            // Delete the file from the 'public' disk
+            Storage::disk('public')->delete($filePath);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'File deleted successfully.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'File not found.',
+        ], 404);
     }
 }
