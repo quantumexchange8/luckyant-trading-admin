@@ -1327,7 +1327,7 @@ class MemberController extends Controller
 
     public function checkExportStatus()
     {
-        sleep(10);
+        sleep(2);
 
         // Check the jobs table for the job ID and queue name
         $job = DB::table('jobs')
