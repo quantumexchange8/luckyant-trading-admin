@@ -133,7 +133,7 @@ const closeDialog = () => {
                         {{ $t('public.profit') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        $ {{ formatAmount(pending.profitAmount) }}
+                        $ {{ formatAmount(pending.profitAmount ?? 0) }}
                     </div>
                 </div>
                 <div v-if="pending.transaction_type === 'Withdrawal'" class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
@@ -141,7 +141,7 @@ const closeDialog = () => {
                         {{ $t('public.bonus') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        $ {{ formatAmount(pending.bonusAmount) }}
+                        $ {{ formatAmount(pending.bonusAmount ?? 0) }}
                     </div>
                 </div>
                 <div v-if="pending.transaction_type === 'Withdrawal'" class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
@@ -165,7 +165,7 @@ const closeDialog = () => {
                         {{ $t('public.to') }}
                     </div>
                     <div v-if="pending.transaction_type === 'Withdrawal'" class="flex flex-col gap-1 text-gray-950 dark:text-white text-sm font-medium">
-                        <span class="font-semibold">{{ pending.payment_account.payment_account_name }}</span>
+                        <span class="font-semibold">{{ pending.payment_account.payment_account_name ?? pending.user.name }}</span>
                         <span class="text-xs text-gray-400">{{ pending.to_wallet_address }}</span>
                     </div>
                     <div v-if="pending.transaction_type === 'Deposit'" class="text-gray-950 dark:text-white text-sm font-medium">

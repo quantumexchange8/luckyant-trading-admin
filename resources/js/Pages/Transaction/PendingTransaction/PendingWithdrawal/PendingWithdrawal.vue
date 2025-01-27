@@ -336,7 +336,7 @@ const closeDialog = () => {
                         >
                             <template #body="slotProps">
                                 <div class="flex flex-col gap-1">
-                                    <span class="font-semibold">{{ slotProps.data.payment_account.payment_account_name }}</span>
+                                    <span class="font-semibold">{{ slotProps.data.payment_account.payment_account_name ?? slotProps.data.user.name }}</span>
                                     <span class="text-xs text-gray-400">{{ slotProps.data.to_wallet_address }}</span>
                                 </div>
                             </template>
@@ -357,7 +357,7 @@ const closeDialog = () => {
                         >
                             <template #body="slotProps">
                                 <Tag
-                                    :severity="slotProps.data.payment_method == 'Crypto' ? 'info' : 'secondary'"
+                                    :severity="slotProps.data.payment_method === 'Crypto' ? 'info' : 'secondary'"
                                     :value="slotProps.data.payment_method"
                                 />
                             </template>
