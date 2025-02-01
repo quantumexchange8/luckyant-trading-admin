@@ -11,8 +11,6 @@ class MasterConfigurationRequest extends FormRequest
         return [
             'category' => ['required'],
             'type' => ['required_if:category,pamm'],
-            'strategy_type' => ['required'],
-            'max_fund_percentage' => ['required_if:strategy_type,Alpha'],
             'min_investment' => ['required', 'numeric'],
             'sharing_profit' => ['required', 'numeric'],
             'market_profit' => ['required', 'numeric'],
@@ -31,7 +29,7 @@ class MasterConfigurationRequest extends FormRequest
         return true;
     }
 
-    public function withValidator($validator)
+    public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
             $sharingProfit = $this->input('sharing_profit');
@@ -57,8 +55,6 @@ class MasterConfigurationRequest extends FormRequest
         return [
             'category' => trans('public.type'),
             'type' => trans('public.pamm_type'),
-            'strategy_type' => trans('public.pamm_strategy_type'),
-            'max_fund_percentage' => trans('public.pamm_max_fund_percentage'),
             'min_investment' => trans('public.min_investment'),
             'sharing_profit' => trans('public.shared'),
             'market_profit' => trans('public.market'),
