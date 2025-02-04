@@ -448,6 +448,18 @@ class CopyTradingController extends Controller
             }
         }
 
+        $switchMaster = SwitchMaster::where([
+            'user_id' => $user->id,
+            'meta_login' => $subscriber->meta_login,
+            'new_master_id' => $subscriber->master_id,
+            'status' => 'Pending',
+        ])->first();
+
+        $switchMaster?->update([
+            'approval_date' => now(),
+            'status' => $request->action == 'approve' ? 'Success' : 'Rejected',
+        ]);
+
         return back()->with('toast', [
             'title' => trans("public.success"),
             'message' => trans("public.toast_success_{$request->action}_subscription_message"),
