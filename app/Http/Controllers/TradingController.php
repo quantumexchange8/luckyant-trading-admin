@@ -634,6 +634,8 @@ class TradingController extends Controller
             ]);
         }
 
+        $wallet = Wallet::find($transaction->from_wallet_id);
+
         if ($request->action == 'approve') {
             $connection = (new MetaFiveService())->getConnectionStatus();
 
@@ -646,8 +648,6 @@ class TradingController extends Controller
 
                     $dealId = $deal['deal_Id'] ?? null;
 
-                    $wallet = Wallet::find($transaction->from_wallet_id);
-
                     $transaction->update([
                         'ticket' => $dealId,
                         'status' => 'Success',
@@ -655,7 +655,6 @@ class TradingController extends Controller
                         'comment' => $comment,
                         'remarks' => 'Admin approved',
                         'handle_by' => Auth::id(),
-                        'new_wallet_amount' => $wallet->balance - $transaction->amount,
                     ]);
 
                     $wallet->update([
@@ -678,6 +677,11 @@ class TradingController extends Controller
                 'approval_at' => now(),
                 'remarks' => $request->remarks,
                 'handle_by' => Auth::id(),
+                'new_wallet_amount' => $wallet->balance + $transaction->amount,
+            ]);
+
+            $wallet->update([
+                'balance' => $wallet->balance + $transaction->amount
             ]);
         }
 
