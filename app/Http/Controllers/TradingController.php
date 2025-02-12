@@ -657,10 +657,6 @@ class TradingController extends Controller
                         'handle_by' => Auth::id(),
                     ]);
 
-                    $wallet->update([
-                        'balance' => $wallet->balance - $transaction->amount
-                    ]);
-
                 } catch (\Exception $e) {
                     \Log::error('Error fetching trading accounts: ' . $e->getMessage());
                 }
