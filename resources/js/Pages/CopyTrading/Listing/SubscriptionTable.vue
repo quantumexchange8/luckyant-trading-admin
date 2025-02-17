@@ -22,73 +22,235 @@ import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
 import RadioButton from "primevue/radiobutton"
+import debounce from "lodash/debounce.js";
 
 const props = defineProps({
     subscriptionBatchesCount: Number
 })
 
+const exportStatus = ref(false);
 const isLoading = ref(false);
+const dt = ref(null);
 const subscriptions = ref([]);
-const exportTable = ref('no');
 const {formatAmount} = transactionFormat();
+const totalRecords = ref(0);
+const first = ref(0);
 
-const getResults = async (filterFundType = null) => {
+const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    start_join_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    end_join_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    start_terminate_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    end_terminate_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    fund_type: { value: null, matchMode: FilterMatchMode.EQUALS },
+    leader_id: { value: null, matchMode: FilterMatchMode.EQUALS },
+    master_meta_login: { value: null, matchMode: FilterMatchMode.EQUALS },
+    status: { value: null, matchMode: FilterMatchMode.EQUALS },
+});
+
+const lazyParams = ref({});
+const emit = defineEmits(["update:filters"]);
+
+const loadLazyData = (event) => {
     isLoading.value = true;
+
+    lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value.filters = filters.value;
     try {
-        let url = `/copy_trading/getSubscriptionsData?export=${exportTable.value}`;
+        setTimeout(async () => {
+            const params = {
+                page: JSON.stringify(event?.page + 1),
+                sortField: event?.sortField,
+                sortOrder: event?.sortOrder,
+                include: [],
+                lazyEvent: JSON.stringify(lazyParams.value)
+            };
 
-        if (selectedLeader.value) {
-            url += `&first_leader_id=${selectedLeader.value.id}`;
-        }
+            const url = route('copy_trading.getSubscriptionsData', params);
+            const response = await fetch(url);
+            const results = await response.json();
 
-        if (joinDatePicker.value.length > 0 && Array.isArray(joinDatePicker.value)) {
-            const [startDate, endDate] = joinDatePicker.value;
+            subscriptions.value = results?.data?.data;
+            totalRecords.value = results?.data?.total;
+            isLoading.value = false;
 
-            if (startDate !== null && endDate !== null) {
-                url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-            }
-        }
-
-        if (terminateDatePicker.value.length > 0 && Array.isArray(terminateDatePicker.value)) {
-            const [startDate, endDate] = terminateDatePicker.value;
-
-            if (startDate !== null && endDate !== null) {
-                url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-            }
-        }
-
-        if (filterFundType) {
-            url += `&fundType=${filterFundType}`;
-        }
-
-        const response = await axios.get(url);
-        subscriptions.value = response.data.subscriptions;
-    } catch (error) {
-        console.error('Error fetching subscriptions:', error);
-    } finally {
+        }, 100);
+    }  catch (e) {
+        subscriptions.value = [];
+        totalRecords.value = 0;
         isLoading.value = false;
+    }
+};
+const onPage = (event) => {
+    lazyParams.value = event;
+    loadLazyData(event);
+};
+const onSort = (event) => {
+    lazyParams.value = event;
+    loadLazyData(event);
+};
+const onFilter = (event) => {
+    lazyParams.value.filters = filters.value ;
+    loadLazyData(event);
+};
+
+const op = ref();
+const toggle = (event) => {
+    op.value.toggle(event);
+    getMasters();
+    getLeaders()
+}
+
+
+const masters = ref();
+const loadingMasters = ref(false);
+
+const getMasters = async () => {
+    loadingMasters.value = true;
+    try {
+        const response = await axios.get('/getMasters?category=copy_trade');
+        masters.value = response.data;
+    } catch (error) {
+        console.error('Error fetching masters:', error);
+    } finally {
+        loadingMasters.value = false;
+    }
+};
+
+const leaders = ref();
+const loadingLeaders = ref(false);
+
+const getLeaders = async () => {
+    loadingLeaders.value = true;
+    try {
+        const response = await axios.get('/getLeaders');
+        leaders.value = response.data;
+    } catch (error) {
+        console.error('Error fetching leaders:', error);
+    } finally {
+        loadingLeaders.value = false;
     }
 };
 
 onMounted(() => {
-    getResults();
+    lazyParams.value = {
+        first: dt.value.first,
+        rows: dt.value.rows,
+        sortField: null,
+        sortOrder: null,
+        filters: filters.value
+    };
+
+    loadLazyData();
 });
 
-const filters = ref({
-    global: {value: null, matchMode: FilterMatchMode.CONTAINS},
-    master_meta_login: {value: null, matchMode: FilterMatchMode.EQUALS},
-    status: {value: null, matchMode: FilterMatchMode.EQUALS},
-});
+watch(
+    filters.value['global'],
+    debounce(() => {
+        loadLazyData();
+    }, 300)
+);
 
 const clearFilterGlobal = () => {
     filters.value['global'].value = null;
 }
 
-watchEffect(() => {
-    if (usePage().props.toast !== null) {
-        getResults();
+const selectedDate = ref([]);
+
+const clearJoinDate = () => {
+    selectedDate.value = [];
+}
+
+watch(selectedDate, (newDateRange) => {
+    if (Array.isArray(newDateRange)) {
+        const [startDate, endDate] = newDateRange;
+        filters.value['start_join_date'].value = startDate;
+        filters.value['end_join_date'].value = endDate;
+
+        if (startDate !== null && endDate !== null) {
+            loadLazyData();
+            emit('update:filters', filters.value)
+        }
+    } else {
+        console.warn('Invalid date range format:', newDateRange);
     }
 });
+
+const terminateDate = ref([]);
+
+const clearTerminateDate = () => {
+    terminateDate.value = [];
+}
+
+watch(terminateDate, (newDateRange) => {
+    if (Array.isArray(newDateRange)) {
+        const [startDate, endDate] = newDateRange;
+        filters.value['start_terminate_date'].value = startDate;
+        filters.value['end_terminate_date'].value = endDate;
+
+        if (startDate !== null && endDate !== null) {
+            loadLazyData();
+            emit('update:filters', filters.value)
+        }
+    } else {
+        console.warn('Invalid date range format:', newDateRange);
+    }
+});
+
+watch([filters.value['master_meta_login'], filters.value['leader_id'], filters.value['fund_type'], filters.value['status']], () => {
+    loadLazyData();
+
+    emit('update:filters', filters.value)
+});
+
+const clearFilter = () => {
+    filters.value = {
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        start_join_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+        end_join_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+        start_terminate_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+        end_terminate_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+        fund_type: { value: null, matchMode: FilterMatchMode.EQUALS },
+        leader_id: { value: null, matchMode: FilterMatchMode.EQUALS },
+        master_meta_login: { value: null, matchMode: FilterMatchMode.EQUALS },
+        status: { value: null, matchMode: FilterMatchMode.EQUALS },
+    };
+
+    selectedDate.value = [];
+    lazyParams.value.filters = filters.value ;
+};
+
+const exportTable = () => {
+    exportStatus.value = true;
+    isLoading.value = true;
+
+    lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value.filters = filters.value;
+
+    if (filters.value) {
+        lazyParams.value.filters = { ...filters.value };
+    } else {
+        lazyParams.value.filters = {};
+    }
+
+    let params = {
+        include: [],
+        lazyEvent: JSON.stringify(lazyParams.value),
+        exportStatus: true,
+    };
+
+    const url = route('copy_trading.getSubscriptionsData', params);
+
+    try {
+
+        window.location.href = url;
+    } catch (e) {
+        console.error('Error occurred during export:', e);
+    } finally {
+        isLoading.value = false;
+        exportStatus.value = false;
+    }
+};
 
 const getSeverity = (status) => {
     switch (status) {
@@ -106,128 +268,11 @@ const getSeverity = (status) => {
     }
 }
 
-const op = ref();
-const toggle = (event) => {
-    op.value.toggle(event);
-    getMasters();
-    getLeaders();
-}
-
-const masters = ref();
-const loadingMasters = ref(false);
-const selectedMaster = ref();
-
-const getMasters = async () => {
-    loadingMasters.value = true;
-    try {
-        const response = await axios.get('/getMasters?category=copy_trade');
-        masters.value = response.data;
-    } catch (error) {
-        console.error('Error fetching masters:', error);
-    } finally {
-        loadingMasters.value = false;
+watchEffect(() => {
+    if (usePage().props.toast !== null) {
+        loadLazyData();
     }
-};
-
-const leaders = ref();
-const loadingLeaders = ref(false);
-const selectedLeader = ref();
-const joinDatePicker = ref([]);
-const terminateDatePicker = ref([]);
-
-const getLeaders = async () => {
-    loadingLeaders.value = true;
-    try {
-        const response = await axios.get('/getLeaders');
-        leaders.value = response.data;
-    } catch (error) {
-        console.error('Error fetching leaders:', error);
-    } finally {
-        loadingLeaders.value = false;
-    }
-};
-
-watch([selectedMaster, selectedLeader, joinDatePicker, terminateDatePicker], ([newMaster, newLeader, newDateRange, newTerminateRange], [oldMaster, oldLeader, oldDateRange, oldTerminateRange]) => {
-    if (newMaster) {
-        filters.value['master_meta_login'].value = newMaster.meta_login;
-    }
-
-    if (newLeader) {
-        getResults();
-    }
-
-    if (Array.isArray(newDateRange) && newDateRange !== oldDateRange) {
-        const [startDate, endDate] = newDateRange;
-
-        if (startDate !== null && endDate !== null) {
-            getResults();
-        }
-    }
-
-    if (Array.isArray(newTerminateRange) && newTerminateRange !== oldTerminateRange) {
-        const [startDate, endDate] = newTerminateRange;
-
-        if (startDate !== null && endDate !== null) {
-            getResults();
-        }
-    }
-});
-
-const clearJoinDate = () => {
-    joinDatePicker.value = [];
-}
-
-const clearTerminateDate = () => {
-    terminateDatePicker.value = [];
-}
-
-const selectedFundType = ref('');
-
-watch(selectedFundType, (newFundType) => {
-    getResults(newFundType);
 })
-
-const clearAll = () => {
-    filters.value['master_meta_login'].value = null;
-    filters.value['status'].value = null;
-    selectedMaster.value = null;
-    selectedLeader.value = null;
-    joinDatePicker.value = [];
-    terminateDatePicker.value = [];
-    selectedFundType.value = '';
-}
-
-const exportReport = () => {
-    let url = `/copy_trading/getSubscriptionsData?export=yes`;
-
-    if (joinDatePicker.value?.length > 0) {
-        const [startDate, endDate] = joinDatePicker.value;
-        url += `&joinStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&joinEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-    }
-
-    if (terminateDatePicker.value?.length > 0) {
-        const [startDate, endDate] = terminateDatePicker.value;
-        url += `&terminateStartDate=${dayjs(startDate).format('YYYY-MM-DD')}&terminateEndDate=${dayjs(endDate).format('YYYY-MM-DD')}`;
-    }
-
-    if (selectedMaster.value) {
-        url += `&master_meta_login=${selectedMaster.value.meta_login}`;
-    }
-
-    if (selectedLeader.value) {
-        url += `&first_leader_id=${selectedLeader.value.id}`;
-    }
-
-    if (selectedFundType.value) {
-        url += `&fundType=${selectedFundType.value}`;
-    }
-
-    if (filters.value['status'].value) {
-        url += `&status=${filters.value['status'].value}`;
-    }
-
-    window.location.href = url;
-}
 </script>
 
 <template>
@@ -237,19 +282,24 @@ const exportReport = () => {
                 class="w-full"
             >
                 <DataTable
-                    v-model:filters="filters"
                     :value="subscriptions"
-                    :paginator="subscriptions?.length > 0"
+                    lazy
+                    paginator
                     removableSort
-                    dataKey="id"
                     :rows="10"
                     :rowsPerPageOptions="[10, 20, 50, 100]"
-                    tableStyle="md:min-width: 50rem"
+                    :first="first"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                    :globalFilterFields="['user.name', 'user.email', 'meta_login', 'master_meta_login']"
+                    v-model:filters="filters"
                     ref="dt"
+                    dataKey="id"
                     :loading="isLoading"
+                    :totalRecords="totalRecords"
+                    @page="onPage($event)"
+                    @sort="onSort($event)"
+                    @filter="onFilter($event)"
+                    :globalFilterFields="['name', 'email', 'connection_number']"
                 >
                     <template #header>
                         <div class="flex flex-col md:flex-row gap-3 items-center self-stretch md:pb-5">
@@ -289,7 +339,7 @@ const exportReport = () => {
                                     <Button
                                         class="w-full md:w-28 flex gap-2"
                                         severity="secondary"
-                                        @click="exportReport"
+                                        @click="exportTable"
                                         :disabled="exportTable==='yes'"
                                     >
                                         <CloudDownloadIcon class="w-4 h-4" />
@@ -307,7 +357,7 @@ const exportReport = () => {
                     <template #loading>
                         <div class="flex flex-col gap-2 items-center justify-center">
                             <Loading />
-                            <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">Loading subscriptions</span>
+                            <span v-if="!exportStatus" class="text-sm text-gray-700 dark:text-gray-300">Loading subscriptions</span>
                             <span v-else class="text-sm text-gray-700 dark:text-gray-300">Exporting Report</span>
                         </div>
                     </template>
@@ -467,7 +517,7 @@ const exportReport = () => {
                     Filter by Master
                 </div>
                 <Select
-                    v-model="selectedMaster"
+                    v-model="filters['master_meta_login'].value"
                     :options="masters"
                     optionLabel="trading_user.name"
                     placeholder="Select a master"
@@ -496,7 +546,7 @@ const exportReport = () => {
                     Filter by Leader
                 </div>
                 <Select
-                    v-model="selectedLeader"
+                    v-model="filters['leader_id'].value"
                     :options="leaders"
                     optionLabel="name"
                     placeholder="Select a leader"
@@ -527,18 +577,18 @@ const exportReport = () => {
                 </div>
                 <div class="relative w-full">
                     <DatePicker
-                        v-model="joinDatePicker"
+                        v-model="selectedDate"
                         dateFormat="dd/mm/yy"
                         class="w-full"
                         selectionMode="range"
                         placeholder="dd/mm/yyyy - dd/mm/yyyy"
                     />
                     <div
-                        v-if="joinDatePicker && joinDatePicker.length > 0"
-                        class="absolute top-2/4 -mt-2.5 right-4 text-gray-400 select-none cursor-pointer bg-white"
+                        v-if="selectedDate && selectedDate.length > 0"
+                        class="absolute top-2/4 -mt-2 right-4 text-gray-400 select-none cursor-pointer bg-white dark:bg-transparent"
                         @click="clearJoinDate"
                     >
-                        <XIcon class="w-4 h-4" />
+                        <XCircleIcon class="w-4 h-4" />
                     </div>
                 </div>
             </div>
@@ -550,18 +600,18 @@ const exportReport = () => {
                 </div>
                 <div class="relative w-full">
                     <DatePicker
-                        v-model="terminateDatePicker"
+                        v-model="terminateDate"
                         dateFormat="dd/mm/yy"
                         class="w-full"
                         selectionMode="range"
                         placeholder="dd/mm/yyyy - dd/mm/yyyy"
                     />
                     <div
-                        v-if="terminateDatePicker && terminateDatePicker.length > 0"
-                        class="absolute top-2/4 -mt-2.5 right-4 text-gray-400 select-none cursor-pointer bg-white"
+                        v-if="terminateDate && terminateDate.length > 0"
+                        class="absolute top-2/4 -mt-2 right-4 text-gray-400 select-none cursor-pointer bg-white dark:bg-transparent"
                         @click="clearTerminateDate"
                     >
-                        <XIcon class="w-4 h-4" />
+                        <XCircleIcon class="w-4 h-4" />
                     </div>
                 </div>
             </div>
@@ -573,11 +623,11 @@ const exportReport = () => {
                 </div>
                 <div class="flex flex-col gap-1 self-stretch">
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="selectedFundType" inputId="demo_fund" value="demo_fund" class="w-4 h-4" />
+                        <RadioButton v-model="filters['fund_type'].value" inputId="demo_fund" value="demo_fund" class="w-4 h-4" />
                         <label for="demo_fund">Demo</label>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton v-model="selectedFundType" inputId="real_fund" value="real_fund" class="w-4 h-4" />
+                        <RadioButton v-model="filters['fund_type'].value" inputId="real_fund" value="real_fund" class="w-4 h-4" />
                         <label for="real_fund">Real</label>
                     </div>
                 </div>
@@ -605,7 +655,7 @@ const exportReport = () => {
                 severity="info"
                 class="w-full"
                 outlined
-                @click="clearAll"
+                @click="clearFilter"
             >
                 Clear All
             </Button>

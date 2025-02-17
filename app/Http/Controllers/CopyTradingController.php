@@ -36,12 +36,98 @@ class CopyTradingController extends Controller
         ]);
     }
 
-    public function getSubscriptionOverview()
+    public function getSubscriptionOverview(Request $request)
     {
         $authUser = Auth::user();
 
-        $subscriptionQuery = Subscription::where('status', 'Active');
-        $subscriberQuery = Subscriber::where('status', 'Subscribing');
+        $subscriptionQuery = Subscription::with([
+            'user:id,name,email,hierarchyList',
+        ])->where('status', 'Active');
+
+        $subscriberQuery = Subscriber::with([
+            'user:id,name,email,hierarchyList',
+        ])->where('status', 'Subscribing');
+
+        $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
+
+        if ($data['filters']['global']) {
+            $keyword = $data['filters']['global'];
+
+            $subscriptionQuery->where(function ($q) use ($keyword) {
+                $q->whereHas('user', function ($query) use ($keyword) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%');
+                    });
+                })
+                    ->orWhere('meta_login', 'like', '%' . $keyword . '%')
+                    ->orWhere('subscription_number', 'like', '%' . $keyword . '%');
+            });
+
+            $subscriberQuery->where(function ($q) use ($keyword) {
+                $q->whereHas('user', function ($query) use ($keyword) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%');
+                    });
+                })
+                    ->orWhere('meta_login', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if (!empty($data['filters']['start_join_date']) && !empty($data['filters']['end_join_date'])) {
+            $start_join_date = \Illuminate\Support\Carbon::parse($data['filters']['start_join_date'])->addDay()->startOfDay();
+            $end_join_date = Carbon::parse($data['filters']['end_join_date'])->addDay()->endOfDay();
+
+            $subscriptionQuery->whereBetween('approval_date', [$start_join_date, $end_join_date]);
+            $subscriberQuery->whereBetween('approval_date', [$start_join_date, $end_join_date]);
+        }
+
+        if (!empty($data['filters']['start_terminate_date']) && !empty($data['filters']['end_terminate_date'])) {
+            $start_terminate_date = \Illuminate\Support\Carbon::parse($data['filters']['start_terminate_date'])->addDay()->startOfDay();
+            $end_terminate_date = Carbon::parse($data['filters']['end_terminate_date'])->addDay()->endOfDay();
+
+            $subscriptionQuery->whereBetween('termination_date', [$start_terminate_date, $end_terminate_date]);
+            $subscriberQuery->whereBetween('unsubscribe_date', [$start_terminate_date, $end_terminate_date]);
+        }
+
+//        if ($data['filters']['fund_type']['value']) {
+//            switch ($data['filters']['fund_type']['value']) {
+//                case 'demo_fund':
+//                    $query->where('demo_fund', '>', 0);
+//                    break;
+//
+//                case 'real_fund':
+//                    $query->where('real_fund', '>', 0);
+//                    break;
+//            }
+//        }
+
+        $leaderId = $data['filters']['leader_id']['id'] ?? null;
+
+        // Filter by leaderId if provided
+        if ($leaderId) {
+            // Load users under the specified leader
+            $usersUnderLeader = User::where('leader_status', 1)
+                ->where('id', $leaderId)
+                ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                ->pluck('id');
+
+            $subscriptionQuery->whereIn('user_id', $usersUnderLeader);
+            $subscriberQuery->whereIn('user_id', $usersUnderLeader);
+        }
+
+        if ($data['filters']['master_meta_login']) {
+            $subscriptionQuery->whereHas('master', function ($query) use ($data) {
+                $query->where('meta_login', $data['filters']['master_meta_login']);
+            });
+
+            $subscriberQuery->where('master_meta_login', $data['filters']['master_meta_login']);
+        }
+
+        if ($data['filters']['status']) {
+            $subscriptionQuery->where('status', $data['filters']['status']);
+        }
 
         // Apply filtering based on roles and leader status
         if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
@@ -117,122 +203,137 @@ class CopyTradingController extends Controller
 
     public function getSubscriptionsData(Request $request, UserService $userService)
     {
-        $subscriptionQuery = SubscriptionBatch::with([
-            'user:id,name,email,hierarchyList',
-            'master:id,meta_login',
-            'master.tradingUser:id,meta_login,name,company,account_type',
-            'master.tradingUser.from_account_type',
-        ]);
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
 
-        $authUser = Auth::user();
+            $query = SubscriptionBatch::with([
+                'user:id,name,email,hierarchyList',
+                'master:id,meta_login',
+                'master.tradingUser:id,meta_login,name,company,account_type',
+                'master.tradingUser.from_account_type',
+            ]);
 
-        $join_start_date = $request->query('joinStartDate');
-        $join_end_date = $request->query('joinEndDate');
+            $authUser = Auth::user();
 
-        if ($join_start_date && $join_end_date) {
-            $start_date = Carbon::createFromFormat('Y-m-d', $join_start_date)->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $join_end_date)->endOfDay();
+            if ($data['filters']['global']['value']) {
+                $keyword = $data['filters']['global']['value'];
 
-            $subscriptionQuery->whereBetween('approval_date', [$start_date, $end_date]);
-        }
-
-        $terminate_start_date = $request->query('terminateStartDate');
-        $terminate_end_date = $request->query('terminateEndDate');
-
-        if ($terminate_start_date && $terminate_end_date) {
-            $start_date = Carbon::createFromFormat('Y-m-d', $terminate_start_date)->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $terminate_end_date)->endOfDay();
-
-            $subscriptionQuery->whereBetween('termination_date', [$start_date, $end_date]);
-        }
-
-        if ($request->fundType) {
-            switch ($request->fundType) {
-                case 'demo_fund':
-                    $subscriptionQuery->where('demo_fund', '>', 0);
-                    break;
-
-                case 'real_fund':
-                    $subscriptionQuery->where('real_fund', '>', 0);
-                    break;
-            }
-        }
-
-        if ($request->first_leader_id) {
-            $first_leader = User::find($request->first_leader_id);
-            $childrenIds = $first_leader->getChildrenIds();
-            $subscriptionQuery->whereIn('user_id', $childrenIds);
-        }
-
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $childrenIds = $authUser->getChildrenIds();
-            $childrenIds[] = $authUser->id;
-            $subscriptionQuery->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $subscriptionQuery->whereIn('user_id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $subscriptionQuery->whereIn('user_id', []);
-        }
-
-        if ($request->export == 'yes') {
-            if ($request->master_meta_login) {
-                $subscriptionQuery->where('master_meta_login', $request->master_meta_login);
+                $query->where(function ($q) use ($keyword) {
+                    $q->whereHas('user', function ($query) use ($keyword) {
+                        $query->where(function ($q) use ($keyword) {
+                            $q->where('name', 'like', '%' . $keyword . '%')
+                                ->orWhere('email', 'like', '%' . $keyword . '%');
+                        });
+                    })
+                        ->orWhere('meta_login', 'like', '%' . $keyword . '%')
+                        ->orWhere('subscription_number', 'like', '%' . $keyword . '%');
+                });
             }
 
-            if ($request->status) {
-                $subscriptionQuery->where('status', $request->status);
+            if (!empty($data['filters']['start_join_date']['value']) && !empty($data['filters']['end_join_date']['value'])) {
+                $start_join_date = \Illuminate\Support\Carbon::parse($data['filters']['start_join_date']['value'])->addDay()->startOfDay();
+                $end_join_date = Carbon::parse($data['filters']['end_join_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('approval_date', [$start_join_date, $end_join_date]);
             }
 
-            return Excel::download(new SubscriptionExport($subscriptionQuery), Carbon::now() . '-copy-trading-report.xlsx');
+            if (!empty($data['filters']['start_terminate_date']['value']) && !empty($data['filters']['end_terminate_date']['value'])) {
+                $start_terminate_date = \Illuminate\Support\Carbon::parse($data['filters']['start_terminate_date']['value'])->addDay()->startOfDay();
+                $end_terminate_date = Carbon::parse($data['filters']['end_terminate_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('termination_date', [$start_terminate_date, $end_terminate_date]);
+            }
+
+            if ($data['filters']['fund_type']['value']) {
+                switch ($data['filters']['fund_type']['value']) {
+                    case 'demo_fund':
+                        $query->where('demo_fund', '>', 0);
+                        break;
+
+                    case 'real_fund':
+                        $query->where('real_fund', '>', 0);
+                        break;
+                }
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            if ($data['filters']['master_meta_login']['value']) {
+                $query->where('master_meta_login', $data['filters']['master_meta_login']['value']['meta_login']);
+            }
+
+            if ($data['filters']['status']['value']) {
+                $query->where('status', $data['filters']['status']['value']);
+            }
+
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
+            } else {
+                $query->orderByDesc('approval_date');
+            }
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('user_id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('user_id', []);
+            }
+
+            if ($request->exportStatus) {
+
+                return Excel::download(new SubscriptionExport($query), Carbon::now() . '-copy-trading-report.xlsx');
+            }
+
+            $subscriptions = $query->paginate($data['rows']);
+
+            // Extract all hierarchy IDs from users' hierarchyLists
+            $userHierarchyLists = $subscriptions->pluck('user.hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            $leaders = User::whereIn('id', $userHierarchyLists)
+                ->where('leader_status', 1) // Only load users with leader_status == 1
+                ->get()
+                ->keyBy('id');
+
+            // Attach the first leader details
+            $subscriptions->each(function ($subscriptionQuery) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
+
+                $subscriptionQuery->first_leader_id = $firstLeader?->id;
+                $subscriptionQuery->first_leader_name = $firstLeader?->name;
+                $subscriptionQuery->first_leader_email = $firstLeader?->email;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $subscriptions,
+            ]);
         }
 
-        $subscription = $subscriptionQuery->select([
-            'id',
-            'user_id',
-            'trading_account_id',
-            'meta_login',
-            'meta_balance',
-            'real_fund',
-            'demo_fund',
-            'master_id',
-            'master_meta_login',
-            'type',
-            'approval_date',
-            'termination_date',
-            'status',
-        ])
-            ->orderByDesc('approval_date')
-            ->get();
-
-        // Extract all hierarchy IDs from users' hierarchyLists
-        $userHierarchyLists = $subscription->pluck('user.hierarchyList')
-            ->filter()
-            ->flatMap(fn($list) => explode('-', trim($list, '-')))
-            ->unique()
-            ->toArray();
-
-        // Load all potential leaders in bulk
-        $leaders = User::whereIn('id', $userHierarchyLists)
-            ->where('leader_status', 1) // Only load users with leader_status == 1
-            ->get()
-            ->keyBy('id');
-
-        // Attach the first leader details
-        $subscription->each(function ($subscriptionQuery) use ($userService, $leaders) {
-            $firstLeader = $userService->getFirstLeader($subscriptionQuery->user?->hierarchyList, $leaders);
-
-            $subscriptionQuery->first_leader_id = $firstLeader?->id;
-            $subscriptionQuery->first_leader_name = $firstLeader?->name;
-            $subscriptionQuery->first_leader_email = $firstLeader?->email;
-        });
-
-        return response()->json([
-            'subscriptions' => $subscription
-        ]);
+        return response()->json(['success' => false, 'data' => []]);
     }
 
     public function pending()

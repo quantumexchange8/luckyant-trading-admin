@@ -1,7 +1,7 @@
 <script setup>
 import Card from "primevue/card";
 import Skeleton from "primevue/skeleton";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import { ArrowCircleUpIcon, ArrowCircleDownIcon } from '@heroicons/vue/solid'
 import {
     UsersCheckIcon,
@@ -10,6 +10,7 @@ import {
 import {transactionFormat} from "@/Composables/index.js";
 
 const props = defineProps({
+    filters: Object,
     subscriptionBatchesCount: Number,
 })
 
@@ -20,11 +21,21 @@ const currentMonthActiveSubscriber = ref(0);
 const lastMonthSubscriberComparison = ref(0);
 const lastMonthActiveFundComparison = ref(0);
 const currentActiveFund = ref(0);
+const lazyParams = ref({});
 
 const getHighestDeposit = async () => {
     isLoading.value = true;
+
+    lazyParams.value = { ...lazyParams.value };
+    lazyParams.value.filters = props.filters;
     try {
-        const response = await axios.get('/copy_trading/getSubscriptionOverview');
+        const params = {
+            lazyEvent: JSON.stringify(lazyParams.value)
+        };
+
+        const url = route('copy_trading.getSubscriptionOverview', params);
+
+        const response = await axios.get(url);
         topThreeUser.value = response.data.topThreeUser;
         currentMonthActiveSubscriber.value = response.data.currentMonthActiveSubscriber;
         lastMonthSubscriberComparison.value = response.data.lastMonthSubscriberComparison;
@@ -47,11 +58,15 @@ const calculatePercentage = (fund) => {
     }
     return Math.min(((fund / currentActiveFund.value) * 100), 100);
 };
+
+watch(() => props.filters, () => {
+    getHighestDeposit();
+}, { deep: true });
 </script>
 
 <template>
     <div class="flex flex-col lg:flex-row gap-3 md:gap-5 w-full">
-        <div class="grid sm:grid-cols-2 lg:grid-cols-1 gap-3 md:gap-5 lg:min-w-80 xl:min-w-[400px]">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-1 gap-3 md:gap-5 lg:min-w-96 xl:min-w-[400px]">
             <Card>
                 <template #content>
                     <div class="flex justify-between items-center">
