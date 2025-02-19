@@ -4,13 +4,13 @@ import {useForm} from "@inertiajs/vue3";
 import {WarningIcon} from "@/Components/Icons/outline.jsx";
 
 const props = defineProps({
-    bank: Object,
+    settingPayment: Object,
 })
 
-const emit = defineEmits(['update:editDetailModal']);
+const emit = defineEmits(['update:visible']);
 
 const form = useForm({
-    id: props.bank.id,
+    id: props.settingPayment.id,
 })
 
 const deletePayment = () => {
@@ -18,31 +18,26 @@ const deletePayment = () => {
         preserveScroll: true,
         onSuccess: () => {
             closeModal()
-            // location.reload();
         },
-        onFinish: () => {
-            form.reset();
-            location.reload();
-        }
     })
 }
 
 const closeModal = () => {
-    emit('update:editDetailModal', false);
+    emit('update:visible', false);
 }
 
 </script>
 
 <template>
-<div>
+    <div>
         <WarningIcon aria-hidden="true" class="w-12 h-12" />
     </div>
     <div class="mt-5">
         <h1 class="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
-            Delete Payment
+            Delete Payment Setting
         </h1>
         <p class="dark:text-gray-400 text-sm">
-            Are you sure you want to delete this Payment? This action cannot be undone.
+            Are you sure you want to delete this Payment Setting? This action cannot be undone.
         </p>
     </div>
     <div class="mt-5 flex gap-3 justify-center">

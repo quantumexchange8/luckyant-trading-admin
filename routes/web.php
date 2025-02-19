@@ -310,6 +310,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
 
         //payment setting
         Route::get('/payment_setting', [SettingController::class, 'paymentSetting'])->name('setting.payment_setting');
+        Route::get('/getSettingPaymentMethods', [SettingController::class, 'getSettingPaymentMethods'])->name('setting.getSettingPaymentMethods');
         Route::get('/getCryptoNetworks', [SettingController::class, 'getCryptoNetworks'])->name('setting.getCryptoNetworks');
         Route::post('/addPaymentSetting', [SettingController::class, 'addPaymentSetting'])->name('setting.addPaymentSetting');
         Route::post('/updatePaymentSetting', [SettingController::class, 'updatePaymentSetting'])->name('setting.updatePaymentSetting');

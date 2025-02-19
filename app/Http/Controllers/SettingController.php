@@ -7,6 +7,7 @@ use App\Models\AccountTypeLeverage;
 use App\Models\AccountTypeToLeader;
 use App\Models\PaymentGateway;
 use App\Models\PaymentGatewayToLeader;
+use App\Models\SettingPaymentToLeader;
 use Auth;
 use Carbon\Carbon;
 use App\Models\Term;
@@ -27,41 +28,32 @@ use App\Http\Requests\PaymentSettingRequest;
 
 class SettingController extends Controller
 {
-    //
-
     public function paymentSetting()
     {
-        $countries = Country::whereIn('id', [132, 45, 240, 219, 101, 102])->get();
-        $formattedCountries = $countries->map(function ($country) {
-            return [
-                'value' => $country->id,
-                'label' => $country->name,
-                'currency' => $country->currency,
-            ];
-        });
+        return Inertia::render('Setting/Payment/SettingPayment');
+    }
 
-        $paymentDetails = SettingPaymentMethod::where('status', 'Active')->first();
+    public function getSettingPaymentMethods()
+    {
+        $paymentMethods = SettingPaymentMethod::withSum('successTransactions', 'amount')
+            ->with('visibleLeaders')
+            ->latest()
+            ->get();
 
-        $paymentHistories = SettingPaymentMethod::with(['user:id,name'])->latest()->get();
-
-        return Inertia::render('Setting/Payment/SettingPayment', [
-            'countries' => $formattedCountries,
-            'paymentDetails' => $paymentDetails,
-            'paymentHistories' => $paymentHistories,
+        return response()->json([
+            'paymentMethods' => $paymentMethods,
         ]);
     }
 
     public function addPaymentSetting(PaymentSettingRequest $request)
     {
-        $country = Country::find($request->country);
-
         $paymentSetting = SettingPaymentMethod::create([
             'payment_method' => $request->payment_method,
             'payment_account_name' => $request->payment_account_name,
             'payment_platform_name' => $request->payment_platform_name,
             'account_no' => $request->account_no,
             'country' => $request->country,
-            'currency' => $request->country ? $country->currency : 'USD',
+            'currency' => $request->country ? $request->currency : 'USD',
             'bank_swift_code' => $request->bank_swift_code,
             'bank_code' => $request->bank_code,
             'status' => 'Active',
@@ -70,22 +62,34 @@ class SettingController extends Controller
 
         if ($request->network) {
             $paymentSetting->update([
-                'crypto_network' => implode(', ', $request->network),
+                'crypto_network' => implode(',', array_column($request->network, 'name')),
             ]);
+        }
+
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            foreach ($leaders as $leader) {
+                SettingPaymentToLeader::create([
+                    'setting_payment_method_id' => $paymentSetting->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
         }
 
         if ($request->hasFile('payment_logo')) {
             $paymentSetting->addMedia($request->payment_logo)->toMediaCollection('payment_logo');
         }
 
-        return redirect()->back()
-            ->with('title', 'Success Add Payment')
-            ->with('success', 'The payment method has been added successfully.');
+        return back()->with('toast', [
+            'title' => trans('public.success'),
+            'message' => trans('public.toast_create_payment_method_success'),
+            'type' => 'success',
+        ]);
     }
 
     public function updatePaymentSetting(PaymentSettingRequest $request)
     {
-
         $payment = SettingPaymentMethod::find($request->id);
 
         $payment->update([
@@ -93,16 +97,34 @@ class SettingController extends Controller
             'payment_platform_name' => $request->payment_platform_name,
             'account_no' => $request->account_no,
             'country' => $request->country,
+            'currency' => $request->country ? $request->currency : 'USD',
             'bank_swift_code' => $request->bank_swift_code,
             'bank_code' => $request->bank_code,
-            'status' => $request->status,
+            'status' => $request->status ? 'Active' : 'Inactive',
             'handle_by' => Auth::user()->id,
         ]);
 
         if ($request->network) {
             $payment->update([
-                'crypto_network' => implode(', ', $request->network),
+                'crypto_network' => implode(',', array_column($request->network, 'name')),
             ]);
+        }
+
+        $leaders = $request->leaders;
+
+        if ($leaders) {
+            $existing_leaders = SettingPaymentToLeader::where('setting_payment_method_id', $payment->id)->get();
+
+            foreach ($existing_leaders as $existing_leader) {
+                $existing_leader->delete();
+            }
+
+            foreach ($leaders as $leader) {
+                SettingPaymentToLeader::create([
+                    'setting_payment_method_id' => $payment->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
         }
 
         if ($request->hasFile('payment_logo')) {
@@ -110,24 +132,25 @@ class SettingController extends Controller
             $payment->addMedia($request->payment_logo)->toMediaCollection('payment_logo');
         }
 
-        // Activity::create([
-        //     'subject_id' => Auth::id(),
-        //     'causer_type' => 'App\Models\SettingPaymentMethod',
-        //     'causer_id' => auth()->id(),
-        // ]);
-
-        return redirect()->back()
-            ->with('title', 'Success Updated Payment')
-            ->with('success', 'The payment has been updated successfully.');
+        return back()->with('toast', [
+            'title' => trans('public.success'),
+            'message' => trans('public.toast_update_payment_method_success'),
+            'type' => 'success',
+        ]);
     }
 
     public function deletePayment(Request $request)
     {
         $payment = SettingPaymentMethod::find($request->id);
-
         $payment->delete();
 
-        return redirect()->back();
+        $payment->visibleLeaders()->delete();
+
+        return back()->with('toast', [
+            'title' => trans('public.success'),
+            'message' => trans('public.toast_delete_payment_method_success'),
+            'type' => 'success',
+        ]);
     }
 
     public function getPaymentHistory(Request $request)

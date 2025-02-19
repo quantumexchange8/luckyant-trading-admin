@@ -128,67 +128,6 @@ const { hasRole } = usePermission();
             </template>
         </SidebarLink>
 
-<!--        <SidebarCollapsible-->
-<!--            title="Subscribers"-->
-<!--            :active="route().current('subscriber.*')"-->
-<!--            :pending-counts="pendingSubscriberRequestCount"-->
-<!--        >-->
-<!--            <template #icon>-->
-<!--                <UsersCheckIcon-->
-<!--                    class="flex-shrink-0 w-6 h-6"-->
-<!--                    aria-hidden="true"-->
-<!--                />-->
-<!--            </template>-->
-
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('subscriber.pending_subscriber')"-->
-<!--                title="Pending Subscribers"-->
-<!--                :active="route().current('subscriber.pending_subscriber')"-->
-<!--                :pending-counts="pendingSubscriberRequestCount"-->
-<!--            />-->
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('subscriber.subscribersListing')"-->
-<!--                title="Subscribers Listing"-->
-<!--                :active="route().current('subscriber.subscribersListing')"-->
-<!--            />-->
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('subscriber.switch_master')"-->
-<!--                title="Switch Master"-->
-<!--                :active="route().current('subscriber.switch_master')"-->
-<!--                :pending-counts="pendingSwitchMasterCount"-->
-<!--            />-->
-<!--        </SidebarCollapsible>-->
-
-<!--        <SidebarCollapsible-->
-<!--            title="Subscriptions"-->
-<!--            :active="route().current('subscription.*')"-->
-<!--            :pending-counts="pendingSubscriberRequestCount"-->
-<!--        >-->
-<!--            <template #icon>-->
-<!--                <FileCheck02Icon-->
-<!--                    class="flex-shrink-0 w-6 h-6"-->
-<!--                    aria-hidden="true"-->
-<!--                />-->
-<!--            </template>-->
-
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('subscription.pending_renewal')"-->
-<!--                title="Pending Renewal"-->
-<!--                :active="route().current('subscription.pending_renewal')"-->
-<!--                :pending-counts="pendingRenewalCount"-->
-<!--            />-->
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('subscription.subscription_listing')"-->
-<!--                title="Subscriptions Listing"-->
-<!--                :active="route().current('subscription.subscription_listing')"-->
-<!--            />-->
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('subscription.termination_fee')"-->
-<!--                title="Termination Fee"-->
-<!--                :active="route().current('subscription.termination_fee')"-->
-<!--            />-->
-<!--        </SidebarCollapsible>-->
-
         <SidebarCollapsible
             title="Copy Trading"
             :active="route().current('copy_trading.*')"
@@ -373,52 +312,5 @@ const { hasRole } = usePermission();
                 :active="route().current('setting.bank_withdrawal_setting')"
             />
         </SidebarCollapsible>
-
-<!--        <SidebarCollapsible-->
-<!--            title="Components"-->
-<!--            :active="route().current('components.*')"-->
-<!--        >-->
-<!--            <template #icon>-->
-<!--                <TemplateIcon-->
-<!--                    class="flex-shrink-0 w-6 h-6"-->
-<!--                    aria-hidden="true"-->
-<!--                />-->
-<!--            </template>-->
-
-<!--            <SidebarCollapsibleItem-->
-<!--                :href="route('components.buttons')"-->
-<!--                title="Buttons"-->
-<!--                :active="route().current('components.buttons')"-->
-<!--            />-->
-<!--        </SidebarCollapsible>-->
-
-        <!-- Examples -->
-        <!--
-        => External link example
-        <SidebarLink
-            title="Github"
-            href="https://github.com/kamona-wd/kui-laravel-breeze"
-            external
-            target="_blank"
-        >
-        </SidebarLink>
-
-        => Collapsible examples
-        <SidebarCollapsible title="Users" :active="$page.url.startsWith('/users')">
-            <SidebarCollapsibleItem :href="route('users.index')" title="List" :active="$page.url === '/users/index'" />
-            <SidebarCollapsibleItem :href="route('users.create')" title="Create" :active="$page.url === '/users/create'" />
-        </SidebarCollapsible>
-
-        <SidebarCollapsible title="Users" :active="usePage().url.value.startsWith('/users')">
-            <template #icon>
-                <UserIcon
-                    class="flex-shrink-0 w-6 h-6"
-                    aria-hidden="true"
-                />
-            </template>
-
-            <SidebarCollapsibleItem :href="route('users.index')" title="List" :active="route().current('users.index')" />
-            <SidebarCollapsibleItem :href="route('users.create')" title="Create" :active="route().current('users.create')" />
-        </SidebarCollapsible>-->
     </PerfectScrollbar>
 </template>

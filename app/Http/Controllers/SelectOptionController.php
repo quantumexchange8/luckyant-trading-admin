@@ -141,6 +141,7 @@ class SelectOptionController extends Controller
             'id',
             'name',
             'iso2',
+            'currency',
             'phone_code',
             'nationality',
             'translations',

@@ -182,6 +182,16 @@ const closeDialog = () => {
                         <span class="text-gray-400">{{ pending.first_leader_email }}</span>
                     </div>
                 </div>
+
+                <div class="flex flex-col md:flex-row md:items-start gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.payment_method') }}
+                    </div>
+                    <div class="flex flex-col text-gray-950 dark:text-white text-sm font-medium">
+                        <span>{{ pending.payment_method }}</span>
+                        <span class="text-gray-400">{{ pending.to_wallet_address }}</span>
+                    </div>
+                </div>
             </div>
 
             <div v-if="pending.transaction_type === 'Deposit' && pending.media.length > 0" class="flex flex-col md:flex-row md:items-start gap-1 self-stretch pt-5">
