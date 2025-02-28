@@ -85,6 +85,10 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/impersonate/{user_id}', [MemberController::class, 'impersonate'])->name('member.impersonate');
         Route::get('/affiliate_listing', [MemberController::class, 'affiliate_listing'])->name('member.affiliate_listing');
         Route::get('/getAffiliateSummaries', [MemberController::class, 'getAffiliateSummaries'])->name('member.getAffiliateSummaries');
+
+        // Member Fund
+        Route::get('/member_fund', [MemberController::class, 'member_fund'])->name('member.member_fund');
+        Route::get('/getMemberFundData', [MemberController::class, 'getMemberFundData'])->name('member.getMemberFundData');
     });
 
     /**

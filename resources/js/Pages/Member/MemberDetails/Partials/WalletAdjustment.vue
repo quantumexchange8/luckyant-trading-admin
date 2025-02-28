@@ -126,6 +126,10 @@ const closeModal = () => {
                         <RadioButton v-model="form.type" inputId="type_wallet_redemption" value="WalletRedemption" />
                         <Label for="type_wallet_redemption" class="ml-2">Redemption</Label>
                     </div>
+                    <div class="flex items-center">
+                        <RadioButton v-model="form.type" inputId="type_wallet_return" value="ReturnedAmount" />
+                        <Label for="type_wallet_return" class="ml-2">Returned Amount</Label>
+                    </div>
                 </div>
                 <InputError :message="form.errors.type" class="mt-1" />
             </div>

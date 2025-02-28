@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AffiliateSummaryExport;
+use App\Exports\MemberFundExport;
 use App\Exports\MemberListingExport;
 use App\Http\Requests\WalletAdjustmentRequest;
 use App\Jobs\ExportMemberReportJob;
@@ -207,7 +208,8 @@ class MemberController extends Controller
                     $keyword = $data['filters']['global']['value'];
 
                     $q->where('name', 'like', '%' . $keyword . '%')
-                        ->orWhere('email', 'like', '%' . $keyword . '%');
+                        ->orWhere('email', 'like', '%' . $keyword . '%')
+                        ->orWhere('username', 'like', '%' . $keyword . '%');
                 });
             }
 
@@ -694,7 +696,7 @@ class MemberController extends Controller
         $transactionData['from_wallet_id'] = $wallet->id;
         $transactionData['transaction_type'] = $request->type;
 
-        if ($transactionData['new_wallet_amount'] < 0) {
+        if ($transactionData['new_wallet_amount'] < 0 && $request->type != 'ReturnedAmount') {
             throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
         }
 
@@ -1388,5 +1390,154 @@ class MemberController extends Controller
             'status' => 'error',
             'message' => 'File not found.',
         ], 404);
+    }
+
+    public function member_fund()
+    {
+        return Inertia::render('Member/MemberFund/MemberFund');
+    }
+
+    public function getMemberFundData(Request $request, UserService $userService)
+    {
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
+
+            $query = User::whereNotIn('role', ['super-admin', 'admin']);
+
+            if ($data['filters']['global']['value']) {
+                $query->where(function ($q) use ($data) {
+                    $keyword = $data['filters']['global']['value'];
+
+                    $q->where('name', 'like', '%' . $keyword . '%')
+                        ->orWhere('email', 'like', '%' . $keyword . '%')
+                        ->orWhere('username', 'like', '%' . $keyword . '%');
+                });
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+// Filter by leaderId if provided
+            if ($leaderId) {
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('id', $usersUnderLeader);
+            }
+
+// Handle start_date and end_date filters
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = Carbon::parse($data['filters']['start_date']['value'])->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->endOfDay();
+
+                $query->whereDate('created_at', '<=', $end_date);
+            } else {
+                $start_date = null;
+                $end_date = null;
+            }
+
+// Handle role-based user filtering
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin sees all users
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('id', $childrenIds);
+            } else {
+                $query->whereIn('id', []);
+            }
+
+            if ($request->exportStatus) {
+                return Excel::download(new MemberFundExport($query->clone()), now() . '-member-fund-report.xlsx');
+            }
+
+            // Paginate results
+            $usersPaginated = $query->latest('id')->paginate($data['rows']);
+
+            // Extract user hierarchy lists
+            $userHierarchyLists = $usersPaginated->pluck('hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            $leaderQuery = $leaderId > 0
+                ? User::where('id', $leaderId)->where('leader_status', 1)
+                : User::whereIn('id', $userHierarchyLists)->where('leader_status', 1);
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            // Transform user collection with transaction data
+            $usersTransformed = $usersPaginated->map(function ($user) use ($userService, $leaders, $start_date, $end_date) {
+                $transactionQuery = Transaction::where('user_id', $user->id)
+                    ->where('status', 'Success');
+
+                if ($start_date && $end_date) {
+                    $transactionQuery->whereBetween('created_at', [$start_date, $end_date]);
+                }
+
+                // Get total deposits
+                $totalDeposits = (clone $transactionQuery)
+                    ->where('transaction_type', 'Deposit')
+                    ->sum('amount');
+
+                // Get total withdrawals
+                $totalWithdrawals = (clone $transactionQuery)
+                    ->where('transaction_type', 'Withdrawal')
+                    ->sum('amount');
+
+                // Get total group deposits (from children)
+                $childrenIds = $user->getChildrenIds();
+                $groupTransactionQuery = Transaction::whereIn('user_id', $childrenIds)
+                    ->where('transaction_type', 'Deposit')
+                    ->where('status', 'Success');
+
+                if ($start_date && $end_date) {
+                    $groupTransactionQuery->whereBetween('created_at', [$start_date, $end_date]);
+                }
+
+                $totalGroupDeposits = $groupTransactionQuery->sum('amount');
+
+                $firstLeader = $userService->getFirstLeader($user->hierarchyList, $leaders);
+
+                return [
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'leader_status' => $user->leader_status,
+                    'first_leader_name' => $firstLeader?->name,
+                    'first_leader_email' => $firstLeader?->email,
+                    'total_deposits' => $totalDeposits,
+                    'total_withdrawals' => $totalWithdrawals,
+                    'total_group_deposits' => $totalGroupDeposits,
+                ];
+            });
+
+            // Return paginated response with transformed data
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'users' => $usersTransformed,
+                    'pagination' => [
+                        'total' => $usersPaginated->total(),
+                        'per_page' => $usersPaginated->perPage(),
+                        'current_page' => $usersPaginated->currentPage(),
+                        'last_page' => $usersPaginated->lastPage(),
+                        'from' => $usersPaginated->firstItem(),
+                        'to' => $usersPaginated->lastItem(),
+                    ],
+                ],
+            ]);
+
+        }
+
+        return response()->json(['success' => false, 'data' => []]);
     }
 }

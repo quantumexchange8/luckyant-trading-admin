@@ -292,4 +292,7 @@ return [
     "delete" => "Delete",
     "toast_update_payment_method_success" => "Payment Setting has been updated",
     "toast_delete_payment_method_success" => "Payment Setting has been deleted",
+    "member_fund" => "Member Fund",
+    "total_withdrawal" => "Total Withdrawal",
+    "export" => "Export",
 ];

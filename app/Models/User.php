@@ -131,6 +131,11 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(PammSubscription::class, 'user_id', 'id')->where('status', 'Active');
     }
 
+    public function total_deposits(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'user_id', 'id')->where('transaction_type', 'Deposit')->where('status', 'Success');
+    }
+
     public function getFirstLeader()
     {
         $first_leader = null;

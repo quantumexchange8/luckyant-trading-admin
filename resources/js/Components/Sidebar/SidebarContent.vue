@@ -83,6 +83,11 @@ const { hasRole } = usePermission();
                 :pending-counts="pendingKycCount"
             />
             <SidebarCollapsibleItem
+                :href="route('member.member_fund')"
+                :title="$t('public.member_fund')"
+                :active="route().current('member.member_fund')"
+            />
+            <SidebarCollapsibleItem
                 :href="route('member.affiliate_listing')"
                 title="Affiliate Listing"
                 :active="route().current('member.affiliate_listing')"
