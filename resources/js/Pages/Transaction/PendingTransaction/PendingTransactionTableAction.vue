@@ -152,6 +152,15 @@ const closeDialog = () => {
                         $ {{ formatAmount(pending.transaction_charges) }}
                     </div>
                 </div>
+                <div v-if="pending.transaction_type === 'Deposit'" class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.transfer_amount') }}
+                    </div>
+                    <div class="text-primary-500 text-sm font-medium">
+                        <span>{{ pending.setting_payment?.currency === 'USD' ? '$' : pending.setting_payment ? '¥' : '$' }}</span>
+                        {{ formatAmount(pending.transaction_amount ?? 0) }}
+                    </div>
+                </div>
                 <div v-if="pending.transaction_type === 'Withdrawal'" class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
                     <div class="w-[140px] text-gray-500 text-xs font-medium">
                         {{ $t('public.receive') }}

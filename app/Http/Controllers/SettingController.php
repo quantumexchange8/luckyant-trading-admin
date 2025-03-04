@@ -492,7 +492,7 @@ class SettingController extends Controller
             'payment_app_name' => ['required'],
             'secret_key' => ['required'],
             'secondary_key' => ['required'],
-            'leaders' => ['required'],
+            'leaders' => ['nullable'],
         ])->setAttributeNames([
             'name' => 'Name',
             'platform' => 'Platform',
@@ -518,13 +518,12 @@ class SettingController extends Controller
 
         $leaders = $request->leaders;
 
+        $existing_leaders = PaymentGatewayToLeader::where('payment_gateway_id', $payment_gateway->id)->get();
+        foreach ($existing_leaders as $existing_leader) {
+            $existing_leader->delete();
+        }
+
         if ($leaders) {
-            $existing_leaders = PaymentGatewayToLeader::where('payment_gateway_id', $payment_gateway->id)->get();
-
-            foreach ($existing_leaders as $existing_leader) {
-                $existing_leader->delete();
-            }
-
             foreach ($leaders as $leader) {
                 PaymentGatewayToLeader::create([
                     'payment_gateway_id' => $payment_gateway->id,

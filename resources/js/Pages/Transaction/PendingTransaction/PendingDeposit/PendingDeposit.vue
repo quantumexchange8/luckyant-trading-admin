@@ -321,15 +321,6 @@ const closeDialog = () => {
                             </template>
                         </Column>
                         <Column
-                            field="to_wallet"
-                            :header="$t('public.to')"
-                            class="min-w-32"
-                        >
-                            <template #body="slotProps">
-                                {{ $t(`public.${slotProps.data.to_wallet.type}`) }}
-                            </template>
-                        </Column>
-                        <Column
                             field="transaction_number"
                             sortable
                             :header="$t('public.transaction_no')"
@@ -346,7 +337,20 @@ const closeDialog = () => {
                             class="table-cell min-w-40"
                         >
                             <template #body="slotProps">
-                                <span class="text-primary-500">$ {{ formatAmount(slotProps.data.amount ?? 0) }}</span>
+                                <span>$ {{ formatAmount(slotProps.data.amount ?? 0) }}</span>
+                            </template>
+                        </Column>
+                        <Column
+                            field="transaction_amount"
+                            sortable
+                            :header="$t('public.transfer_amount')"
+                            class="table-cell min-w-52"
+                        >
+                            <template #body="slotProps">
+                                <div class="text-primary-500 font-medium">
+                                    <span>{{ slotProps.data.setting_payment?.currency === 'USD' ? '$' : slotProps.data.setting_payment ? '¥' : '$' }}</span>
+                                    {{ formatAmount(slotProps.data.transaction_amount ?? 0) }}
+                                </div>
                             </template>
                         </Column>
                         <Column

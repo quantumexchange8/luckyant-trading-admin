@@ -76,7 +76,8 @@ class TransactionController extends Controller
             'to_meta_login:id,meta_login,account_type',
             'to_meta_login.accountType:id,name,slug',
             'payment_account',
-            'media'
+            'media',
+            'setting_payment'
         ])
 
             ->where([
@@ -196,7 +197,13 @@ class TransactionController extends Controller
 
                 if ($transaction->transaction_type == 'Deposit') {
                     $wallet = Wallet::find($transaction->to_wallet_id);
-                    $wallet->balance += $transaction->amount;
+
+                    if ($transaction->payment_method == 'Payment Merchant') {
+                        $wallet->balance += $transaction->transaction_amount;
+                    } else {
+                        $wallet->balance += $transaction->amount;
+                    }
+
                     $wallet->save();
 
                     if (App::environment('production')) {
@@ -230,7 +237,12 @@ class TransactionController extends Controller
                     'new_wallet_amount' => $wallet->balance,
                 ]);
 
-                $wallet->balance += $transaction->amount;
+                if ($transaction->payment_method == 'Payment Merchant') {
+                    $wallet->balance += $transaction->transaction_amount;
+                } else {
+                    $wallet->balance += $transaction->amount;
+                }
+
                 $wallet->save();
 
                 if (App::environment('production')) {

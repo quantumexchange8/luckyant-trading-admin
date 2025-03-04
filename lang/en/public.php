@@ -295,4 +295,5 @@ return [
     "member_fund" => "Member Fund",
     "total_withdrawal" => "Total Withdrawal",
     "export" => "Export",
+    "transfer_amount" => "Transfer Amount",
 ];
