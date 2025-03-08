@@ -67,7 +67,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
                 'first_leader' => $record->first_leader_name,
                 'trading_account' => $record->meta_login ?? '-',
                 'master' => $record->master->tradingUser->name ?? '-',
-                'type' => strtoupper($record->master->type),
+                'type' => strtoupper($record->master?->type),
                 'master_trading_account' => $record->master_meta_login,
                 'account_type' => $record->master->tradingUser->from_account_type->name ?? '-',
                 'subscription_number' => $record->subscription_number,

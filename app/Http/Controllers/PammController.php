@@ -38,7 +38,7 @@ class PammController extends Controller
         $pendingQuery = PammSubscription::query()
             ->with([
                 'user:id,name,email,hierarchyList',
-                'master:id,meta_login',
+                'master:id,meta_login,type',
                 'master.tradingUser:id,meta_login,name,company,account_type',
                 'master.tradingUser.from_account_type',
             ])
