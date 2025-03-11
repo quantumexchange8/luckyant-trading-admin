@@ -144,10 +144,13 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      */
     Route::prefix('announcement')->group(function () {
         Route::get('/listing', [AnnouncementController::class, 'index'])->name('announcement.announcement_listing');
+        Route::get('/new_announcement', [AnnouncementController::class, 'create'])->name('announcement.create');
         Route::get('/getAnnouncement', [AnnouncementController::class, 'getAnnouncement'])->name('getAnnouncement');
+        Route::get('/edit_announcement/{id}', [AnnouncementController::class, 'edit'])->name('announcement.edit_announcement');
+
         Route::post('/addAnnouncement', [AnnouncementController::class, 'addAnnouncement'])->name('addAnnouncement');
-        Route::post('/edit_details', [AnnouncementController::class, 'editAnnoucement'])->name('announcement.edit_details');
-        Route::post('/updateStatus', [AnnouncementController::class, 'updateStatus'])->name('announcement.updateStatus');
+        Route::post('/updateAnnouncement', [AnnouncementController::class, 'updateAnnouncement'])->name('announcement.updateAnnouncement');
+        Route::put('/updateStatus', [AnnouncementController::class, 'updateStatus'])->name('announcement.updateStatus');
     });
 
     /**

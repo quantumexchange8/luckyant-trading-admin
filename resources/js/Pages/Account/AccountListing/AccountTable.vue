@@ -509,7 +509,6 @@ const exportReport = () => {
                         class="w-full"
                         selectionMode="range"
                         placeholder="dd/mm/yyyy - dd/mm/yyyy"
-                        tim
                     />
                     <div
                         v-if="selectedDate && selectedDate.length > 0"

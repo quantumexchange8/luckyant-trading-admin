@@ -10,6 +10,7 @@ export default {
 
             //Color
             'bg-white dark:bg-gray-900',
+            'border border-gray-300 dark:border-gray-800',
             'text-gray-950 dark:text-gray-0'
         ]
     },
@@ -17,7 +18,7 @@ export default {
         class: [
             //Flex
             'flex flex-col',
-            'gap-4',
+            'gap-5',
 
             'p-5'
         ]

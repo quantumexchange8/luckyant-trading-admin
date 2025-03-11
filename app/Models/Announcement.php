@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
@@ -19,8 +20,15 @@ class Announcement extends Model implements HasMedia
         'subject',
         'details',
         'type',
-        'status'
+        'url',
+        'status',
+        'handle_by',
     ];
+
+    public function leaders(): HasManyThrough
+    {
+        return $this->hasManyThrough(User::class, AnnouncementToLeader::class, 'announcement_id', 'id', 'id', 'user_id');
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

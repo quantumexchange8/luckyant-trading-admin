@@ -9,6 +9,7 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m'
 import { i18nVue } from 'laravel-vue-i18n'
 import PrimeVue from 'primevue/config';
 import Tooltip from 'primevue/tooltip';
+import ConfirmationService from 'primevue/confirmationservice';
 
 const appName =
     window.document.getElementsByTagName('title')[0]?.innerText || 'K UI'
@@ -35,6 +36,7 @@ createInertiaApp({
                 unstyled: true,
                 pt: Aura
             })
+            .use(ConfirmationService)
             .directive('tooltip', Tooltip);
 
         app.mount(el);

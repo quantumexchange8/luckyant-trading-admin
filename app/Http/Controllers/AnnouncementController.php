@@ -3,87 +3,210 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\AnnouncementToLeader;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AnnouncementController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Announcement/Announcement');
+        return Inertia::render('Announcement/Announcement', [
+            'announcementsCount' => Announcement::count()
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Announcement/NewAnnouncement');
+    }
+
+    public function edit($id)
+    {
+        $announcement = Announcement::with([
+            'leaders',
+            'media'
+        ])->find($id);
+
+        return Inertia::render('Announcement/EditAnnouncement', [
+            'announcement' => $announcement,
+            'thumbnail' => $announcement->getMedia('announcement'),
+        ]);
     }
 
     public function getAnnouncement(Request $request)
     {
-        $announcements = Announcement::query()
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = $request->input('search');
-                $query->where(function ($innerQuery) use ($search) {
-                    $innerQuery->where('subject', 'like', '%' . $search . '%');
-                });
-            })
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $date = $request->input('date');
-                $dateRange = explode(' - ', $date);
-                $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-                $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
-                $query->whereBetween('created_at', [$start_date, $end_date]);
+        // fetch limit with default
+        $limit = $request->input('limit', 6);
+
+        // Fetch parameter from request
+        $search = $request->input('search', '');
+        $start_date = $request->input('start_date', '');
+        $end_date = $request->input('end_date', '');
+
+        $query = Announcement::with([
+            'media',
+            'leaders'
+        ]);
+
+        if (!empty($search)) {
+            $keyword = '%' . $search . '%';
+            $query->where(function ($q) use ($keyword) {
+                $q->where('subject', 'like', $keyword)
+                    ->orWhere('details', 'like', $keyword);
             });
+        }
 
-        $results = $announcements->latest()->paginate(10);
+        if (!empty($start_date) && !empty($end_date)) {
+            $startDate = Carbon::parse($start_date)->addDay()->startOfDay();
+            $endDate = Carbon::parse($end_date)->addDay()->endOfDay();
 
-        $results->each(function ($image) {
-            $image->announcement_image_url = $image->getFirstMediaUrl('announcement');
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+
+        // Get total count of masters
+        $totalRecords = $query->count();
+
+        // Fetch paginated results
+        $announcements = $query->latest()
+            ->paginate($limit);
+
+        $formattedAnnouncements = $announcements->map(function ($master) {
+            // if all leaders included, return 'everyone'
+            $totalCount = $master->leaders->count();
+            $leadersCount = User::where('leader_status', 1)->count();
+
+            if ($totalCount === $leadersCount) {
+                $master->leaders_names = 'everyone';
+            } else {
+                $master->leaders_names = $master->leaders->pluck('name')->join(', ');
+            }
+
+            return $master;
         });
 
-        return response()->json($results);
+        return response()->json([
+            'announcements' => $formattedAnnouncements,
+            'totalRecords' => $totalRecords,
+            'currentPage' => $announcements->currentPage(),
+        ]);
     }
 
     public function addAnnouncement(Request $request)
     {
+        Validator::make($request->all(), [
+            'receiver' => ['required'],
+            'thumbnail' => ['nullable', 'image', 'max:8000'],
+        ])->setAttributeNames([
+            'receiver' => trans('public.recipient'),
+            'thumbnail' => trans('public.thumbnail'),
+        ])->validate();
+
+        if (!$request->filled('subject') && !$request->filled('content') && !$request->hasFile('thumbnail')) {
+            throw ValidationException::withMessages([
+                'subject' => trans('public.at_least_one_field_required'),
+            ]);
+        }
 
         $announcement = Announcement::create([
             'subject' => $request->subject,
             'details' => $request->details,
-            'type' => $request->positions,
+            'type' => 'login',
+            'url' => $request->url,
             'status' => 'Active',
+            'handle_by' => \Auth::id()
         ]);
 
-        if ($request->hasfile('image'))
-        {
-            $announcement->addMedia($request->image)->toMediaCollection('announcement');
+        if ($request->hasfile('thumbnail')) {
+            $announcement->addMedia($request->thumbnail)->toMediaCollection('announcement');
         }
 
-        return redirect()->back()->with('title', 'Announcement uploaded')->with('success', 'This announcement has been uploaded successfully.');
+        $leaders = $request->receiver;
+
+        if ($leaders) {
+            foreach ($leaders as $leader) {
+                AnnouncementToLeader::create([
+                    'announcement_id' => $announcement->id,
+                    'user_id' => $leader['id'],
+                ]);
+            }
+        }
+
+        return to_route('announcement.announcement_listing')->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_publish_announcement"),
+            'type' => 'success',
+        ]);
     }
 
-    public function editAnnoucement(Request $request)
+    public function updateAnnouncement(Request $request)
     {
+        Validator::make($request->all(), [
+            'receiver' => ['required'],
+            'thumbnail' => ['nullable', 'image', 'max:8000'],
+        ])->setAttributeNames([
+            'receiver' => trans('public.recipient'),
+            'thumbnail' => trans('public.thumbnail'),
+        ])->validate();
 
         $announcement = Announcement::find($request->id);
 
         $announcement->update([
             'subject' => $request->subject,
             'details' => $request->details,
+            'url' => $request->url,
         ]);
 
-        if ($request->hasfile('image'))
-        {
-            $announcement->clearMediaCollection('announcement');
-            $announcement->addMedia($request->image)->toMediaCollection('announcement');
+        $leaders = $request->receiver;
+
+        if ($leaders) {
+            $existingLeaders = AnnouncementToLeader::where('announcement_id', $announcement->id)
+                ->pluck('user_id')
+                ->toArray();
+
+            $incomingLeaderIds = collect($leaders)->pluck('id')->toArray();
+
+            if (!empty(array_diff($existingLeaders, $incomingLeaderIds)) || !empty(array_diff($incomingLeaderIds, $existingLeaders))) {
+                AnnouncementToLeader::where('announcement_id', $announcement->id)->delete();
+
+                foreach ($leaders as $leader) {
+                    AnnouncementToLeader::create([
+                        'announcement_id' => $announcement->id,
+                        'user_id' => $leader['id'],
+                    ]);
+                }
+            }
+        } else {
+            AnnouncementToLeader::where('master_id', $announcement->id)->delete();
         }
 
-        return redirect()->back()->with('title', 'Announcement uploaded')->with('success', 'This announcement has been uploaded successfully.');
+        if ($request->hasfile('thumbnail')) {
+            $announcement->clearMediaCollection('announcement');
+            $announcement->addMedia($request->thumbnail)->toMediaCollection('announcement');
+        }
+
+        return to_route('announcement.announcement_listing')->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_announcement"),
+            'type' => 'success',
+        ]);
     }
 
     public function updateStatus(Request $request)
     {
         $announcement = Announcement::find($request->id);
 
-        $announcement->update([
-            'status' => $request->status,
-        ]);
+        $announcement->status = $announcement->status == 'Active' ? 'Inactive' : 'Active';
+        $announcement->save();
 
-        return redirect()->back()->with('title', 'Announcement uploaded')->with('success', 'This announcement has been uploaded successfully.');
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_announcement"),
+            'type' => 'success',
+        ]);
     }
 }

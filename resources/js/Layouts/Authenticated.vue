@@ -8,6 +8,7 @@ import ToastList from "@/Components/ToastList.vue";
 import Alert from "@/Components/Alert.vue";
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
+import ConfirmationDialog from "@/Components/ConfirmationDialog.vue";
 
 defineProps({
     title: String
@@ -26,13 +27,13 @@ let removeFinishEventListener = Inertia.on("finish", () => {
         intent.value = 'success'
         alertTitle.value = page.props.title
         alertMessage.value = page.props.success
-        
+
     } else if (page.props.warning) {
         showAlert.value = true
         intent.value = 'warning'
         alertTitle.value = page.props.title
         alertMessage.value = page.props.warning
-        
+
     }
 });
 </script>
@@ -77,6 +78,9 @@ let removeFinishEventListener = Inertia.on("finish", () => {
                     {{ alertMessage }}
                 </Alert>
                 <ToastList />
+
+                <!-- Confirmation Dialog -->
+                <ConfirmationDialog />
                 <slot />
             </main>
 
