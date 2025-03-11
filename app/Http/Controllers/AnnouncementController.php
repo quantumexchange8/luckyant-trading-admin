@@ -209,4 +209,17 @@ class AnnouncementController extends Controller
             'type' => 'success',
         ]);
     }
+
+    public function deleteAnnouncement(Request $request)
+    {
+        $announcement = Announcement::find($request->id);
+
+        $announcement->delete();
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_delete_announcement"),
+            'type' => 'success',
+        ]);
+    }
 }

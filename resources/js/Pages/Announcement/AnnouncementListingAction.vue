@@ -4,6 +4,9 @@ import {h, ref} from "vue";
 import TieredMenu from "primevue/tieredmenu";
 import {IconTrash, IconDotsVertical, IconPencilMinus} from "@tabler/icons-vue";
 import UpdateAnnouncementStatus from "@/Pages/Announcement/Partials/UpdateAnnouncementStatus.vue";
+import {useConfirm} from "primevue/useconfirm";
+import {trans} from "laravel-vue-i18n";
+import {router} from "@inertiajs/vue3";
 
 const props = defineProps({
     announcement: Object,
@@ -25,14 +28,49 @@ const items = ref([
         label: 'delete',
         icon: h(IconTrash),
         command: () => {
-            visible.value = true;
-            dialogType.value = 'delete';
+            requireConfirmation('delete_announcement');
         },
     },
 ]);
 
 const toggle = (event) => {
     menu.value.toggle(event);
+};
+
+const confirm = useConfirm();
+
+const requireConfirmation = (action_type) => {
+    const messages = {
+        delete_announcement: {
+            group: 'headless-error',
+            header: trans('public.delete_announcement'),
+            text: trans('public.delete_announcement_caption'),
+            cancelButton: trans('public.cancel'),
+            acceptButton: trans('public.delete'),
+            action: () => {
+                router.visit(route('announcement.deleteAnnouncement', props.announcement.id), {
+                    method: 'delete',
+                    data: {
+                        id: props.announcement.id,
+                    },
+                })
+            }
+        },
+    };
+
+    const { group, header, text, dynamicText, suffix, actionType, cancelButton, acceptButton, action } = messages[action_type];
+
+    confirm.require({
+        group,
+        header,
+        actionType,
+        text,
+        dynamicText,
+        suffix,
+        cancelButton,
+        acceptButton,
+        accept: action
+    });
 };
 </script>
 

@@ -3,7 +3,6 @@ import ToggleSwitch from "primevue/toggleswitch";
 import {h, ref, watch} from "vue";
 import {useConfirm} from "primevue/useconfirm";
 import {router} from "@inertiajs/vue3";
-import {IconUserCancel, IconUserCheck} from "@tabler/icons-vue";
 import {trans} from "laravel-vue-i18n";
 
 const props = defineProps({

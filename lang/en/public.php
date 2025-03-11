@@ -327,4 +327,7 @@ return [
     "activate_announcement_caption" => "Are you sure you want to activate the announcement?",
     "toast_success_update_announcement" => "The announcement has been updated successfully.",
     "edit_announcement" => "Edit Announcement",
+    "delete_announcement" => "Delete Announcement",
+    "delete_announcement_caption" => "Are you sure you want to delete the announcement?",
+    "toast_success_delete_announcement" => "The announcement has been deleted successfully.",
 ];

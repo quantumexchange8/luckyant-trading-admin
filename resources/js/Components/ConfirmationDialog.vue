@@ -115,7 +115,8 @@ import {
                     <Button
                         type="button"
                         @click="acceptCallback"
-                        class="w-full text-nowrap bg-red-700 border-0 hover:bg-red-500"
+                        severity="danger"
+                        class="w-full text-nowrap"
                     >
                         {{ message.acceptButton }}
                     </Button>

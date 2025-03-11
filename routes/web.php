@@ -151,6 +151,8 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/addAnnouncement', [AnnouncementController::class, 'addAnnouncement'])->name('addAnnouncement');
         Route::post('/updateAnnouncement', [AnnouncementController::class, 'updateAnnouncement'])->name('announcement.updateAnnouncement');
         Route::put('/updateStatus', [AnnouncementController::class, 'updateStatus'])->name('announcement.updateStatus');
+
+        Route::delete('/deleteAnnouncement', [AnnouncementController::class, 'deleteAnnouncement'])->name('announcement.deleteAnnouncement');
     });
 
     /**
