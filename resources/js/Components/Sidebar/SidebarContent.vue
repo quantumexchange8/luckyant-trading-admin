@@ -6,7 +6,6 @@ import {
     Setting,
     Users01Icon,
     UsersSquareIcon,
-    UsersCheckIcon,
     File06Icon,
     UserUp01Icon,
     FileCheck02Icon,
@@ -19,8 +18,10 @@ import {usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
 import { usePermission } from '@/Composables/permissions.js'
 import {
-    IconPasswordUser
+    IconPasswordUser,
+    IconForms
 } from "@tabler/icons-vue";
+import SidebarCategoryLabel from "@/Components/Sidebar/SidebarCategoryLabel.vue";
 
 const page = usePage();
 const pendingTransactionCount = ref(page.props.pendingTransactionCount);
@@ -120,6 +121,30 @@ const { hasRole } = usePermission();
             />
         </SidebarCollapsible>
 
+        <SidebarCollapsible
+            :title="$t('public.application')"
+            :active="route().current('application.*')"
+        >
+            <template #icon>
+                <IconForms size="24" stroke-width="1.5" />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('application.pending_application')"
+                :title="$t('public.pending_application')"
+                :active="route().current('application.pending_application')"
+            />
+            <SidebarCollapsibleItem
+                :href="route('application.application_listing')"
+                :title="$t('public.application_listing')"
+                :active="route().current('application.application_listing')"
+            />
+        </SidebarCollapsible>
+
+        <SidebarCategoryLabel
+            :title="$t('public.trading')"
+        />
+
         <SidebarLink
             :title="$t('public.master')"
             :href="route('master.master_listing')"
@@ -198,6 +223,10 @@ const { hasRole } = usePermission();
             />
         </SidebarCollapsible>
 
+        <SidebarCategoryLabel
+            :title="$t('public.analytic')"
+        />
+
         <SidebarCollapsible
             title="Transactions"
             :active="route().current('transaction.*')"
@@ -251,6 +280,10 @@ const { hasRole } = usePermission();
                 :active="route().current('report.daily_register')"
             />
         </SidebarCollapsible>
+
+        <SidebarCategoryLabel
+            :title="$t('public.administration')"
+        />
 
         <SidebarCollapsible
             title="Admin"

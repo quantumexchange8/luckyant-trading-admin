@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\CopyTradingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MemberController;
@@ -120,6 +121,21 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
 
     /**
      * ==============================
+     *         Application
+     * ==============================
+     */
+    Route::prefix('application')->group(function () {
+        Route::get('pending_application', [ApplicationController::class, 'pending_application'])->name('application.pending_application');
+        Route::get('application_listing', [ApplicationController::class, 'index'])->name('application.application_listing');
+
+        Route::post('addApplication', [ApplicationController::class, 'addApplication'])->name('application.addApplication');
+
+        // Candidate Listing
+        Route::get('candidate_listing', [ApplicationController::class, 'candidate_listing'])->name('application.candidate_listing');
+    });
+
+    /**
+     * ==============================
      *          Transaction
      * ==============================
      */
@@ -189,55 +205,6 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/updateMaster', [MasterController::class, 'updateMaster'])->name('master.updateMaster');
         Route::patch('/updateMasterManagementFee', [MasterController::class, 'updateMasterManagementFee'])->name('master.updateMasterManagementFee');
         Route::post('/updateTncFile', [MasterController::class, 'updateTncFile'])->name('master.updateTncFile');
-    });
-
-    /**
-     * ==============================
-     *         Subscriber
-     * ==============================
-     */
-    Route::prefix('subscriber')->group(function () {
-        Route::get('/pending_subscriber', [SubscriberController::class, 'pending_subscriber'])->name('subscriber.pending_subscriber');
-        Route::get('/getPendingSubscribers', [SubscriberController::class, 'getPendingSubscribers'])->name('subscriber.getPendingSubscribers');
-
-        Route::get('/subscribers', [SubscriberController::class, 'subscribers'])->name('subscriber.subscribers'); // delete after check
-        Route::get('/getPendingSubscriptions', [SubscriberController::class, 'getPendingSubscriptions'])->name('subscriber.getPendingSubscriptions'); // delete after check
-
-        Route::get('/getActiveSubscriber', [SubscriberController::class, 'getActiveSubscriber'])->name('subscriber.getActiveSubscriber');
-        Route::get('/subscriptionHistory', [SubscriberController::class, 'subscriptionHistory'])->name('subscriber.subscriptionHistory');
-        Route::get('/getHistorySubscriber', [SubscriberController::class, 'getHistorySubscriber'])->name('subscriber.getHistorySubscriber');
-        Route::get('/getPendingSubscriptionRenewal', [SubscriberController::class, 'getPendingSubscriptionRenewal'])->name('subscriber.getPendingSubscriptionRenewal');
-        // subscriber request
-        Route::post('/approveSubscribe', [SubscriberController::class, 'approveSubscribe'])->name('subscriber.approveSubscribe');
-        Route::post('/rejectSubscribe', [SubscriberController::class, 'rejectSubscribe'])->name('subscriber.rejectSubscribe');
-        Route::post('/terminateSubscribe', [SubscriberController::class, 'terminateSubscribe'])->name('subscriber.terminateSubscribe');
-
-        Route::get('/subscribersListing', [SubscriberController::class, 'subscribersListing'])->name('subscriber.subscribersListing');
-
-        //switch master request
-        Route::get('/switch_master', [SubscriberController::class, 'switch_master'])->name('subscriber.switch_master');
-        Route::get('/getSwitchMasterData', [SubscriberController::class, 'getSwitchMasterData'])->name('subscriber.getSwitchMasterData');
-        Route::post('/approveSwitchMaster', [SubscriberController::class, 'approveSwitchMaster'])->name('subscriber.approveSwitchMaster');
-        Route::post('/rejectSwitchMaster', [SubscriberController::class, 'rejectSwitchMaster'])->name('subscriber.rejectSwitchMaster');
-
-    });
-
-    /**
-     * ==============================
-     *         Subscriptions
-     * ==============================
-     */
-    Route::prefix('subscriptions')->group(function () {
-        Route::get('/pending_renewal', [SubscriptionController::class, 'pending_renewal'])->name('subscription.pending_renewal');
-        Route::get('/getPendingRenewalData', [SubscriptionController::class, 'getPendingRenewalData'])->name('subscription.getPendingRenewalData');
-        Route::get('/subscription_listing', [SubscriptionController::class, 'subscription_listing'])->name('subscription.subscription_listing');
-        Route::get('/getSubscriptionBatchData', [SubscriptionController::class, 'getSubscriptionBatchData'])->name('subscription.getSubscriptionBatchData');
-        Route::get('/termination_fee', [SubscriptionController::class, 'termination_fee'])->name('subscription.termination_fee');
-        Route::get('/getTerminationFeeData', [SubscriptionController::class, 'getTerminationFeeData'])->name('subscription.getTerminationFeeData');
-
-        // subscription renewal
-        Route::post('/approveRenewalSubscription', [SubscriptionController::class, 'approveRenewalSubscription'])->name('subscription.approveRenewalSubscription');
-        Route::post('/rejectRenewalSubscription', [SubscriptionController::class, 'rejectRenewalSubscription'])->name('subscription.rejectRenewalSubscription');
     });
 
     /**
