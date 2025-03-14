@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Applicant;
 use App\Models\ApplicationForm;
 use App\Models\ApplicationFormToLeader;
 use Illuminate\Http\Request;
@@ -14,6 +15,13 @@ class ApplicationController extends Controller
     {
         return Inertia::render('Application/Listing/ApplicationListing', [
             'applicationsCount' => ApplicationForm::count()
+        ]);
+    }
+
+    public function pending_application()
+    {
+        return Inertia::render('Application/Pending/ApplicationPending', [
+            'applicantsCount' => Applicant::where('status', 'pending')->count()
         ]);
     }
 
