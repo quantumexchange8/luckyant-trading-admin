@@ -203,6 +203,60 @@ const closeDialog = () => {
                 </div>
             </div>
 
+            <div
+                v-if="pending.transaction_type === 'Withdrawal' && pending.payment_method === 'Bank'"
+                class="flex flex-col gap-3 items-start w-full pt-4"
+            >
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.bank') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ pending.payment_account.payment_platform_name }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        Region of Bank
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ pending.payment_account.bank_region ?? '-' }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        Account Name
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ pending.payment_account.payment_account_name }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        Account No
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ pending.payment_account.account_no }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        Bank Sub Branch
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ pending.payment_account.bank_sub_branch }}
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[140px] text-gray-500 text-xs font-medium">
+                        Bank SWIFT Code
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        {{ pending.payment_account.bank_swift_code }}
+                    </div>
+                </div>
+            </div>
+
             <div v-if="pending.transaction_type === 'Deposit' && pending.media.length > 0" class="flex flex-col md:flex-row md:items-start gap-1 self-stretch pt-5">
                 <div class="w-[140px] text-gray-500 text-xs font-medium">
                     {{ $t('public.payment_slip') }}
