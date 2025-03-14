@@ -128,10 +128,14 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('pending_application', [ApplicationController::class, 'pending_application'])->name('application.pending_application');
         Route::get('application_listing', [ApplicationController::class, 'index'])->name('application.application_listing');
 
+        // Pending Application
+        Route::get('getPendingApplications', [ApplicationController::class, 'getPendingApplications'])->name('application.getPendingApplications');
+        Route::post('updateApplicationApproval', [ApplicationController::class, 'updateApplicationApproval'])->name('application.updateApplicationApproval');
+
         Route::post('addApplication', [ApplicationController::class, 'addApplication'])->name('application.addApplication');
 
         // Candidate Listing
-        Route::get('candidate_listing', [ApplicationController::class, 'candidate_listing'])->name('application.candidate_listing');
+        Route::get('applicant_listing', [ApplicationController::class, 'applicant_listing'])->name('application.applicant_listing');
     });
 
     /**

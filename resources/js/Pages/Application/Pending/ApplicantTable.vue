@@ -20,6 +20,10 @@ import { FilterMatchMode } from '@primevue/core/api';
 import EmptyData from '@/Components/NoData.vue';
 import { usePage } from '@inertiajs/vue3';
 import { useLangObserver } from '@/Composables/localeObserver';
+import ApplicantTableAction from "@/Pages/Application/Pending/ApplicantTableAction.vue";
+import {SearchIcon, XCircleIcon} from "@heroicons/vue/outline";
+import Input from "@/Components/Input.vue";
+import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 
 const isLoading = ref(false);
 const dt = ref(null);
@@ -54,7 +58,7 @@ const loadLazyData = (event) => {
                 lazyEvent: JSON.stringify(lazyParams.value),
             };
 
-            const url = route('transaction.pending.getPendingWithdrawalData', params);
+            const url = route('application.getPendingApplications', params);
             const response = await fetch(url);
 
             const results = await response.json();
@@ -178,7 +182,7 @@ const exportWithdrawal = () => {
         exportStatus: true,
     };
 
-    const url = route('transaction.pending.getPendingWithdrawalData', params);
+    const url = route('application.getPendingApplications', params);
 
     try {
         window.location.href = url;
@@ -220,29 +224,30 @@ watchEffect(() => {
         :globalFilterFields="['user.name' ,'transaction_number']"
     >
         <template #header>
-            <div class="flex flex-wrap justify-between items-center">
+            <div class="flex flex-wrap justify-between items-center mb-5">
                 <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-
-                    <!-- Search bar -->
-                    <IconField>
-                        <InputIcon>
-                            <IconSearch :size="16" stroke-width="1.5" />
-                        </InputIcon>
-                        <InputText
-                            v-model="filters['global'].value"
-                            :placeholder="$t('public.search_keyword')"
-                            type="text"
-                            class="block w-full pl-10 pr-10"
-                        />
-                        <!-- Clear filter button -->
+                    <div class="relative w-full md:w-60">
+                        <InputIconWrapper class="md:col-span-2">
+                            <template #icon>
+                                <SearchIcon aria-hidden="true" class="w-5 h-5" />
+                            </template>
+                            <Input
+                                withIcon
+                                id="search"
+                                type="text"
+                                class="block w-full"
+                                placeholder="Search"
+                                v-model="filters['global'].value"
+                            />
+                        </InputIconWrapper>
                         <div
-                            v-if="filters['global'].value"
-                            class="absolute top-1/2 -translate-y-1/2 right-4 text-gray-300 hover:text-gray-400 select-none cursor-pointer"
+                            v-if="filters['global'].value !== null"
+                            class="absolute top-2/4 -mt-2 right-4 text-gray-300 hover:text-gray-400 select-none cursor-pointer"
                             @click="clearFilterGlobal"
                         >
-                            <IconXboxX aria-hidden="true" :size="15" />
+                            <XCircleIcon aria-hidden="true" class="w-4 h-4"/>
                         </div>
-                    </IconField>
+                    </div>
 
                     <!-- filter button -->
                     <Button
@@ -291,31 +296,21 @@ watchEffect(() => {
         <template v-if="pendingWithdrawal?.length > 0">
             <Column
                 field="created_at"
-                style="min-width: 11rem"
                 class="hidden md:table-cell"
                 dataType="date"
+                :header="$t('public.request_date')"
                 sortable
             >
-                <template #header>
-                    <span class="block">{{ $t('public.date') }}</span>
-                </template>
                 <template #body="{ data }">
                     {{ dayjs(data.created_at).format('YYYY-MM-DD') }}
-                    <div class="text-xs text-gray-500 mt-1">
-                        {{ dayjs(data.created_at).add(8, 'hour').format('hh:mm:ss A') }}
-                    </div>
                 </template>
             </Column>
 
             <Column
-                field="user_id"
-                style="min-width: 11rem"
+                field="user"
+                :header="$t('public.user_requested')"
                 class="hidden md:table-cell"
-                sortable
             >
-                <template #header>
-                    <span class="block">{{ $t('public.name') }}</span>
-                </template>
                 <template #body="{ data }">
                     <div class="flex flex-col">
                         <span class="text-surface-950 dark:text-white">{{ data.user.name }}</span>
@@ -325,98 +320,52 @@ watchEffect(() => {
             </Column>
 
             <Column
-                field="transaction_number"
-                style="min-width: 15rem"
+                field="leader"
+                :header="$t('public.leader')"
                 class="hidden md:table-cell"
-                sortable
             >
-                <template #header>
-                    <span class="block">{{ $t('public.transaction_number') }}</span>
-                </template>
                 <template #body="{ data }">
-                    {{ data.transaction_number }}
-                </template>
-            </Column>
-
-            <Column
-                field="to_payment_account_name"
-                style="min-width: 9rem"
-                class="hidden md:table-cell"
-                sortable
-            >
-                <template #header>
-                    <span class="block">{{ $t('public.payment_account') }}</span>
-                </template>
-                <template #body="{ data }">
-                    <div class="flex gap-1 items-center">
-                        <span class="break-words max-w-40 text-surface-950 dark:text-white">{{ data.to_payment_account_no }}</span>
-                        <Tag
-                            :severity="data.to_payment_platform === 'bank' ? 'info' : 'secondary'"
-                            :value="$t(`public.${data.to_payment_platform}`)"
-                        />
+                    <div class="flex flex-col">
+                        <span class="text-surface-950 dark:text-white">{{ data.first_leader_name }}</span>
+                        <span class="text-surface-500 text-xs">{{ data.first_leader_email }}</span>
                     </div>
                 </template>
             </Column>
 
             <Column
-                field="amount"
-                style="min-width: 9rem"
+                field="application_form"
+                :header="$t('public.application_form')"
                 class="hidden md:table-cell"
-                dataType="numeric"
-                sortable
             >
-                <template #header>
-                    <span class="block">{{ $t('public.amount') }}</span>
-                </template>
                 <template #body="{ data }">
-                    <span class="font-medium">${{ formatAmount(data.amount ?? 0, 4) }}</span>
-                </template>
-            </Column>
-
-            <!-- mobile view-->
-            <Column
-                field="mobile"
-                class="table-cell md:hidden"
-            >
-                <template #body="{data}">
-                    <div class="flex items-center gap-3 justify-between w-full">
-                        <div class="flex flex-col items-start">
-                                        <span class="text-xs text-white truncate">
-                                                {{ dayjs(data.created_at).format('YYYY-MM-DD') }}
-                                            </span>
-                            <div class="flex gap-1 items-center text-surface-500 text-xs">
-                                <div class="font-medium max-w-[180px] truncate">
-                                    {{ data.user.name }}
-                                </div>
-                                <span>|</span>
-                                <span class="font-bold dark:text-white/60">{{ data.transaction_number }}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col items-start pr-2">
-                            <div class="flex justify-end text-base w-full">
-                                ${{ formatAmount(data.amount, 4) }}
-                            </div>
-                        </div>
+                    <div class="flex flex-col">
+                      {{ data.application_form.title }}
                     </div>
                 </template>
             </Column>
 
             <Column
-                field="action"
-                frozen
-                alignFrozen="right"
-                :style="locale === 'en'
-                                    ? 'width: 5%'
-                                    : 'width: 5%; min-width: 86px;'"
+                field="applicant"
+                :header="$t('public.applicant')"
+                class="hidden md:table-cell"
             >
-                <template #body="{data}">
-                    <PendingWithdrawalAction
-                        :pending="data"
+                <template #body="{ data }">
+                    <div class="flex flex-col">
+                      {{ data.name }}
+                    </div>
+                </template>
+            </Column>
+
+            <Column
+                field="applicant"
+                class="hidden md:table-cell"
+            >
+                <template #body="{ data }">
+                    <ApplicantTableAction
+                        :applicant="data"
                     />
                 </template>
             </Column>
-
         </template>
     </DataTable>
 </template>
