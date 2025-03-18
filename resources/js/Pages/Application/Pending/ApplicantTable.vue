@@ -24,6 +24,7 @@ import ApplicantTableAction from "@/Pages/Application/Pending/ApplicantTableActi
 import {SearchIcon, XCircleIcon} from "@heroicons/vue/outline";
 import Input from "@/Components/Input.vue";
 import InputIconWrapper from "@/Components/InputIconWrapper.vue";
+import RadioButton from "primevue/radiobutton";
 
 const isLoading = ref(false);
 const dt = ref(null);
@@ -38,6 +39,9 @@ const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     start_date: { value: null, matchMode: FilterMatchMode.EQUALS },
     end_date: { value: null, matchMode: FilterMatchMode.EQUALS },
+    leader_id: { value: null, matchMode: FilterMatchMode.EQUALS },
+    requires_flight: { value: null, matchMode: FilterMatchMode.EQUALS },
+    requires_ib_training: { value: null, matchMode: FilterMatchMode.EQUALS },
 });
 
 const lazyParams = ref({});
@@ -125,6 +129,22 @@ watch(selectedDate, (newDateRange) => {
 const op = ref();
 const toggle = (event) => {
     op.value.toggle(event);
+    getLeaders();
+};
+
+const leaders = ref();
+const loadingLeaders = ref(false);
+
+const getLeaders = async () => {
+    loadingLeaders.value = true;
+    try {
+        const response = await axios.get('/getLeaders');
+        leaders.value = response.data;
+    } catch (error) {
+        console.error('Error fetching leaders:', error);
+    } finally {
+        loadingLeaders.value = false;
+    }
 };
 
 onMounted(() => {
@@ -143,12 +163,19 @@ watch(
     debounce(() => {
         loadLazyData();
     }, 300)
-)
+);
+
+watch([filters.value['leader_id'], filters.value['requires_flight'], filters.value['requires_ib_training']], () => {
+    loadLazyData();
+});
 
 const clearAll = () => {
     filters.value['global'].value = null;
     filters.value['start_date'].value = null;
     filters.value['end_date'].value = null;
+    filters.value['leader_id'].value = null;
+    filters.value['requires_flight'].value = null;
+    filters.value['requires_ib_training'].value = null;
     selectedDate.value = [];
 };
 
@@ -167,11 +194,12 @@ const getSeverity = (status) => {
 const exportTable = ref('no');
 
 const exportStatus = ref(false);
-const exportWithdrawal = () => {
+const exportReport = () => {
     exportStatus.value = true;
     isLoading.value = true;
 
     lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value.filters = filters.value;
 
     const params = {
         page: JSON.stringify(event?.page + 1),
@@ -251,8 +279,10 @@ watchEffect(() => {
 
                     <!-- filter button -->
                     <Button
+                        type="button"
                         class="w-full md:w-28 flex items-center gap-2"
                         outlined
+                        severity="secondary"
                         @click="toggle"
                         size="small"
                     >
@@ -263,14 +293,14 @@ watchEffect(() => {
 
                 <div class="flex items-center space-x-4 w-full md:w-auto mt-4 md:mt-0">
                     <!-- Export button -->
-                    <!-- <Button
+                    <Button
                         class="w-full md:w-auto flex justify-center items-center"
-                        @click="exportWithdrawal"
+                        @click="exportReport"
                         :disabled="exportTable==='yes'"
                     >
                         <span class="pr-1">{{ $t('public.export') }}</span>
                         <IconDownload size="16" stroke-width="1.5"/>
-                    </Button> -->
+                    </Button>
                 </div>
             </div>
         </template>
@@ -288,8 +318,9 @@ watchEffect(() => {
                 <ProgressSpinner
                     strokeWidth="4"
                 />
-                <span v-if="exportTable === 'no'" class="text-sm text-gray-700 dark:text-gray-300">{{ $t('public.withdrawal_loading_caption') }}</span>
-                <span v-else class="text-sm text-gray-700 dark:text-gray-300">{{ $t('public.export_withdrawal_caption') }}</span>
+                <div class="dark:text-white">
+                    Loading data
+                </div>
             </div>
         </template>
 
@@ -368,4 +399,104 @@ watchEffect(() => {
             </Column>
         </template>
     </DataTable>
+
+    <Popover ref="op">
+        <div class="flex flex-col gap-6 w-60">
+            <!-- Filter Role-->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_by_leaders') }}
+                </div>
+                <Select
+                    v-model="filters['leader_id'].value"
+                    :options="leaders"
+                    optionLabel="name"
+                    placeholder="Select a leader"
+                    class="w-full"
+                    filter
+                    :filter-fields="['name', 'email']"
+                    :loading="loadingLeaders"
+                >
+                    <template #value="slotProps">
+                        <div v-if="slotProps.value" class="flex items-center">
+                            {{ slotProps.value.name }}
+                        </div>
+                        <span v-else>{{ slotProps.placeholder }}</span>
+                    </template>
+                    <template #option="slotProps">
+                        <div class="flex flex-col max-w-[220px] truncate">
+                            <div>{{ slotProps.option.name }}</div>
+                            <div class="text-gray-400">{{ slotProps.option.email }}</div>
+                        </div>
+                    </template>
+                </Select>
+            </div>
+
+            <!-- Filter Join Date-->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.filter_date') }}
+                </div>
+                <div class="relative w-full">
+                    <DatePicker
+                        v-model="selectedDate"
+                        dateFormat="dd/mm/yy"
+                        class="w-full"
+                        selectionMode="range"
+                        placeholder="dd/mm/yyyy - dd/mm/yyyy"
+                    />
+                    <div
+                        v-if="selectedDate && selectedDate.length > 0"
+                        class="absolute top-2/4 -mt-2 right-4 text-gray-400 select-none cursor-pointer bg-white dark:bg-transparent"
+                        @click="clearDate"
+                    >
+                        <XCircleIcon class="w-4 h-4" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Flight -->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.flight') }}
+                </div>
+                <div class="flex flex-col gap-1 self-stretch">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['requires_flight'].value" inputId="requires_flight_yes" value="true" class="w-4 h-4" />
+                        <label for="requires_flight_yes">{{ $t('public.yes') }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['requires_flight'].value" inputId="requires_flight_no" value="false" class="w-4 h-4" />
+                        <label for="requires_flight_no">{{ $t('public.no') }}</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter IB Training -->
+            <div class="flex flex-col gap-2 items-center self-stretch">
+                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
+                    {{ $t('public.ib_training') }}
+                </div>
+                <div class="flex flex-col gap-1 self-stretch">
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['requires_ib_training'].value" inputId="requires_ib_training_yes" value="true" class="w-4 h-4" />
+                        <label for="requires_ib_training_yes">{{ $t('public.yes') }}</label>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
+                        <RadioButton v-model="filters['requires_ib_training'].value" inputId="requires_ib_training_no" value="false" class="w-4 h-4" />
+                        <label for="requires_ib_training_no">{{ $t('public.no') }}</label>
+                    </div>
+                </div>
+            </div>
+            <Button
+                type="button"
+                severity="info"
+                class="w-full"
+                outlined
+                @click="clearAll"
+            >
+                Clear All
+            </Button>
+        </div>
+    </Popover>
 </template>

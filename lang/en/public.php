@@ -353,4 +353,7 @@ return [
     "ib_training" => "IB Training",
     "toast_success_approved_applicant" => "The applicant has been approved successfully.",
     "toast_success_rejected_applicant" => "The applicant has been rejected successfully.",
+    "filter" => "Filter",
+    "flight_information" => "Flight Information",
+    "flight" => "Flight",
 ];

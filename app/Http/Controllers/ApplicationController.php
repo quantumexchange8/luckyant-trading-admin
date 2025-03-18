@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ApplicantExport;
 use App\Models\Applicant;
 use App\Models\ApplicationForm;
 use App\Models\ApplicationFormToLeader;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ApplicationController extends Controller
 {
@@ -96,11 +98,32 @@ class ApplicationController extends Controller
             }
 
             //date filter
-            if (!empty($data['filters']['start_request_date']['value']) && !empty($data['filters']['end_request_date']['value'])) {
-                $start_date = Carbon::parse($data['filters']['start_request_date']['value'])->addDay()->startOfDay(); //add day to ensure capture entire day
-                $end_date = Carbon::parse($data['filters']['end_request_date']['value'])->addDay()->endOfDay();
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay(); //add day to ensure capture entire day
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
 
                 $query->whereBetween('created_at', [$start_date, $end_date]);
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            if ($data['filters']['requires_flight']['value']) {
+                $query->where('requires_transport', $data['filters']['requires_flight']['value'] == 'true' ? 1 : 0);
+            }
+
+            if ($data['filters']['requires_ib_training']['value']) {
+                $query->where('requires_ib_training', $data['filters']['requires_ib_training']['value'] == 'true' ? 1 : 0);
             }
 
             //sort field/order
@@ -109,6 +132,10 @@ class ApplicationController extends Controller
                 $query->orderBy($data['sortField'], $order);
             } else {
                 $query->orderByDesc('created_at');
+            }
+
+            if ($request->exportStatus) {
+                return Excel::download(new ApplicantExport($query), Carbon::now() . '-pending-applicants.xlsx');
             }
 
             $applicants = $query->paginate($data['rows']);
