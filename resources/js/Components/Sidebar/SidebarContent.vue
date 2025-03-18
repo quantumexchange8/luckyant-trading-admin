@@ -30,6 +30,7 @@ const pendingSubscriberRequestCount = ref(page.props.pendingSubscriberRequestCou
 const pendingRenewalCount = ref(page.props.pendingRenewalCount);
 const pendingPammCount = ref(page.props.pendingPammCount);
 const pendingBalanceIn = ref(page.props.pendingBalanceIn);
+const pendingApplicants = ref(page.props.pendingApplicants);
 const { hasRole } = usePermission();
 </script>
 
@@ -122,8 +123,10 @@ const { hasRole } = usePermission();
         </SidebarCollapsible>
 
         <SidebarCollapsible
+            v-if="hasRole('super-admin')"
             :title="$t('public.application')"
             :active="route().current('application.*')"
+            :pending-counts="pendingApplicants"
         >
             <template #icon>
                 <IconForms size="24" stroke-width="1.5" />
@@ -133,6 +136,7 @@ const { hasRole } = usePermission();
                 :href="route('application.pending_application')"
                 :title="$t('public.pending_application')"
                 :active="route().current('application.pending_application')"
+                :pending-counts="pendingApplicants"
             />
             <SidebarCollapsibleItem
                 :href="route('application.application_listing')"
