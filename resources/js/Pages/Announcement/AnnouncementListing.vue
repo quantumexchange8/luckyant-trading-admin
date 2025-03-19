@@ -122,7 +122,7 @@ const clearSearch = () => {
                 />
                 <div
                     v-if="selectedDate && selectedDate.length > 0"
-                    class="absolute top-2/4 -mt-2 right-2 text-gray-400 dark:text-gray-600 hover:text-gray-500 dark:text-gray-400 select-none cursor-pointer bg-transparent"
+                    class="absolute top-2/4 -mt-2 right-2 text-gray-400 hover:text-gray-500 dark:text-gray-400 select-none cursor-pointer bg-transparent"
                     @click="clearJoinDate"
                 >
                     <XIcon class="w-4 h-4" />

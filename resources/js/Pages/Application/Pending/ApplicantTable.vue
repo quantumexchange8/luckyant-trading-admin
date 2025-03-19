@@ -2,24 +2,17 @@
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
-import IconField from 'primevue/iconfield';
-import InputText from 'primevue/inputtext';
-import InputIcon from 'primevue/inputicon';
-import Tag from 'primevue/tag';
 import Select from 'primevue/select';
 import DatePicker from 'primevue/datepicker';
 import ProgressSpinner from 'primevue/progressspinner';
 import Popover from 'primevue/popover';
-import Card from 'primevue/card';
-import { IconXboxX, IconX, IconSearch, IconAdjustments, IconDownload } from '@tabler/icons-vue';
+import { IconAdjustments, IconDownload } from '@tabler/icons-vue';
 import { onMounted, ref, watch, watchEffect } from 'vue';
 import debounce from "lodash/debounce.js";
 import dayjs from 'dayjs';
 import { FilterMatchMode } from '@primevue/core/api';
-// import PendingWithdrawalAction from './PendingWithdrawalAction.vue';
 import EmptyData from '@/Components/NoData.vue';
 import { usePage } from '@inertiajs/vue3';
-import { useLangObserver } from '@/Composables/localeObserver';
 import ApplicantTableAction from "@/Pages/Application/Pending/ApplicantTableAction.vue";
 import {SearchIcon, XCircleIcon} from "@heroicons/vue/outline";
 import Input from "@/Components/Input.vue";
@@ -29,11 +22,8 @@ import RadioButton from "primevue/radiobutton";
 const isLoading = ref(false);
 const dt = ref(null);
 const first = ref(0);
-const pendingWithdrawal = ref([]);
+const applicants = ref([]);
 const totalRecords= ref(0);
-const totalPendingAmount = ref();
-const pendingWithdrawalCounts = ref();
-const {locale} = useLangObserver();
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -66,14 +56,12 @@ const loadLazyData = (event) => {
             const response = await fetch(url);
 
             const results = await response.json();
-            pendingWithdrawal.value = results?.data?.data;
+            applicants.value = results?.data?.data;
             totalRecords.value = results?.data?.total;
-            totalPendingAmount.value = results?.totalPendingAmount;
-            pendingWithdrawalCounts.value = results?.pendingWithdrawalCounts;
             isLoading.value = false;
         }, 100);
     } catch (e) {
-        pendingWithdrawal.value = [];
+        applicants.value = [];
         totalRecords.value = 0;
         isLoading.value = false;
     }
@@ -93,16 +81,6 @@ const onFilter = (event) => {
     lazyParams.value.fitlers = filters.value;
     loadLazyData(event);
 };
-
-const emit = defineEmits(['updatePendingWithdrawal']);
-
-watch([totalPendingAmount, pendingWithdrawalCounts], () => {
-    emit('updatePendingWithdrawal', {
-        totalPendingAmount: totalPendingAmount.value,
-        pendingWithdrawalCounts: pendingWithdrawalCounts.value,
-    });
-});
-
 
 //Date Filter
 const selectedDate = ref([]);
@@ -232,7 +210,7 @@ watchEffect(() => {
 
 <template>
     <DataTable
-        :value="pendingWithdrawal"
+        :value="applicants"
         lazy
         paginator
         removableSort
@@ -306,11 +284,10 @@ watchEffect(() => {
         </template>
 
         <template #empty>
-            <div v-if="pendingWithdrawalCounts === 0">
-                <EmptyData
-                    :title="$t('public.no_withdrawal_founded')"
-                />
-            </div>
+            <EmptyData
+                v-if="isLoading"
+                :title="$t('public.no_withdrawal_founded')"
+            />
         </template>
 
         <template #loading>
@@ -324,7 +301,7 @@ watchEffect(() => {
             </div>
         </template>
 
-        <template v-if="pendingWithdrawal?.length > 0">
+        <template v-if="applicants?.length > 0">
             <Column
                 field="created_at"
                 class="hidden md:table-cell"

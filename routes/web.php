@@ -125,17 +125,20 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
      * ==============================
      */
     Route::prefix('application')->group(function () {
-        Route::get('pending_application', [ApplicationController::class, 'pending_application'])->name('application.pending_application');
         Route::get('application_listing', [ApplicationController::class, 'index'])->name('application.application_listing');
+        Route::get('getApplicationData', [ApplicationController::class, 'getApplicationData'])->name('application.getApplicationData');
+        Route::get('getApplicantsData', [ApplicationController::class, 'getApplicantsData'])->name('application.getApplicantsData');
 
         // Pending Application
+        Route::get('pending_application', [ApplicationController::class, 'pending_application'])->name('application.pending_application');
         Route::get('getPendingApplications', [ApplicationController::class, 'getPendingApplications'])->name('application.getPendingApplications');
+
         Route::post('updateApplicationApproval', [ApplicationController::class, 'updateApplicationApproval'])->name('application.updateApplicationApproval');
 
         Route::post('addApplication', [ApplicationController::class, 'addApplication'])->name('application.addApplication');
-
-        // Candidate Listing
-        Route::get('applicant_listing', [ApplicationController::class, 'applicant_listing'])->name('application.applicant_listing');
+        Route::post('updateApplication', [ApplicationController::class, 'updateApplication'])->name('application.updateApplication');
+        Route::put('updateStatus', [ApplicationController::class, 'updateStatus'])->name('application.updateStatus');
+        Route::delete('deleteApplication', [ApplicationController::class, 'deleteApplication'])->name('application.deleteApplication');
     });
 
     /**

@@ -356,4 +356,13 @@ return [
     "filter" => "Filter",
     "flight_information" => "Flight Information",
     "flight" => "Flight",
+    "toast_success_update_application" => "The application form has been updated successfully.",
+    "edit_application" => "Edit Application",
+    "activate_application_form" => "Activate Application Form",
+    "activate_application_form_caption" => "Are you sure you want to activate the application form?",
+    "deactivate_application_form" => "Activate Application Form",
+    "deactivate_application_form_caption" => "Are you sure you want to deactivate the application form?",
+    "delete_application_form" => "Delete Application Form",
+    "delete_application_form_caption" => "Are you sure you want to delete the application form?",
+    "toast_success_delete_application" => "Successfully deleted the application.",
 ];

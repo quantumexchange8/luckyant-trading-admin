@@ -45,13 +45,13 @@ const closeDialog = () => {
         size="small"
         @click="openDialog"
     >
-        {{ $t('public.action') }}
+        {{ applicant.status === 'pending' ? $t('public.action') : $t('public.view') }}
     </Button>
 
     <Dialog
         v-model:visible="visible"
         modal
-        :header="$t('public.request_approval')"
+        :header="applicant.status === 'pending' ? $t('public.request_approval') : $t('public.view_details')"
         class="dialog-xs md:dialog-md"
     >
         <div class="flex flex-col gap-3 items-center self-stretch">
@@ -264,7 +264,7 @@ const closeDialog = () => {
                 </div>
             </div>
 
-            <div class="flex flex-col items-start gap-1 self-stretch pt-4">
+            <div v-if="applicant.status === 'pending'" class="flex flex-col items-start gap-1 self-stretch pt-4">
                 <InputLabel for="remarks" :value="$t('public.remarks')" />
                 <Textarea
                     id="remarks"
@@ -280,7 +280,7 @@ const closeDialog = () => {
             </div>
         </div>
 
-        <div class="flex gap-3 justify-between self-stretch pt-5 w-full">
+        <div v-if="applicant.status === 'pending'" class="flex gap-3 justify-between self-stretch pt-5 w-full">
             <Button
                 type="button"
                 severity="danger"
