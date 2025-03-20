@@ -58,7 +58,7 @@ class ApplicantExport implements FromCollection, WithHeadings
                 'applicant_country' => $record->country->name ?? '-',
                 'applicant_phone_number' => $record->phone_number ?? '-',
                 'applicant_identity_number' => $record->identity_number ?? '-',
-                'applicant_ticket_type' => $record->ticket_type ?? '-',
+                'applicant_ticket_type' => trans("public.$record->ticket_type") ?? '-',
                 'applicant_requires_transport' => $record->requires_transport ? 'Yes' : 'No',
                 'applicant_requires_ib_training' => $record->requires_ib_training ? 'Yes' : 'No',
                 'applicant_flight_name' => $record->transport_detail->name ?? '-',
