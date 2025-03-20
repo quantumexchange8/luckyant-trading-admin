@@ -365,4 +365,10 @@ return [
     "delete_application_form" => "Delete Application Form",
     "delete_application_form_caption" => "Are you sure you want to delete the application form?",
     "toast_success_delete_application" => "Successfully deleted the application.",
+    "ticket_type" => "Ticket Type",
+    "old_membership_program" => "Old Membership Program",
+    "new_membership_program" => "New Membership Program",
+    "referral_program" => "Referral Program",
+    "gold_squad_program" => "Gold Squad Program",
+    "ticket_gift_pack" => "Ticket Gift Pack",
 ];
