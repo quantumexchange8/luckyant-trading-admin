@@ -254,24 +254,6 @@ const closeDialog = () => {
                         {{ $t('public.no') }}
                     </div>
                 </div>
-
-            </div>
-
-            <div class="flex flex-col gap-3 items-center self-stretch w-full pt-3">
-                <span class="font-medium text-sm text-gray-600 dark:text-gray-400 w-full text-left">{{ $t('public.additional_information') }}</span>
-
-                <div class="flex flex-col gap-1 items-start w-full">
-
-                    <!-- Accommodation details -->
-                    <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
-                        <div class="w-[140px] text-gray-500 text-xs font-medium">
-                            {{ $t('public.ib_training') }}
-                        </div>
-                        <div class="text-gray-950 dark:text-white text-sm font-medium">
-                            {{ applicant.requires_ib_training ? $t('public.yes') : $t('public.no') }}
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div v-if="applicant.status === 'pending'" class="flex flex-col items-start gap-1 self-stretch pt-4">
