@@ -71,7 +71,7 @@ const submitForm = () => {
                                 {{ $t('public.leader') }}
                             </div>
                             <div class="text-gray-950 dark:text-white text-sm font-medium">
-                                {{ firstLeader.name }}
+                                {{ firstLeader?.name ?? '-' }}
                             </div>
                         </div>
                         <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
@@ -79,7 +79,7 @@ const submitForm = () => {
                                 {{ $t('public.referrer') }}
                             </div>
                             <div class="text-gray-950 dark:text-white text-sm font-medium">
-                                {{ member.upline.name }}
+                                {{ member.upline?.name ?? '-' }}
                             </div>
                         </div>
                         <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
@@ -106,7 +106,7 @@ const submitForm = () => {
                                 v-model="selectedUpline"
                                 :options="uplines"
                                 optionLabel="name"
-                                placeholder="Choose a country"
+                                placeholder="Choose a referrer"
                                 class="w-full"
                                 :invalid="!!form.errors.upline_id"
                                 filter
