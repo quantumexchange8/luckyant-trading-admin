@@ -330,4 +330,8 @@ return [
     "delete_announcement" => "Delete Announcement",
     "delete_announcement_caption" => "Are you sure you want to delete the announcement?",
     "toast_success_delete_announcement" => "The announcement has been deleted successfully.",
+    "setting_rank" => "Settings Rank",
+    "display_rank" => "Display Rank",
+    "rank_up" => "Rank Up",
+    "group" => "Group",
 ];

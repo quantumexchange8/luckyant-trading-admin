@@ -45,7 +45,7 @@ export default {
         <input type="file" accept="image/*" class="hidden" ref="file" @change="change">
         <img :src="src" alt="Avatar" class="h-full w-full object-cover">
         <div class="absolute top-0 h-full w-full bg-black bg-opacity-25 flex justify-center items-center">
-            <button @click.prevent="browse()" class="rounded-full text-white hover:bg-white hover:bg-opacity-25 p-2 focus:outline-none transition duration-200">
+            <button type="button" @click.prevent="browse()" class="rounded-full text-white hover:bg-white hover:bg-opacity-25 p-2 focus:outline-none transition duration-200">
                 <CameraIcon aria-hidden="true" :class="iconSizeClasses" />
             </button>
             <button v-if="file" @click.prevent="remove()" class="rounded-full text-white hover:bg-white hover:bg-opacity-25 p-2 focus:outline-none transition duration-200">

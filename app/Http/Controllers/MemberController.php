@@ -438,56 +438,16 @@ class MemberController extends Controller
 
     public function viewMemberDetails($id)
     {
-        $user = User::with(['media', 'upline:id,name,email'])->find($id);
+        $user = User::with('upline')->find($id);
 
-        $settingRanks = SettingRank::all();
-
-        $formattedRanks = $settingRanks->map(function ($rank) {
-            return [
-                'value' => $rank->id,
-                'label' => $rank->name,
-            ];
-        });
-
-        $countries = Country::all();
-        $formattedCountries = $countries->map(function ($country) {
-            return [
-                'value' => $country->id,
-                'label' => $country->name,
-            ];
-        });
-
-        $formattedNationalities = $countries->map(function ($nationality) {
-            return [
-                'value' => $nationality->nationality,
-                'label' => $nationality->nationality,
-            ];
-        });
-
-        $paymentAccounts = PaymentAccount::where('user_id', $id)->get();
-
-        $wallets = Wallet::where('user_id', $user->id)->get();
-
-        $user->profile_photo_url = $user->getFirstMediaUrl('profile_photo');
-        $user->front_identity = $user->getMedia('front_identity');
-        $user->back_identity = $user->getMedia('back_identity');
-
-        $formattedCurrencies = Country::whereIn('id', [132, 233, 102, 101, 45, 240])->get()->map(function ($country) {
-            return [
-                'value' => $country->currency,
-                'label' => $country->currency_name . ' (' . $country->currency . ')',
-            ];
-        });
+        $wallets = Wallet::where('user_id', $id)->get();
 
         return Inertia::render('Member/MemberDetails/MemberDetail', [
             'member_detail' => $user,
-            'ranks' => $formattedRanks,
-            'countries' => $formattedCountries,
-            'nationalities' => $formattedNationalities,
+            'firstLeader' => $user->getFirstLeader(),
+            'frontIdentity' => $user->getFirstMediaUrl('front_identity'),
+            'backIdentity' => $user->getFirstMediaUrl('back_identity'),
             'wallets' => $wallets,
-            'tradingAccounts' => User::find($id)->tradingAccounts,
-            'paymentAccounts' => $paymentAccounts,
-            'currencies' => $formattedCurrencies,
         ]);
     }
 
@@ -1539,5 +1499,121 @@ class MemberController extends Controller
         }
 
         return response()->json(['success' => false, 'data' => []]);
+    }
+
+    public function updateMemberRank(Request $request)
+    {
+        Validator::make($request->all(), [
+            'setting_rank_id' => ['required'],
+            'display_rank_id' => ['required'],
+            'rank_up_status' => ['required'],
+        ])->setAttributeNames([
+            'setting_rank_id' => trans('public.setting_rank'),
+            'display_rank_id' => trans('public.display_rank'),
+            'rank_up_status' => trans('public.rank_up'),
+        ])->validate();
+
+        $user = User::find($request->user_id);
+        $previous_rank_id = $user->setting_rank_id;
+
+        $user->update([
+            'setting_rank_id' => $request->setting_rank_id,
+            'display_rank_id' => $request->display_rank_id,
+            'rank_up_status' => $request->rank_up_status,
+        ]);
+
+        $rank = SettingRank::find($user->setting_rank_id);
+
+        RankingLog::create([
+            'user_id' => $user->id,
+            'old_rank' => $previous_rank_id,
+            'new_rank' => $user->setting_rank_id,
+            'user_package_amount' => 0,
+            'target_package_amount' => $rank->package_requirement,
+            'user_direct_referral_amount' => 0,
+            'target_direct_referral_amount' => $rank->direct_referral,
+            'user_group_sales' => 0,
+            'target_group_sales' => $rank->group_sales,
+        ]);
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_member_message"),
+            'type' => 'success',
+        ]);
+    }
+
+    public function updateMemberGroup(Request $request)
+    {
+        Validator::make($request->all(), [
+            'upline_id' => ['required'],
+            'is_public' => ['required'],
+        ])->setAttributeNames([
+            'upline_id' => trans('public.setting_rank'),
+            'is_public' => trans('public.status'),
+        ])->validate();
+
+        $user = User::find($request->user_id);
+
+        if ($request->upline_id) {
+            $upline_id = $request->upline_id;
+
+            if($user->upline_id != $upline_id)
+            {
+                $topLead = User::find($upline_id);
+
+                if ($topLead) {
+                    if ($topLead->top_leader_id == null) {
+                        $user->update([
+                            'top_leader_id' => $topLead->id
+                        ]);
+                    } else {
+                        $user->update([
+                            'top_leader_id' => $topLead->top_leader_id
+                        ]);
+                    }
+
+                    $user->update([
+                        'is_public' => $topLead->is_public
+                    ]);
+
+                    User::whereIn('id', $user->getChildrenIds())->update([
+                        'is_public' => $user->is_public
+                    ]);
+                }
+
+                $this->transferUpline($user, $upline_id);
+            } else {
+                if ($user->is_public != $request->is_public) {
+                    $user->update([
+                        'is_public' => $request->is_public,
+                    ]);
+
+                    $childrenIds = $user->getChildrenIds();
+
+                    User::whereIn('id', $childrenIds)->update([
+                        'is_public' => $user->is_public
+                    ]);
+                }
+            }
+        }
+
+        if ($user->is_public != $request->is_public) {
+            $user->update([
+                'is_public' => $request->is_public,
+            ]);
+
+            $childrenIds = $user->getChildrenIds();
+
+            User::whereIn('id', $childrenIds)->update([
+                'is_public' => $user->is_public
+            ]);
+        }
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_member_message"),
+            'type' => 'success',
+        ]);
     }
 }
