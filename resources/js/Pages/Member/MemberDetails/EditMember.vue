@@ -1,383 +1,406 @@
 <script setup>
 import InputError from "@/Components/InputError.vue";
-import Label from "@/Components/Label.vue";
-import Input from "@/Components/Input.vue";
+import InputLabel from "@/Components/Label.vue";
+import InputText from "primevue/inputtext";
+import Select from "primevue/select";
+import Card from "primevue/card";
 import {useForm} from "@inertiajs/vue3";
-import Button from "@/Components/Button.vue";
-import BaseListbox from "@/Components/BaseListbox.vue";
-import { ref } from "vue";
-import { EyeIcon, EyeOffIcon } from '@heroicons/vue/outline'
-import VueTailwindDatepicker from "vue-tailwind-datepicker";
-import {
-  RadioGroup,
-  RadioGroupLabel,
-  RadioGroupDescription,
-  RadioGroupOption,
-} from '@headlessui/vue'
+import Button from "primevue/button";
+import DatePicker from "primevue/datepicker";
 import AvatarInput from "@/Pages/Member/MemberDetails/Partials/AvatarInput.vue";
+import {onMounted, ref} from "vue";
 import CountryLists from "../../../../../public/data/countries.json";
-import Modal from "@/Components/Modal.vue";
+import {
+    IconCircleCheckFilled
+} from "@tabler/icons-vue";
+import dayjs from "dayjs";
 
 const props = defineProps({
-    member_detail: Object,
-    countries: Array,
-    nationalities: Array,
-})
-
-const plans = [
-  {
-    name: 'Male',
-    value: 'male',
-  },
-  {
-    name: 'Female',
-    value: 'female',
-  },
-]
-
-const selected = ref(plans.find(plan => plan.value === props.member_detail.gender) || plans[0]);
-const memberInfo = ref(props.member_detail);
+    member: Object,
+});
 
 const form = useForm({
-    user_id: props.member_detail.id,
-    name: '',
-    username: '',
-    email: '',
-    dial_code: '',
-    phone: '',
-    dob: '',
+    user_id: props.member.id,
+    name: props.member.name,
+    username: props.member.username,
+    email: props.member.email,
+    dial_code: props.member.dial_code,
+    phone: props.member.phone,
+    dob: props.member.dob,
+    gender: props.member.gender,
     country: '',
-    gender: '',
-    address: '',
     nationality: '',
-    identification_number: '',
+    address: props.member.address,
+    identification_number: props.member.identification_number,
     profile_photo: null,
-})
+});
 
-const formatter = ref({
-  date: 'YYYY-MM-DD',
-  month: 'MMM'
-})
+const selectedCountry = ref();
+const selectedNationality = ref();
+const countries = ref([]);
+const loadingCountries = ref(false);
 
-const showPassword = ref(false)
-const togglePasswordVisibility = () => {
-    showPassword.value = !showPassword.value;
-};
+const getCountries = async () => {
+    loadingCountries.value = true;
+    try{
+        const response = await axios.get('/getCountries');
+        countries.value = response.data;
+        selectedCountry.value = countries.value.find(country => country.id === props.member.country) || null;
+        selectedNationality.value = countries.value.find(country => country.nationality === props.member.nationality) || null;
+    } catch(error){
+        console.error('Error fetching selectedCountry:', error);
+    } finally {
+        loadingCountries.value = false;
+    }
+}
 
-const submit = () => {
-    form.name = memberInfo.value.name;
-    form.username = memberInfo.value.username;
-    form.email = memberInfo.value.email;
-    form.dial_code = memberInfo.value.dial_code;
-    form.phone = memberInfo.value.phone;
-    form.dob = memberInfo.value.dob;
-    form.country = memberInfo.value.country;
-    form.gender = selected.value.value;
-    form.address = memberInfo.value.address_1;
-    form.nationality = memberInfo.value.nationality;
-    form.identification_number = memberInfo.value.identification_number;
-    form.post(route('member.edit_member'), {
-        onSuccess: () => {
-            form.reset();
-        },
-    })
+const genders = [
+    'male',
+    'female',
+]
+
+const selectedGender = ref(form.gender);
+const selectGender = (type) => {
+    selectedGender.value = type;
+}
+
+onMounted(() => {
+    getCountries();
+});
+
+const selectedDob = ref(form.dob);
+
+const submitForm = () => {
+    form.gender = selectedGender.value;
+    form.country = selectedCountry.value?.id;
+    form.nationality = selectedNationality.value?.nationality;
+    form.dob = dayjs(selectedDob.value).format("YYYY-MM-DD");
+    form.post(route('member.edit_member'))
 }
 
 const openInNewTab = (url) => {
     window.open(url, '_blank');
 }
-
-const frontIdentityModal = ref(false);
-const frontIdentityUrl = ref('');
-
-const openFrontIdentityModal = (mediaContent) => {
-    frontIdentityModal.value = true;
-    frontIdentityUrl.value = mediaContent.original_url;
-}
-
-const closeFrontIdentityModal = () => {
-    frontIdentityModal.value = false
-}
-const backIdentityModal = ref(false);
-const backIdentityUrl = ref('');
-
-const openBackIdentityModal = (mediaContent) => {
-    backIdentityModal.value = true;
-    backIdentityUrl.value = mediaContent.original_url;
-}
-
-const closeBackIdentityModal = () => {
-    backIdentityModal.value = false
-}
-
 </script>
 
 <template>
-    <div class="w-full flex items-end">
-        <form class="w-full">
-            <div class="flex justify-between items-center self-stretch pb-2">
-                <div class="flex items-center gap-4">
-                    <div>
-                        <AvatarInput class="w-16 h-16 rounded-full" v-model="form.profile_photo" :default-src="member_detail.profile_photo_url ? member_detail.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" />
-                        <!-- <img
-                        class="object-cover w-16 h-16 rounded-full"
-                        :src="props.member_detail.profile_photo_url ? props.member_detail.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'"
-                        /> -->
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="font-semibold">
-                            {{ member_detail.name }}
-                        </div>
+    <Card>
+        <template #content>
+            <form class="flex flex-col gap-3 items-center self-stretch w-full">
+                <div class="flex flex-col gap-3 md:flex-row justify-between md:items-center self-stretch">
+                    <div class="flex items-center gap-4">
                         <div>
-                            {{ member_detail.email }}
+                            <AvatarInput class="w-16 h-16 rounded-full" v-model="form.profile_photo" :default-src="member.profile_photo_url ? member.profile_photo_url : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" />
+                        </div>
+                        <div class="flex flex-col">
+                            <div class="font-semibold dark:text-white">
+                                {{ member.name }}
+                            </div>
+                            <div class="text-gray-500">
+                                {{ member.email }}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <Button
-                        type="button"
-                        variant="success"
-                        size="base"
-                        class="items-center gap-2 max-w-md"
-                        @click="openInNewTab(route('member.impersonate', member_detail.id))"
-                    >
-                        <span>Access</span>
-                    </Button>
+                    <div>
+                        <Button
+                            type="button"
+                            severity="success"
+                            size="small"
+                            class="items-center gap-2 w-full md:w-auto"
+                            :label="$t('public.access_portal')"
+                            @click.prevent="openInNewTab(route('member.impersonate', member.id))"
+                        />
+                    </div>
                 </div>
 
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="name" value="Name" />
-                    <div class="md:col-span-3">
-                        <Input
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full">
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="name"
+                            :invalid="!!form.errors.name"
+                        >
+                            {{ $t('public.name') }}
+                        </InputLabel>
+                        <InputText
                             id="name"
                             type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                            v-model="memberInfo.name"
-                            autofocus
-                            autocomplete="name"
-                            :invalid="form.errors.name"
+                            class="block w-full"
+                            v-model="form.name"
+                            :placeholder="$t('public.enter_name')"
+                            :invalid="!!form.errors.name"
                         />
-                        <InputError :message="form.errors.name" class="mt-1 col-span-4" />
+                        <InputError :message="form.errors.name" />
                     </div>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="username" value="Username" />
-                    <div class="md:col-span-3">
-                        <Input
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="username"
+                            :invalid="!!form.errors.username"
+                        >
+                            {{ $t('public.username') }}
+                        </InputLabel>
+                        <InputText
                             id="username"
                             type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                            v-model="memberInfo.username"
-                            autocomplete="username"
-                            :invalid="form.errors.username"
+                            class="block w-full"
+                            v-model="form.username"
+                            :placeholder="$t('public.enter_username')"
+                            :invalid="!!form.errors.username"
                         />
-                        <InputError :message="form.errors.username" class="mt-1 col-span-4" />
+                        <InputError :message="form.errors.username" />
                     </div>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="email" value="Email" />
-                    <div class="md:col-span-3">
-                        <Input
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="email"
+                            :invalid="!!form.errors.email"
+                        >
+                            {{ $t('public.email') }}
+                        </InputLabel>
+                        <InputText
                             id="email"
-                            type="email"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                            v-model="memberInfo.email"
-                        />
-                        <InputError :message="form.errors.email" class="mt-1 col-span-4" />
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <Label
-                        for="phone"
-                        :value="$t('public.mobile_phone')"
-                    />
-                    <div class="flex gap-3">
-                        <BaseListbox
-                            class="w-[240px]"
-                            :options="CountryLists"
-                            v-model="memberInfo.dial_code"
-                            with-img
-                            is-phone-code
-                            :error="!!form.errors.phone"
-                        />
-                        <Input
-                            id="phone"
                             type="text"
                             class="block w-full"
-                            :placeholder="$t('public.phone_placeholder')"
-                            v-model="memberInfo.phone"
-                            :invalid="form.errors.phone"
+                            v-model="form.email"
+                            :placeholder="$t('public.enter_email')"
+                            :invalid="!!form.errors.email"
+                            disabled
                         />
+                        <InputError :message="form.errors.email" />
                     </div>
-                    <InputError :message="form.errors.phone"/>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="dob" value="Date of Birth" />
-                    <div class="md:col-span-3">
-                        <!-- <Input
-                            id="dob"
-                            type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                            v-model="form.dob"
-                            :invalid="form.errors.dob"
-                        />
-                        <InputError :message="form.errors.dob" class="mt-1 col-span-4" /> -->
-                        <vue-tailwind-datepicker
-                            input-classes="py-2.5 w-full rounded-lg dark:placeholder:text-gray-500 focus:ring-primary-400 hover:border-primary-400 focus:border-primary-400 dark:focus:ring-primary-500 dark:hover:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-gray-800 dark:text-white border border-gray-300 dark:border-gray-800"                            v-model="memberInfo.dob"
-                            as-single
-                            :formatter="formatter"
-                        />
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="gender" value="Gender" />
-                    <div class="md:col-span-3">
-                        <RadioGroup v-model="selected">
-                            <RadioGroupLabel class="sr-only">Gender</RadioGroupLabel>
-                            <div class="flex gap-3 items-center self-stretch w-full">
-                                <RadioGroupOption
-                                    as="template"
-                                    v-for="(plan, index) in plans"
-                                    :key="index"
-                                    :value="plan"
-                                    v-slot="{ active, checked }"
-                                >
-                                    <div
-                                        :class="[
-                                            active
-                                                ? 'ring-0 ring-white ring-offset-0'
-                                                : '',
-                                            checked ? 'border-primary-600 dark:border-white bg-primary-500 dark:bg-gray-600 text-white' : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white',
-                                        ]"
-                                        class="relative flex cursor-pointer rounded-xl border p-3 focus:outline-none w-full"
-                                    >
-                                        <div class="flex items-center w-full">
-                                            <div class="text-sm flex flex-col gap-3 w-full">
-                                                <RadioGroupLabel
-                                                    as="div"
-                                                    class="font-medium"
-                                                >
-                                                    <div class="flex justify-center items-center gap-3">
-                                                        {{ plan.name }}
-                                                    </div>
-                                                </RadioGroupLabel>
-                                            </div>
-                                        </div>
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="phone"
+                            :invalid="!!form.errors.phone"
+                        >
+                            {{ $t('public.phone_number') }}
+                        </InputLabel>
+                        <div class="flex gap-2 items-center self-stretch relative">
+                            <Select
+                                v-model="form.dial_code"
+                                :options="CountryLists"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="Phone Code"
+                                class="w-[120px]"
+                                :invalid="!!form.errors.dial_code"
+                                filter
+                                :filterFields="['label', 'value', 'code']"
+                            >
+                                <template #value="slotProps">
+                                    <div v-if="slotProps.value" class="flex items-center">
+                                        <div>{{ slotProps.value }}</div>
                                     </div>
-                                </RadioGroupOption>
+                                    <span v-else class="text-surface-400 dark:text-surface-500">{{ slotProps.placeholder }}</span>
+                                </template>
+                                <template #option="slotProps">
+                                    <div class="flex items-center gap-1">
+                                        <img
+                                            :src="slotProps.option.imgUrl"
+                                            :alt="slotProps.option.iso2"
+                                            width="18"
+                                            height="12"
+                                        />
+                                        <div>{{ slotProps.option.value }}</div>
+                                        <div class="max-w-[200px] uppercase truncate text-gray-500">({{ slotProps.option.code }})</div>
+                                    </div>
+                                </template>
+                            </Select>
+
+                            <InputText
+                                id="phone"
+                                type="text"
+                                class="block w-full"
+                                v-model="form.phone"
+                                placeholder="Phone Number"
+                                :invalid="!!form.errors.phone"
+                            />
+                        </div>
+                        <InputError :message="form.errors.phone" />
+                    </div>
+
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="dob"
+                            :invalid="!!form.errors.dob"
+                        >
+                            {{ $t('public.date_of_birth') }}
+                        </InputLabel>
+                        <DatePicker
+                            v-model="selectedDob"
+                            class="w-full"
+                            dateFormat="yy-mm-dd"
+                        />
+                        <InputError :message="form.errors.dob" />
+                    </div>
+
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="gender"
+                            :invalid="!!form.errors.gender"
+                        >
+                            {{ $t('public.gender') }}
+                        </InputLabel>
+                        <div class="flex items-start gap-3 self-stretch w-full overflow-x-auto">
+                            <div
+                                v-for="gender in genders"
+                                @click="selectGender(gender)"
+                                class="group flex flex-col items-start py-3 px-4 gap-1 self-stretch rounded-lg border shadow-input transition-colors duration-300 select-none cursor-pointer w-full"
+                                :class="{
+                                    'bg-primary-50 dark:bg-gray-800 border-primary-500': selectedGender === gender,
+                                    'bg-white dark:bg-gray-950 border-gray-300 dark:border-gray-700 hover:bg-primary-50 hover:border-primary-500': selectedGender !== gender,
+                                }"
+                            >
+                                <div class="flex items-center gap-3 self-stretch">
+                                <span
+                                    class="flex-grow text-sm font-semibold transition-colors duration-300 group-hover:text-primary-700 dark:group-hover:text-primary-500 uppercase"
+                                    :class="{
+                                        'text-primary-700 dark:text-primary-300': selectedGender === gender,
+                                        'text-gray-950 dark:text-white': selectedGender !== gender
+                                    }"
+                                >
+                                    {{ gender }}
+                                </span>
+                                    <IconCircleCheckFilled v-if="selectedGender === gender" size="20" stroke-width="1.25" color="#2970FF" />
+                                </div>
                             </div>
-                        </RadioGroup>
-                        <InputError :message="form.errors.gender" class="mt-1 col-span-4" />
+                        </div>
+                        <InputError :message="form.errors.gender" />
                     </div>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="country" value="Country" />
-                    <div class="md:col-span-3">
-                        <BaseListbox
-                            v-model="memberInfo.country"
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="country"
+                            :invalid="!!form.errors.country"
+                        >
+                            {{ $t('public.country') }}
+                        </InputLabel>
+                        <Select
+                            v-model="selectedCountry"
                             :options="countries"
-                        />
-                        <InputError :message="form.errors.country" class="mt-1 col-span-4" />
+                            optionLabel="name"
+                            placeholder="Choose a country"
+                            class="w-full"
+                            :invalid="!!form.errors.country"
+                            filter
+                            :filterFields="['name', 'iso2']"
+                            :loading="loadingCountries"
+                        >
+                            <template #value="slotProps">
+                                <div v-if="slotProps.value" class="flex items-center">
+                                    <div>{{ slotProps.value.name }}</div>
+                                </div>
+                                <span v-else class="text-surface-400 dark:text-surface-500">{{ slotProps.placeholder }}</span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="flex items-center gap-1">
+                                    <img
+                                        v-if="slotProps.option.iso2"
+                                        :src="`https://flagcdn.com/w40/${slotProps.option.iso2.toLowerCase()}.png`"
+                                        :alt="slotProps.option.iso2"
+                                        width="18"
+                                        height="12"
+                                    />
+                                    <div>{{ slotProps.option.name }}</div>
+                                    <div class="max-w-[200px] uppercase truncate text-gray-500">({{ slotProps.option.iso2 }})</div>
+                                </div>
+                            </template>
+                        </Select>
+                        <InputError :message="form.errors.country" />
                     </div>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="nationality" value="Nationality" />
-                    <div class="md:col-span-3">
-                        <BaseListbox
-                            v-model="memberInfo.nationality"
-                            :options="nationalities"
-                        />
-                        <InputError :message="form.errors.nationality" class="mt-1 col-span-4" />
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="nationality"
+                            :invalid="!!form.errors.nationality"
+                        >
+                            {{ $t('public.nationality') }}
+                        </InputLabel>
+
+                        <Select
+                            v-model="selectedNationality"
+                            :options="countries"
+                            optionLabel="name"
+                            placeholder="Choose a country"
+                            class="w-full"
+                            :invalid="!!form.errors.nationality"
+                            filter
+                            :filterFields="['name', 'iso2']"
+                            :loading="loadingCountries"
+                        >
+                            <template #value="slotProps">
+                                <div v-if="slotProps.value" class="flex items-center">
+                                    <div>{{ slotProps.value.nationality }}</div>
+                                </div>
+                                <span v-else class="text-surface-400 dark:text-surface-500">{{ slotProps.placeholder }}</span>
+                            </template>
+                            <template #option="slotProps">
+                                <div class="flex items-center gap-1">
+                                    <img
+                                        v-if="slotProps.option.iso2"
+                                        :src="`https://flagcdn.com/w40/${slotProps.option.iso2.toLowerCase()}.png`"
+                                        :alt="slotProps.option.iso2"
+                                        width="18"
+                                        height="12"
+                                    />
+                                    <div>{{ slotProps.option.name }}</div>
+                                    <div class="max-w-[200px] uppercase truncate text-gray-500">({{ slotProps.option.iso2 }})</div>
+                                </div>
+                            </template>
+                        </Select>
+                        <InputError :message="form.errors.nationality" />
                     </div>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="address" value="Address" />
-                    <div class="md:col-span-3">
-                        <Input
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="address"
+                            :invalid="!!form.errors.address"
+                        >
+                            {{ $t('public.address') }}
+                        </InputLabel>
+                        <InputText
                             id="address"
                             type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                            v-model="memberInfo.address_1"
-
+                            class="block w-full"
+                            v-model="form.address"
+                            :placeholder="$t('public.address')"
+                            :invalid="!!form.errors.address"
                         />
-                        <InputError :message="form.errors.address" class="mt-1 col-span-4" />
+                        <InputError :message="form.errors.address" />
                     </div>
-                </div>
 
-                <div class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="identification_number" value="Identity Number" />
-                    <div class="md:col-span-3">
-                        <Input
+                    <div class="flex flex-col gap-1 items-start self-stretch">
+                        <InputLabel
+                            for="identification_number"
+                            :invalid="!!form.errors.identification_number"
+                        >
+                            {{ $t('public.ic_passport') }}
+                        </InputLabel>
+                        <InputText
                             id="identification_number"
                             type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-black dark:text-white dark:bg-gray-600 px-3 py-0"
-                            v-model="memberInfo.identification_number"
-
+                            class="block w-full"
+                            v-model="form.identification_number"
+                            :placeholder="$t('public.enter_identification_number')"
+                            :invalid="!!form.errors.identification_number"
                         />
-                        <InputError :message="form.errors.identification_number" class="mt-1 col-span-4" />
+                        <InputError :message="form.errors.identification_number" />
                     </div>
                 </div>
 
-                <div v-if="memberInfo.front_identity.length > 0" class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="front_identity" value="Proof of Identity (Front)" />
-                    <div class="md:col-span-3">
-                        <Input
-                            id="front_identity"
-                            type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-primary-500 dark:text-primary-500 dark:bg-gray-600 px-3 py-0 hover:text-primary-600 dark:hover:text-primary-400 hover:cursor-pointer"
-                            v-model="memberInfo.front_identity[0].file_name"
-                            @click="openFrontIdentityModal(memberInfo.front_identity[0])"
-                            readonly
-                        />
-                    </div>
+                <div class="flex justify-end w-full pt-5">
+                    <Button
+                        type="submit"
+                        :disabled="form.processing"
+                        @click.prevent="submitForm"
+                        class="px-10 w-full md:w-auto"
+                        size="small"
+                    >
+                        <span>Save</span>
+                    </Button>
                 </div>
-
-                <div v-if="memberInfo.back_identity.length > 0" class="space-y-2">
-                    <Label class="text-sm dark:text-white" for="back_identity" value="Proof of Identity (Back)" />
-                    <div class="md:col-span-3">
-                        <Input
-                            id="back_identity"
-                            type="text"
-                            class="flex flex-row items-center gap-3 w-full rounded-lg text-base text-primary-500 dark:text-primary-500 dark:bg-gray-600 px-3 py-0 hover:text-primary-600 dark:hover:text-primary-400 hover:cursor-pointer"
-                            v-model="memberInfo.back_identity[0].file_name"
-                            @click="openBackIdentityModal(memberInfo.back_identity[0])"
-                            readonly
-                        />
-                    </div>
-                </div>
-
-            </div>
-            <div class="flex justify-end items-end mt-5">
-                <Button
-                    variant="primary"
-                    :disabled="form.processing"
-                    @click.prevent="submit"
-                >
-                    <span>Save</span>
-                </Button>
-            </div>
-        </form>
-    </div>
-
-    <Modal :show="frontIdentityModal" title="Proof of Identity (Front)" @close="closeFrontIdentityModal">
-        <div class="p-2 rounded-lg w-full flex justify-center">
-            <img :src="frontIdentityUrl" class="max-h-64 rounded-lg" alt="">
-        </div>
-    </Modal>
-
-    <Modal :show="backIdentityModal" title="Proof of Identity (Back)" @close="closeBackIdentityModal">
-        <div class="p-2 rounded-lg w-full flex justify-center">
-            <img :src="backIdentityUrl" class="max-h-64 rounded-lg" alt="">
-        </div>
-    </Modal>
+            </form>
+        </template>
+    </Card>
 </template>

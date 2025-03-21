@@ -572,6 +572,8 @@ const downloadFile = () => {
                         <Column
                             field="action"
                             class="table-cell"
+                            frozen
+                            align-frozen="right"
                         >
                             <template #header>
                                 <span class="block">{{ $t('public.action') }}</span>

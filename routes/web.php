@@ -72,7 +72,6 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/updateExtraBonus', [MemberController::class, 'updateExtraBonus'])->name('member.updateExtraBonus');
         Route::post('/updateLeaderStatus', [MemberController::class, 'updateLeaderStatus'])->name('member.updateLeaderStatus');
 
-        Route::post('/editMember', [MemberController::class, 'editMember'])->name('member.edit_member');
         Route::post('/payment_account', [MemberController::class, 'paymentAccount'])->name('member.payment_account');
         Route::patch('/advanceEditMember', [MemberController::class, 'advanceEditMember'])->name('member.advanceEdit_member');
         Route::get('/getAllUsers', [MemberController::class, 'getAllUsers'])->name('member.getAllUsers');
@@ -86,6 +85,11 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/impersonate/{user_id}', [MemberController::class, 'impersonate'])->name('member.impersonate');
         Route::get('/affiliate_listing', [MemberController::class, 'affiliate_listing'])->name('member.affiliate_listing');
         Route::get('/getAffiliateSummaries', [MemberController::class, 'getAffiliateSummaries'])->name('member.getAffiliateSummaries');
+
+        //Member Details Update
+        Route::post('/editMember', [MemberController::class, 'editMember'])->name('member.edit_member');
+        Route::put('/updateMemberRank', [MemberController::class, 'updateMemberRank'])->name('member.updateMemberRank');
+        Route::put('/updateMemberGroup', [MemberController::class, 'updateMemberGroup'])->name('member.updateMemberGroup');
 
         // Member Fund
         Route::get('/member_fund', [MemberController::class, 'member_fund'])->name('member.member_fund');
