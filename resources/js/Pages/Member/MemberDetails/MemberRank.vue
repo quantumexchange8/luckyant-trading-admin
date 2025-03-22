@@ -3,7 +3,7 @@ import Card from "primevue/card";
 import {useForm} from "@inertiajs/vue3";
 import InputLabel from "@/Components/Label.vue";
 import InputError from "@/Components/InputError.vue";
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import Select from "primevue/select";
 import {useLangObserver} from "@/Composables/localeObserver.js";
 import {IconCircleCheckFilled} from "@tabler/icons-vue";
@@ -52,9 +52,15 @@ const selectRankUp = (type) => {
     selectedRankUp.value = type;
 }
 
+watch(selectedSettingRank, (rank) => {
+    if (rank.id !== props.member.setting_rank_id) {
+        selectRankUp('manual');
+    }
+})
+
 const submitForm = () => {
     form.setting_rank_id = selectedSettingRank.value.id;
-    form.display_rank_id = selectedSettingRank.value.id;
+    form.display_rank_id = selectedDisplayRank.value.id;
     form.rank_up_status = selectedRankUp.value;
 
     form.put(route('member.updateMemberRank'));
@@ -107,7 +113,7 @@ const submitForm = () => {
                             {{ $t('public.display_rank') }}
                         </InputLabel>
                         <Select
-                            v-model="selectedSettingRank"
+                            v-model="selectedDisplayRank"
                             :options="ranks"
                             optionLabel="name"
                             placeholder="Choose a rank"
