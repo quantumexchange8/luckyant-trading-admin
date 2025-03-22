@@ -1514,27 +1514,32 @@ class MemberController extends Controller
         ])->validate();
 
         $user = User::find($request->user_id);
-        $previous_rank_id = $user->setting_rank_id;
+        $new_setting_rank = SettingRank::find($request->setting_rank_id);
 
         $user->update([
-            'setting_rank_id' => $request->setting_rank_id,
             'display_rank_id' => $request->display_rank_id,
             'rank_up_status' => $request->rank_up_status,
         ]);
 
-        $rank = SettingRank::find($user->setting_rank_id);
+        if ($new_setting_rank->id != $user->setting_rank_id) {
+            $previous_rank_id = $user->setting_rank_id;
 
-        RankingLog::create([
-            'user_id' => $user->id,
-            'old_rank' => $previous_rank_id,
-            'new_rank' => $user->setting_rank_id,
-            'user_package_amount' => 0,
-            'target_package_amount' => $rank->package_requirement,
-            'user_direct_referral_amount' => 0,
-            'target_direct_referral_amount' => $rank->direct_referral,
-            'user_group_sales' => 0,
-            'target_group_sales' => $rank->group_sales,
-        ]);
+            $user->setting_rank_id = $new_setting_rank->id;
+            $user->rank_up_status = 'manual';
+            $user->save();
+
+            RankingLog::create([
+                'user_id' => $user->id,
+                'old_rank' => $previous_rank_id,
+                'new_rank' => $user->setting_rank_id,
+                'user_package_amount' => 0,
+                'target_package_amount' => $new_setting_rank->package_requirement,
+                'user_direct_referral_amount' => 0,
+                'target_direct_referral_amount' => $new_setting_rank->direct_referral,
+                'user_group_sales' => 0,
+                'target_group_sales' => $new_setting_rank->group_sales,
+            ]);
+        }
 
         return back()->with('toast', [
             'title' => trans("public.success"),
