@@ -90,6 +90,7 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/editMember', [MemberController::class, 'editMember'])->name('member.edit_member');
         Route::put('/updateMemberRank', [MemberController::class, 'updateMemberRank'])->name('member.updateMemberRank');
         Route::put('/updateMemberGroup', [MemberController::class, 'updateMemberGroup'])->name('member.updateMemberGroup');
+        Route::put('/updateMemberPassword', [MemberController::class, 'updateMemberPassword'])->name('member.updateMemberPassword');
 
         // Member Fund
         Route::get('/member_fund', [MemberController::class, 'member_fund'])->name('member.member_fund');

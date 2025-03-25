@@ -1617,4 +1617,25 @@ class MemberController extends Controller
             'type' => 'success',
         ]);
     }
+
+    public function updateMemberPassword(Request $request)
+    {
+        Validator::make($request->all(), [
+            'password' => ['required', 'confirmed'],
+        ])->setAttributeNames([
+            'password' => trans('public.password'),
+        ])->validate();
+
+        $user = User::find($request->user_id);
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return back()->with('toast', [
+            'title' => trans("public.success"),
+            'message' => trans("public.toast_success_update_member_message"),
+            'type' => 'success',
+        ]);
+    }
 }

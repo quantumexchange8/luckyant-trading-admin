@@ -375,4 +375,6 @@ return [
     "referral_program" => "Referral Program",
     "gold_squad_program" => "Gold Squad Program",
     "ticket_gift_pack" => "Ticket Gift Pack",
+    "reset_password" => "Reset Password",
+    "confirm_password" => "Confirm Password",
 ];

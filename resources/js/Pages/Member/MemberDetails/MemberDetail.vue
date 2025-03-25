@@ -7,6 +7,7 @@ import MemberRank from "@/Pages/Member/MemberDetails/MemberRank.vue";
 import MemberGroup from "@/Pages/Member/MemberDetails/MemberGroup.vue";
 import MemberKyc from "@/Pages/Member/MemberDetails/MemberKyc.vue";
 import MemberWallet from "@/Pages/Member/MemberDetails/MemberWallet.vue";
+import ResetPasswordForm from "@/Pages/Member/MemberDetails/ResetPasswordForm.vue";
 
 const props = defineProps({
     member_detail: Object,
@@ -62,6 +63,20 @@ const props = defineProps({
                     :member="member_detail"
                     :firstLeader="firstLeader"
                 />
+
+                <Card>
+                    <template #content>
+                        <div class="flex flex-col gap-5 items-center self-stretch">
+                            <div class="flex flex-col gap-3 items-center self-stretch">
+                                <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.reset_password') }}</span>
+
+                                <ResetPasswordForm
+                                    :member="member_detail"
+                                />
+                            </div>
+                        </div>
+                    </template>
+                </Card>
             </div>
         </div>
     </AuthenticatedLayout>

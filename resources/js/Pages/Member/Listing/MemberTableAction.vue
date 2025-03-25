@@ -10,6 +10,7 @@ import {
     IconUserUp,
     IconUserDown,
     IconUserCheck,
+    IconUserShield
 } from "@tabler/icons-vue";
 import TieredMenu from "primevue/tieredmenu";
 import Dialog from "primevue/dialog";
@@ -17,6 +18,8 @@ import Button from "primevue/button";
 import ExtraBonus from "@/Pages/Member/Listing/Partials/ExtraBonus.vue";
 import EditLeader from "@/Pages/Member/Listing/Partials/EditLeader.vue";
 import KycApproval from "@/Pages/Member/Listing/Partials/KycApproval.vue";
+import ResetPassword from "@/Pages/Auth/ResetPassword.vue";
+import ResetPasswordForm from "@/Pages/Member/MemberDetails/ResetPasswordForm.vue";
 
 const props = defineProps({
     user: Object,
@@ -57,6 +60,14 @@ const items = ref([
         command: () => {
             visible.value = true;
             dialogType.value = props.user.leader_status ? 'demote_leader' : 'promote_member';
+        },
+    },
+    {
+        label: 'reset_password',
+        icon: h(IconUserShield),
+        command: () => {
+            visible.value = true;
+            dialogType.value = 'reset_password';
         },
     },
     {
@@ -143,6 +154,15 @@ const toggle = (event) => {
                 :action="dialogType"
                 @update:visible="visible = $event"
             />
+        </template>
+
+        <template v-if="dialogType === 'reset_password'">
+            <div class="flex flex-col gap-3 items-center self-stretch">
+                <ResetPasswordForm
+                    :member="user"
+                    @update:visible="visible = $event"
+                />
+            </div>
         </template>
     </Dialog>
 </template>
