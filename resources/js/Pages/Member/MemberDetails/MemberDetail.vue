@@ -31,8 +31,8 @@ const props = defineProps({
             </div>
         </template>
 
-        <div class="flex flex-col lg:flex-row gap-3 md:gap-5 w-full items-start self-stretch">
-            <div class="flex flex-col gap-3 md:gap-5 w-full lg:basis-2/3">
+        <div class="grid grid-cols-6 lg:grid-cols-12 gap-3 md:gap-5 w-full items-start self-stretch">
+            <div class="flex flex-col gap-3 md:gap-5 col-span-6 lg:col-span-8 w-full">
                 <!-- Edit member -->
                 <EditMember
                     :member="member_detail"
@@ -52,7 +52,7 @@ const props = defineProps({
                 />
             </div>
 
-            <div class="flex flex-col gap-3 md:gap-5 w-full lg:basis-1/3">
+            <div class="flex flex-col gap-3 md:gap-5 col-span-6 lg:col-span-4 w-full">
                 <!-- Rank -->
                 <MemberRank
                     :member="member_detail"

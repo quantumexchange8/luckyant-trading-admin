@@ -5,7 +5,6 @@ import InputLabel from "@/Components/Label.vue";
 import InputError from "@/Components/InputError.vue";
 import Select from "primevue/select";
 import {ref} from "vue";
-import {useLangObserver} from "@/Composables/localeObserver.js";
 import {useForm} from "@inertiajs/vue3";
 import {IconCircleCheckFilled} from "@tabler/icons-vue";
 import Button from "primevue/button";
@@ -31,7 +30,7 @@ const getUsers = async () => {
         const response = await axios.get('/getUsers');
         uplines.value = response.data;
         selectedUpline.value = uplines.value.find(upline => upline.id === props.member.upline_id) || null;
-    } catch(error){
+    } catch(error) {
         console.error('Error fetching uplines:', error);
     } finally {
         loadingUsers.value = false;
@@ -71,7 +70,7 @@ const submitForm = () => {
                                 {{ $t('public.leader') }}
                             </div>
                             <div class="text-gray-950 dark:text-white text-sm font-medium">
-                                {{ firstLeader?.name ?? '-' }}
+                                {{ firstLeader?.email ?? '-' }}
                             </div>
                         </div>
                         <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
@@ -79,10 +78,10 @@ const submitForm = () => {
                                 {{ $t('public.referrer') }}
                             </div>
                             <div class="text-gray-950 dark:text-white text-sm font-medium">
-                                {{ member.upline?.name ?? '-' }}
+                                {{ member.upline?.email ?? '-' }}
                             </div>
                         </div>
-                        <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                        <div class="flex flex-col md:flex-row items-start md:items-center gap-1 self-stretch">
                             <div class="w-[140px] text-gray-500 text-xs font-medium">
                                 {{ $t('public.status') }}
                             </div>
@@ -105,7 +104,7 @@ const submitForm = () => {
                             <Select
                                 v-model="selectedUpline"
                                 :options="uplines"
-                                optionLabel="name"
+                                optionLabel="email"
                                 placeholder="Choose a referrer"
                                 class="w-full"
                                 :invalid="!!form.errors.upline_id"
@@ -115,13 +114,13 @@ const submitForm = () => {
                             >
                                 <template #value="slotProps">
                                     <div v-if="slotProps.value" class="flex items-center">
-                                        <div>{{ slotProps.value.name }}</div>
+                                        <div>{{ slotProps.value.email }}</div>
                                     </div>
                                     <span v-else class="text-surface-400 dark:text-surface-500">{{ slotProps.placeholder }}</span>
                                 </template>
                                 <template #option="slotProps">
                                     <div class="flex items-center gap-1">
-                                        <div>{{ slotProps.option.name }}</div>
+                                        <div>{{ slotProps.option.email }}</div>
                                     </div>
                                 </template>
                             </Select>

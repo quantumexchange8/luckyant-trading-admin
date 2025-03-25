@@ -200,4 +200,44 @@ class SelectOptionController extends Controller
 
         return response()->json($users);
     }
+
+    public function getLimitedUsers(Request $request)
+    {
+        $query = User::whereNotIn('role', ['super-admin', 'admin'])
+            ->select(['id', 'name', 'email']);
+
+        $authUser = Auth::user();
+
+        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+            $childrenIds = $authUser->getChildrenIds();
+            $childrenIds[] = $authUser->id;
+            $query->whereIn('id', $childrenIds);
+        } elseif ($authUser->hasRole('super-admin')) {
+            // Super-admin logic, no restrictions
+        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+            $query->whereIn('id', $childrenIds);
+        } else {
+            // No applicable conditions, restrict data
+            $query->whereIn('id', []);
+        }
+
+        if ($request->user_type == 'leader') {
+            $query->where('leader_status', 1);
+        } elseif ($request->user_type == 'user') {
+            $query->where('leader_status', 0);
+        }
+
+        // Implement pagination
+        $offset = $request->input('offset', 0);
+        $limit = $request->input('limit', 20); // Default to 20 users per page
+        $totalUsers = $query->count(); // Get total user count for pagination
+
+        $users = $query->offset($offset)->limit($limit)->get();
+
+        return response()->json([
+            'users' => $users,
+            'total' => $totalUsers
+        ]);
+    }
 }
