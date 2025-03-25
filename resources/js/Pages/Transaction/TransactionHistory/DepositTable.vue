@@ -58,7 +58,7 @@ const loadLazyData = (event) => {
     isLoading.value = true;
 
     lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
-
+    lazyParams.value.filters = filters.value;
     try {
         setTimeout(async () => {
             const params = {

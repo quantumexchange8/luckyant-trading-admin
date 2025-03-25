@@ -765,10 +765,6 @@ class MemberController extends Controller
             ->select('id', 'name', 'email')
             ->get();
 
-        $users->each(function ($users) {
-            $users->profile_photo = $users->getFirstMediaUrl('profile_photo');
-        });
-
         return response()->json($users);
     }
 
@@ -1554,7 +1550,7 @@ class MemberController extends Controller
             'upline_id' => ['required'],
             'is_public' => ['required'],
         ])->setAttributeNames([
-            'upline_id' => trans('public.setting_rank'),
+            'upline_id' => trans('public.referrer'),
             'is_public' => trans('public.status'),
         ])->validate();
 

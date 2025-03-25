@@ -8,6 +8,7 @@ import {ref} from "vue";
 import {useForm} from "@inertiajs/vue3";
 import {IconCircleCheckFilled} from "@tabler/icons-vue";
 import Button from "primevue/button";
+import Combobox from "@/Components/Combobox.vue";
 
 const props = defineProps({
     member: Object,
@@ -20,7 +21,7 @@ const form = useForm({
     is_public: null,
 });
 
-const selectedUpline = ref();
+const selectedUpline = ref(props.member.upline ? { value: props.member.upline.id, label: props.member.upline.email } : {});
 const uplines = ref([]);
 const loadingUsers = ref(false);
 
@@ -37,7 +38,21 @@ const getUsers = async () => {
     }
 }
 
-getUsers();
+
+function loadUsers(query, setOptions) {
+    fetch('/member/getAllUsers?query=' + query + '&id=' + props.member.id)
+        .then(response => response.json())
+        .then(results => {
+            setOptions(
+                results.map(user => {
+                    return {
+                        value: user.id,
+                        label: user.email,
+                    }
+                })
+            )
+        });
+}
 
 const groupStatuses = [
     {label: 'public', value: 1},
@@ -50,7 +65,7 @@ const selectGroupStatus = (type) => {
 }
 
 const submitForm = () => {
-    form.upline_id = selectedUpline.value.id;
+    form.upline_id = selectedUpline.value['value'];
     form.is_public = selectedGroupStatus.value;
 
     form.put(route('member.updateMemberGroup'));
@@ -100,30 +115,13 @@ const submitForm = () => {
                             >
                                 {{ $t('public.referrer') }}
                             </InputLabel>
-
-                            <Select
-                                v-model="selectedUpline"
-                                :options="uplines"
-                                optionLabel="email"
-                                placeholder="Choose a referrer"
-                                class="w-full"
-                                :invalid="!!form.errors.upline_id"
-                                filter
-                                :filterFields="['name', 'email', 'username']"
-                                :loading="loadingUsers"
-                            >
-                                <template #value="slotProps">
-                                    <div v-if="slotProps.value" class="flex items-center">
-                                        <div>{{ slotProps.value.email }}</div>
-                                    </div>
-                                    <span v-else class="text-surface-400 dark:text-surface-500">{{ slotProps.placeholder }}</span>
-                                </template>
-                                <template #option="slotProps">
-                                    <div class="flex items-center gap-1">
-                                        <div>{{ slotProps.option.email }}</div>
-                                    </div>
-                                </template>
-                            </Select>
+                            <div class="w-full">
+                                <Combobox
+                                    :load-options="loadUsers"
+                                    v-model="selectedUpline"
+                                    :error="form.errors.upline_id"
+                                />
+                            </div>
                             <InputError :message="form.errors.upline_id" />
                         </div>
 
@@ -158,7 +156,7 @@ const submitForm = () => {
                                     </div>
                                 </div>
                             </div>
-                            <InputError :message="form.errors.upline_id" />
+                            <InputError :message="form.errors.is_public" />
                         </div>
 
                         <div class="flex justify-end w-full pt-3">

@@ -176,9 +176,9 @@ function clearSelection() {
             :class="{
                 'border-primary-500 bg-white dark:bg-gray-600': open && !field.error,
                 'border-error-500': !open && field.error,
-                'border-gray-300 dark:border-transparent': !open && !field.error,
+                'border-gray-300 dark:border-gray-700': !open && !field.error,
               }"
-            class="min-h-[2.5rem] relative flex w-full flex-wrap items-center gap-1 overflow-hidden rounded-lg border bg-white dark:bg-gray-800 py-1 pl-3 pr-14 focus-within:border-primary-400 hover:border-primary-400 dark:hover:border-primary-400 focus:ring-0 dark:disabled:bg-gray-700 dark:disabled:border-transparent"
+            class="min-h-[2.5rem] relative flex w-full flex-wrap items-center gap-1 overflow-hidden rounded-lg border bg-white dark:bg-gray-950 py-1 pl-3 pr-14 focus-within:border-primary-400 hover:border-primary-400 dark:hover:border-primary-400 focus:ring-0 dark:disabled:bg-gray-700 dark:disabled:border-transparent shadow-toast"
         >
             <template v-if="props.multiple">
                 <div
@@ -235,7 +235,7 @@ function clearSelection() {
         </ComboboxButton>
 
         <TransitionRoot
-            class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white dark:bg-gray-800 py-1 text-base shadow-md ring-1 ring-black ring-opacity-5 focus:outline-none"
+            class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white dark:bg-gray-900 border dark:border-gray-700 py-1 text-base shadow-md ring-1 ring-black ring-opacity-5 focus:outline-none"
             leave="transition ease-in duration-100"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
@@ -288,7 +288,7 @@ function clearSelection() {
                                 'bg-gray-100': selected,
                                 'bg-gray-200': active,
                               }"
-                            class="relative inline-flex items-center gap-2 w-full cursor-default select-none whitespace-pre py-2 px-3 text-sm dark:text-white active:bg-gray-300 dark:bg-gray-800"
+                            class="relative inline-flex items-center gap-2 w-full cursor-default select-none whitespace-pre py-2 px-3 text-sm dark:text-white active:bg-gray-300 dark:bg-gray-900"
                         >
                             <img v-if="image" :src="option.img ? option.img : 'https://img.freepik.com/free-icon/user_318-159711.jpg'" class="w-8 h-8 rounded-full" alt="">
                             <span
