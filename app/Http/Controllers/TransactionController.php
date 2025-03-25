@@ -199,12 +199,21 @@ class TransactionController extends Controller
                     $wallet = Wallet::find($transaction->to_wallet_id);
 
                     if ($transaction->payment_method == 'Payment Merchant') {
+                        if (!$transaction->transaction_amount) {
+                            $transaction->update([
+                                'transaction_amount' => $transaction->amount,
+                            ]);
+                        }
                         $wallet->balance += $transaction->transaction_amount;
                     } else {
                         $wallet->balance += $transaction->amount;
                     }
 
                     $wallet->save();
+
+                    $transaction->update([
+                        'new_wallet_amount' => $wallet->balance,
+                    ]);
 
                     if (App::environment('production')) {
                         Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
@@ -234,16 +243,23 @@ class TransactionController extends Controller
                     'status' => 'Success',
                     'approval_at' => now(),
                     'handle_by' => Auth::user()->id,
-                    'new_wallet_amount' => $wallet->balance,
                 ]);
 
                 if ($transaction->payment_method == 'Payment Merchant') {
+                    if (!$transaction->transaction_amount) {
+                        $transaction->update([
+                            'transaction_amount' => $transaction->amount,
+                        ]);
+                    }
                     $wallet->balance += $transaction->transaction_amount;
                 } else {
                     $wallet->balance += $transaction->amount;
                 }
-
                 $wallet->save();
+
+                $transaction->update([
+                    'new_wallet_amount' => $wallet->balance,
+                ]);
 
                 if (App::environment('production')) {
                     Notification::route('mail', $transaction->user->email)->notify(new DepositConfirmationNotification($transaction));
