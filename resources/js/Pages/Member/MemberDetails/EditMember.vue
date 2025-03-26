@@ -164,7 +164,6 @@ const openInNewTab = (url) => {
                             v-model="form.email"
                             :placeholder="$t('public.enter_email')"
                             :invalid="!!form.errors.email"
-                            disabled
                         />
                         <InputError :message="form.errors.email" />
                     </div>
