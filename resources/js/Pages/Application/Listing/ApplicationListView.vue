@@ -120,11 +120,11 @@ watchEffect(() => {
                     <IconCircleXFilled size="16" />
                 </div>
             </div>
-            <div class="relative">
+            <div class="relative w-full md:w-auto">
                 <DatePicker
                     v-model="selectedDate"
                     dateFormat="dd/mm/yy"
-                    class="min-w-60"
+                    class="min-w-60 w-full md:w-auto"
                     selectionMode="range"
                     placeholder="Filter published date"
                 />

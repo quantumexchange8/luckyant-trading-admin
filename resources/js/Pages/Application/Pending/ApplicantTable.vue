@@ -304,7 +304,7 @@ watchEffect(() => {
         <template v-if="applicants?.length > 0">
             <Column
                 field="created_at"
-                class="hidden md:table-cell"
+                class="table-cell"
                 dataType="date"
                 :header="$t('public.request_date')"
                 sortable
@@ -317,7 +317,7 @@ watchEffect(() => {
             <Column
                 field="user"
                 :header="$t('public.user_requested')"
-                class="hidden md:table-cell"
+                class="table-cell"
             >
                 <template #body="{ data }">
                     <div class="flex flex-col">
@@ -330,7 +330,7 @@ watchEffect(() => {
             <Column
                 field="leader"
                 :header="$t('public.leader')"
-                class="hidden md:table-cell"
+                class="table-cell"
             >
                 <template #body="{ data }">
                     <div class="flex flex-col">
@@ -343,7 +343,7 @@ watchEffect(() => {
             <Column
                 field="application_form"
                 :header="$t('public.application_form')"
-                class="hidden md:table-cell"
+                class="table-cell"
             >
                 <template #body="{ data }">
                     <div class="flex flex-col">
@@ -355,7 +355,7 @@ watchEffect(() => {
             <Column
                 field="applicant"
                 :header="$t('public.applicant')"
-                class="hidden md:table-cell"
+                class="table-cell"
             >
                 <template #body="{ data }">
                     <div class="flex flex-col">
@@ -366,7 +366,7 @@ watchEffect(() => {
 
             <Column
                 field="applicant"
-                class="hidden md:table-cell"
+                class="table-cell"
             >
                 <template #body="{ data }">
                     <ApplicantTableAction
