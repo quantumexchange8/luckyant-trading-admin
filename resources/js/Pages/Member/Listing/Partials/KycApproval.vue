@@ -142,6 +142,7 @@ const submitForm = (action) => {
                         class="block w-full"
                         v-model="form.email"
                         placeholder="Enter email"
+                        disabled
                         :invalid="!!form.errors.email"
                     />
                     <InputError :message="form.errors.email" />
