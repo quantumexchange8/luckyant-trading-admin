@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -44,37 +46,37 @@ class Master extends Model implements HasMedia
         'management_fee',
     ];
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function trading_account(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function trading_account(): BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'trading_account_id', 'id');
     }
 
-    public function subscribers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subscribers(): HasMany
     {
         return $this->hasMany(Subscriber::class, 'master_id', 'id');
     }
 
-    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class, 'master_id', 'id');
     }
 
-    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function tradingUser(): BelongsTo
     {
         return $this->belongsTo(TradingUser::class, 'meta_login', 'meta_login');
     }
 
-    public function masterManagementFee(): \Illuminate\Database\Eloquent\Relations\hasMany
+    public function masterManagementFee(): HasMany
     {
         return $this->hasMany(MasterManagementFee::class, 'master_id', 'id');
     }
 
-    public function masterSubscriptionPackage(): \Illuminate\Database\Eloquent\Relations\hasMany
+    public function masterSubscriptionPackage(): HasMany
     {
         return $this->hasMany(MasterSubscriptionPackage::class, 'master_id', 'id');
     }
@@ -100,6 +102,11 @@ class Master extends Model implements HasMedia
     public function leaders(): HasManyThrough
     {
         return $this->hasManyThrough(User::class, MasterToLeader::class, 'master_id', 'id', 'id', 'user_id');
+    }
+
+    public function master_term(): HasOne
+    {
+        return $this->hasOne(MasterTerms::class, 'master_id', 'id');
     }
 
     public function getActivitylogOptions(): LogOptions

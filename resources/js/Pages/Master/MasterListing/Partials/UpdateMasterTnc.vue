@@ -8,6 +8,7 @@ import InputError from "@/Components/InputError.vue";
 import {
     IconX
 } from "@tabler/icons-vue"
+import TipTapEditor from "@/Components/TipTapEditor.vue";
 
 const props = defineProps({
     master: Object,
@@ -20,6 +21,7 @@ const locales = ref([
 
 const form = useForm({
     master_id: props.master.id,
+    term_contents: props.master.master_term?.term_contents,
     tnc_pdf: {},
     tree_pdf: {},
 });
@@ -81,8 +83,21 @@ const closeDialog = () => {
 
 <template>
     <form class="flex flex-col gap-6 items-start self-stretch">
+        <div class="flex flex-col md:col-span-2 gap-1 items-start self-stretch">
+            <InputLabel
+                for="term_contents"
+                :invalid="!!form.errors.term_contents"
+            >
+                {{ $t('public.term_contents') }}
+            </InputLabel>
+            <TipTapEditor
+                v-model="form.term_contents"
+            />
+            <InputError :message="form.errors.term_contents" />
+        </div>
+
         <!-- Dynamically generated input fields for each selected locale -->
-        <div class="flex flex-col gap-3 items-center self-stretch">
+        <div v-if="master.category === 'pamm'" class="flex flex-col gap-3 items-center self-stretch">
             <span class="font-bold text-sm text-gray-950 dark:text-white w-full text-left">{{ $t('public.upload_pdf') }}</span>
             <div class="grid md:grid-cols-2 gap-3 w-full">
                 <!-- Upload Slip -->
@@ -150,7 +165,7 @@ const closeDialog = () => {
                     </div>
 
                     <!-- Tree Files -->
-                    <div class="flex flex-col gap-1 items-start">
+                    <div v-if="master.type === 'ESG'" class="flex flex-col gap-1 items-start">
                         <InputLabel
                             :for="`${locale}_tree_pdf`"
                             :value="`Tree TNC (${$t(`public.${locale}`)})`"

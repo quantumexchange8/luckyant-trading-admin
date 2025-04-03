@@ -377,4 +377,6 @@ return [
     "ticket_gift_pack" => "Ticket Gift Pack",
     "reset_password" => "Reset Password",
     "confirm_password" => "Confirm Password",
+    "term_contents" => "Terms & Conditions Contents",
+    "toast_success_update_tnc_message" => "The Master TNC has been updated successfully.",
 ];

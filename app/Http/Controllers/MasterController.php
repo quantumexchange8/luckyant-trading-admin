@@ -9,6 +9,7 @@ use App\Models\Master;
 use App\Models\MasterLeader;
 use App\Models\MasterManagementFee;
 use App\Models\MasterSubscriptionPackage;
+use App\Models\MasterTerms;
 use App\Models\MasterToLeader;
 use App\Models\Subscriber;
 use App\Models\Subscription;
@@ -519,7 +520,8 @@ class MasterController extends Controller
                 'tradingUser:id,meta_login,name,account_type',
                 'tradingUser.from_account_type',
                 'leaders:user_id,name',
-                'media'
+                'media',
+                'master_term'
             ])
             ->withCount([
                 'active_copy_trades',
@@ -1083,6 +1085,14 @@ class MasterController extends Controller
     public function updateTncFile(Request $request)
     {
         $master = Master::find($request->master_id);
+
+        if ($request->term_contents) {
+            MasterTerms::updateOrCreate([
+                'master_id' => $request->master_id,
+            ], [
+                'term_contents' => $request->term_contents,
+            ]);
+        }
 
         $pamm_tnc_files = $request->tnc_pdf;
         $tree_tnc_files = $request->tree_pdf;

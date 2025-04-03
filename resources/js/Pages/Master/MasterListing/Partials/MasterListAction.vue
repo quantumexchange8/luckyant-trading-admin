@@ -81,7 +81,7 @@ const toggle = (event) => {
         v-model:visible="visible"
         modal
         :header="$t(`public.${dialogType}`)"
-        :class="dialogType === 'edit' ? 'dialog-xs md:dialog-lg' : 'dialog-xs md:dialog-md'"
+        :class="dialogType === 'management_fee' ? 'dialog-xs md:dialog-md' : 'dialog-xs md:dialog-lg'"
     >
         <template v-if="dialogType === 'management_fee'">
             <UpdateManagementFee

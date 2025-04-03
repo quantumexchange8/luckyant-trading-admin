@@ -267,6 +267,7 @@ const getSeverity = (status) => {
                                 <Skeleton width="5rem" height="1.5rem"></Skeleton>
                                 <Skeleton width="5rem" height="1.5rem"></Skeleton>
                                 <Skeleton width="5rem" height="1.5rem"></Skeleton>
+                                <Skeleton width="5rem" height="1.5rem"></Skeleton>
                             </div>
 
                             <!-- Performance Section -->
@@ -351,7 +352,7 @@ const getSeverity = (status) => {
                             </div>
 
                             <!-- StatusBadge Section -->
-                            <div class="flex items-center gap-2 self-stretch">
+                            <div class="flex flex-wrap items-center gap-2 self-stretch">
                                 <Tag severity="primary">
                                     {{ master.min_join_equity > 0 ? '$ ' + formatAmount(master.min_join_equity, 0) : $t('public.no_min') }}
                                 </Tag>
@@ -367,6 +368,10 @@ const getSeverity = (status) => {
                                 <Tag severity="secondary">
                                     {{ formatAmount(master.sharing_profit, 0) + '%&nbsp;' + $t('public.profit') }}
                                 </Tag>
+                                <Tag
+                                    severity="info"
+                                    :value="$t(`public.${master.category}`)"
+                                />
                                 <Tag
                                     :severity="getSeverity(master.trading_user.from_account_type.slug)"
                                     :value="$t(`public.${master.trading_user.from_account_type.slug}`)"
