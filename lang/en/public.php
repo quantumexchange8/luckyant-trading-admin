@@ -379,4 +379,14 @@ return [
     "confirm_password" => "Confirm Password",
     "term_contents" => "Terms & Conditions Contents",
     "toast_success_update_tnc_message" => "The Master TNC has been updated successfully.",
+    "world_pool" => "World Pool",
+    "allocation" => "Allocation",
+    "world_pool_allocation" => "World Pool Allocation",
+    "allocate_pool" => "Allocate Pool",
+    "pool_amount" => "Pool Amount",
+    "save" => "Save",
+    "toast_success_allocate_world_pool" => "The world pool has been allocated successfully.",
+    "toast_success_update_world_pool" =>
+    "The world pool has been updated successfully.",
+    "edit_amount" => "Edit Amount",
 ];

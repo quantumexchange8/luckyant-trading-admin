@@ -16,6 +16,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\TradingController;
+use App\Http\Controllers\WorldPoolController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
@@ -144,6 +145,19 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('updateApplication', [ApplicationController::class, 'updateApplication'])->name('application.updateApplication');
         Route::put('updateStatus', [ApplicationController::class, 'updateStatus'])->name('application.updateStatus');
         Route::delete('deleteApplication', [ApplicationController::class, 'deleteApplication'])->name('application.deleteApplication');
+    });
+
+    /**
+     * ==============================
+     *          World Pool
+     * ==============================
+     */
+    Route::prefix('world_pool')->group(function () {
+        Route::get('allocation', [WorldPoolController::class, 'index'])->name('world_pool.world_pool_allocation');
+        Route::get('getAllocationData', [WorldPoolController::class, 'getAllocationData'])->name('world_pool.getAllocationData');
+
+        Route::post('allocateWorldPool', [WorldPoolController::class, 'allocateWorldPool'])->name('world_pool.allocateWorldPool');
+        Route::post('updateWorldPool', [WorldPoolController::class, 'updateWorldPool'])->name('world_pool.updateWorldPool');
     });
 
     /**

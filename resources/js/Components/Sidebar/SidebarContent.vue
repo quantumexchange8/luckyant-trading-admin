@@ -19,7 +19,8 @@ import {ref} from "vue";
 import { usePermission } from '@/Composables/permissions.js'
 import {
     IconPasswordUser,
-    IconForms
+    IconForms,
+    IconDatabaseDollar,
 } from "@tabler/icons-vue";
 import SidebarCategoryLabel from "@/Components/Sidebar/SidebarCategoryLabel.vue";
 
@@ -142,6 +143,22 @@ const { hasRole } = usePermission();
                 :href="route('application.application_listing')"
                 :title="$t('public.application_listing')"
                 :active="route().current('application.application_listing')"
+            />
+        </SidebarCollapsible>
+
+        <SidebarCollapsible
+            v-if="hasRole('super-admin')"
+            :title="$t('public.world_pool')"
+            :active="route().current('world_pool.*')"
+        >
+            <template #icon>
+                <IconDatabaseDollar size="24" stroke-width="1.5" />
+            </template>
+
+            <SidebarCollapsibleItem
+                :href="route('world_pool.world_pool_allocation')"
+                :title="$t('public.allocation')"
+                :active="route().current('world_pool.world_pool_allocation')"
             />
         </SidebarCollapsible>
 
