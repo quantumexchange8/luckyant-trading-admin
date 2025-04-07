@@ -49,8 +49,6 @@ class TransactionsExport implements FromCollection, WithHeadings
 
         $result = array();
         foreach($records as $record){
-            $country = Country::find($record->user->country);
-
             if ($record->transaction_type == 'Transfer') {
                 $from = $record->from_wallet ? $record->from_wallet->user->name : '-';
                 $to = $record->to_wallet ? $record->to_wallet->user->name : '-';
@@ -63,7 +61,7 @@ class TransactionsExport implements FromCollection, WithHeadings
                 'name' => $record->user->name,
                 'email' => $record->user->email,
                 'first_leader' => $record->first_leader_name,
-                'country' => $country->name,
+                'country' => $record->user?->ofCountry?->name ?? '-',
                 'type' => $record->transaction_type,
                 'fund_type' => $record->fund_type,
                 'from' => $from,
