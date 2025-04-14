@@ -46,6 +46,7 @@ const loadLazyData = (event) => {
     isLoading.value = true;
 
     lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value.filters = filters.value;
 
     try {
         setTimeout(async () => {
@@ -54,13 +55,13 @@ const loadLazyData = (event) => {
                 sortField: event?.sortField,
                 sortOrder: event?.sortOrder,
                 include: [],
-                lazyEvent: JSON.stringify(lazyParams.value)
+                lazyEvent: JSON.stringify(lazyParams.value),
             };
 
             const url = route('account.getTradingAccount', params);
             const response = await fetch(url);
-            const results = await response.json();
 
+            const results = await response.json();
             accounts.value = results?.data?.data;
             totalRecords.value = results?.data?.total;
             isLoading.value = false;
@@ -93,7 +94,6 @@ const toggle = (event) => {
 
 const leaders = ref();
 const loadingLeaders = ref(false);
-const selectedDate = ref([]);
 
 const getLeaders = async () => {
     loadingLeaders.value = true;
@@ -122,24 +122,26 @@ const getAccountTypes = async () => {
     }
 };
 
-const clearJoinDate = () => {
+//Date Filter
+const selectedDate = ref([]);
+
+const clearDate = () => {
     selectedDate.value = [];
-}
+};
 
 watch(selectedDate, (newDateRange) => {
-    if (Array.isArray(newDateRange)) {
-        const [startDate, endDate] = newDateRange;
-        filters.value['start_date'].value = startDate;
+    if(Array.isArray(newDateRange)) { //ensure is an array with both start and end date
+        const [startDate, endDate] = newDateRange; // extract data from newDateRange
+        filters.value['start_date'].value = startDate; //update new date selected
         filters.value['end_date'].value = endDate;
-        loadLazyData();
+
+        if(startDate !== null && endDate !== null){
+            loadLazyData();
+        }
     } else {
         console.warn('Invalid date range format:', newDateRange);
     }
-})
-
-watch(selectedDate, () => {
-    loadLazyData();
-})
+});
 
 onMounted(() => {
     lazyParams.value = {
@@ -201,6 +203,7 @@ const exportReport = () => {
     isLoading.value = true;
 
     lazyParams.value = { ...lazyParams.value, first: event?.first || first.value };
+    lazyParams.value.filters = filters.value;
 
     const params = {
         page: JSON.stringify(event?.page + 1),
@@ -513,7 +516,7 @@ const exportReport = () => {
                     <div
                         v-if="selectedDate && selectedDate.length > 0"
                         class="absolute top-2/4 -mt-2 right-2 text-gray-400 select-none cursor-pointer bg-transparent"
-                        @click="clearJoinDate"
+                        @click="clearDate"
                     >
                         <XIcon class="w-4 h-4" />
                     </div>

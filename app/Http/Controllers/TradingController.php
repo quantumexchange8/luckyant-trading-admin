@@ -103,8 +103,10 @@ class TradingController extends Controller
                 if ($fundType == 'DemoFund') {
                     $query->where('demo_fund', '>', 0);
                 } else {
-                    $query->where('demo_fund', '<=', 0)
-                        ->orWhereNull('demo_fund');
+                    $query->where(function ($q) {
+                        $q->where('demo_fund', '<=', 0)
+                            ->orWhereNull('demo_fund');
+                    });
                 }
             }
 
@@ -137,11 +139,12 @@ class TradingController extends Controller
                 $query->whereIn('user_id', []);
             }
 
+            //sort field/order
             if ($data['sortField'] && $data['sortOrder']) {
                 $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
                 $query->orderBy($data['sortField'], $order);
             } else {
-                $query->latest();
+                $query->orderByDesc('created_at');
             }
 
             // Export logic
@@ -149,36 +152,33 @@ class TradingController extends Controller
                 return Excel::download(new TradingAccountExport($query), now() . '-trading-accounts.xlsx');
             }
 
-            $transactions = $query->paginate($data['rows']);
+            $accounts = $query->paginate($data['rows']);
 
-            $userHierarchyLists = $transactions->pluck('user.hierarchyList')
+            // Extract all hierarchy IDs from users' hierarchyLists
+            $userHierarchyLists = $accounts->pluck('user.hierarchyList')
                 ->filter()
                 ->flatMap(fn($list) => explode('-', trim($list, '-')))
                 ->unique()
                 ->toArray();
 
             // Load all potential leaders in bulk
-            if ($leaderId > 0) {
-                $leaderQuery = User::where('id', $leaderId)
-                    ->where('leader_status', 1);
-            } else {
-                $leaderQuery = User::whereIn('id', $userHierarchyLists)
-                    ->where('leader_status', 1);
-            }
+            $leaders = User::whereIn('id', $userHierarchyLists)
+                ->where('leader_status', 1) // Only load users with leader_status == 1
+                ->get()
+                ->keyBy('id');
 
-            $leaders = $leaderQuery->get()->keyBy('id');
+            // Attach the first leader details
+            $accounts->each(function ($query) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($query->user?->hierarchyList, $leaders);
 
-            $transactions->each(function ($account) use ($userService, $leaders) {
-                $firstLeader = $userService->getFirstLeader($account->user?->hierarchyList, $leaders);
-
-                $account->first_leader_id = $firstLeader?->id;
-                $account->first_leader_name = $firstLeader?->name;
-                $account->first_leader_email = $firstLeader?->email;
+                $query->first_leader_id = $firstLeader?->id;
+                $query->first_leader_name = $firstLeader?->name;
+                $query->first_leader_email = $firstLeader?->email;
             });
 
             return response()->json([
                 'success' => true,
-                'data' => $transactions,
+                'data' => $accounts,
             ]);
         }
 
