@@ -68,7 +68,7 @@ class TransactionsExport implements FromCollection, WithHeadings
                 'to' => $record->transaction_type == 'Withdrawal' ? $record->to_wallet_address : $to,
                 'transaction_id' => $record->transaction_number,
                 'txn_hash' => $record->txn_hash,
-                'to_wallet_address' => $record->to_wallet_address,
+                'to_wallet_address' => "'" . $record->to_wallet_address,
                 'payment_method' => $record->payment_method,
                 'payment_platform_name' => $record->payment_account->payment_platform_name ?? '',
                 'bank_sub_branch' => $record->payment_account->bank_sub_branch ?? '',
