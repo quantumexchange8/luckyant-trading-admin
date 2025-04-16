@@ -6,7 +6,6 @@ import CurrentPool from "@/Pages/WorldPool/Allocation/CurrentPool.vue";
 defineProps({
     last_allocate_date: String,
     world_pool: Object,
-    active_subscriptions_capital: String
 })
 </script>
 
@@ -24,7 +23,6 @@ defineProps({
             <!-- Current World Pool -->
             <CurrentPool
                 :world_pool="world_pool"
-                :active_subscriptions_capital="active_subscriptions_capital"
             />
 
             <!-- Allocation Table -->

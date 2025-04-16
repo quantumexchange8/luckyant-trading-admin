@@ -24,17 +24,16 @@ class WorldPoolController extends Controller
             ->sum('allocation_amount');
 
         $world_pool = [];
+        $active_subscriptions_capital = Subscription::where('status', 'active')
+            ->sum('meta_balance');
 
         foreach ($ranks as $index => $rank) {
             if ($index === 0) {
-                $world_pool[$rank] = $allocation_amount;
+                $world_pool[$rank] = $active_subscriptions_capital + $allocation_amount;
             } else {
-                $world_pool[$rank] = $allocation_amount * 2;
+                $world_pool[$rank] = ($active_subscriptions_capital + $allocation_amount) * 2;
             }
         }
-
-        $active_subscriptions_capital = Subscription::where('status', 'active')
-            ->sum('meta_balance');
 
         return Inertia::render('WorldPool/Allocation/WorldPoolAllocation', [
             'last_allocate_date' => WorldPoolAllocation::orderByDesc('allocation_date')->first()->allocation_date,

@@ -3,8 +3,7 @@ import Card from "primevue/card";
 import {transactionFormat} from "@/Composables/index.js";
 
 defineProps({
-    world_pool: Object,
-    active_subscriptions_capital: String
+    world_pool: Object
 });
 
 const {formatAmount} = transactionFormat();
@@ -18,8 +17,7 @@ const {formatAmount} = transactionFormat();
         >
             <template #content>
                 <div class="flex flex-col items-center self-stretch">
-                    <span class="text-xl font-semibold dark:text-white">$ {{ formatAmount(Number(active_subscriptions_capital) + Number(amount)) }}</span>
-                    <span class="text-lg text-primary-500">($ {{ formatAmount(active_subscriptions_capital) }} + ${{ formatAmount(amount) }})</span>
+                    <span class="text-lg font-semibold dark:text-white">${{ formatAmount(amount) }}</span>
                     <span class="text-sm text-gray-500">{{ rank }}</span>
                 </div>
             </template>
