@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SettingRank;
+use App\Models\Subscription;
 use App\Models\WorldPoolAllocation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -32,9 +33,13 @@ class WorldPoolController extends Controller
             }
         }
 
+        $active_subscriptions_capital = Subscription::where('status', 'active')
+            ->sum('meta_balance');
+
         return Inertia::render('WorldPool/Allocation/WorldPoolAllocation', [
             'last_allocate_date' => WorldPoolAllocation::orderByDesc('allocation_date')->first()->allocation_date,
-            'world_pool' => $world_pool
+            'world_pool' => $world_pool,
+            'active_subscriptions_capital' => $active_subscriptions_capital
         ]);
     }
 
