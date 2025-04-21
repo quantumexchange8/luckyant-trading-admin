@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PammSubscription extends Model
@@ -39,37 +40,37 @@ class PammSubscription extends Model
         'termination_date' => 'datetime',
     ];
 
-    public function tradingAccount(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function tradingAccount(): BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'trading_account_id', 'id');
     }
 
-    public function master(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function master(): BelongsTo
     {
         return $this->belongsTo(Master::class, 'master_id', 'id');
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function subscription(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class, 'subscription_id', 'id');
     }
 
-    public function transaction(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'transaction_id', 'id');
     }
 
-    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function tradingUser(): BelongsTo
     {
         return $this->belongsTo(TradingUser::class, 'master_meta_login', 'meta_login');
     }
 
-    public function package(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function package(): BelongsTo
     {
         return $this->belongsTo(MasterSubscriptionPackage::class, 'subscription_package_id', 'id');
     }

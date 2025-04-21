@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PammSubscription;
 use App\Models\SettingRank;
 use App\Models\Subscription;
 use App\Models\WorldPoolAllocation;
@@ -27,18 +28,25 @@ class WorldPoolController extends Controller
         $active_subscriptions_capital = Subscription::where('status', 'active')
             ->sum('meta_balance');
 
+        $active_pamm_capital = PammSubscription::with('master:id,involves_world_pool')
+            ->where('status', 'Active')
+            ->whereHas('master', function ($q) {
+                $q->where('involves_world_pool', 1);
+            })
+            ->sum('subscription_amount');
+
         foreach ($ranks as $index => $rank) {
+            $world_pool_amount = ($active_subscriptions_capital + $active_pamm_capital + $allocation_amount) / 10000 * 0.4;
             if ($index === 0) {
-                $world_pool[$rank] = $active_subscriptions_capital + $allocation_amount;
+                $world_pool[$rank] = $world_pool_amount;
             } else {
-                $world_pool[$rank] = ($active_subscriptions_capital + $allocation_amount) * 2;
+                $world_pool[$rank] = $world_pool_amount * 2;
             }
         }
 
         return Inertia::render('WorldPool/Allocation/WorldPoolAllocation', [
-            'last_allocate_date' => WorldPoolAllocation::orderByDesc('allocation_date')->first()->allocation_date,
+            'last_allocate_date' => WorldPoolAllocation::orderByDesc('allocation_date')->first()?->allocation_date,
             'world_pool' => $world_pool,
-            'active_subscriptions_capital' => $active_subscriptions_capital
         ]);
     }
 
