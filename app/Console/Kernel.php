@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('update:exchange-rate')->dailyAt('08:00');
         $schedule->command('terminate:meta-login')->dailyAt('08:00');
-        $schedule->command('update:world-pool-allocation')->daily();
+        $schedule->command('update:world-pool-allocation')->dailyAt('04:00');
 //        $schedule->command('update:trading-account-info')->everyFiveMinutes();
     }
 

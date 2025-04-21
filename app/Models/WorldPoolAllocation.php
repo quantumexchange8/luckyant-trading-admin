@@ -12,6 +12,7 @@ class WorldPoolAllocation extends Model
     protected $fillable = [
         'allocation_date',
         'allocation_amount',
+        'world_pool_amount'
     ];
 
     protected $casts = [

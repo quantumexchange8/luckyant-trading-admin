@@ -22,25 +22,15 @@ class WorldPoolController extends Controller
             ->toArray();
 
         $allocation_amount = WorldPoolAllocation::whereDate('allocation_date', '<=', Carbon::now())
-            ->sum('allocation_amount');
+            ->sum('world_pool_amount');
 
         $world_pool = [];
-        $active_subscriptions_capital = Subscription::where('status', 'active')
-            ->sum('meta_balance');
-
-        $active_pamm_capital = PammSubscription::with('master:id,involves_world_pool')
-            ->where('status', 'Active')
-            ->whereHas('master', function ($q) {
-                $q->where('involves_world_pool', 1);
-            })
-            ->sum('subscription_amount');
 
         foreach ($ranks as $index => $rank) {
-            $world_pool_amount = ($active_subscriptions_capital + $active_pamm_capital + $allocation_amount) / 10000 * 0.4;
             if ($index === 0) {
-                $world_pool[$rank] = $world_pool_amount;
+                $world_pool[$rank] = $allocation_amount;
             } else {
-                $world_pool[$rank] = $world_pool_amount * 2;
+                $world_pool[$rank] = $allocation_amount * 2;
             }
         }
 
