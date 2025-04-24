@@ -62,7 +62,7 @@ class PendingWithdrawalExport implements FromCollection, WithHeadings
                 'fund_type' => $row->fund_type,
                 'transaction_id' => $row->transaction_number,
                 'txn_hash' => $row->txn_hash,
-                'to_wallet_address' => $row->to_wallet_address,
+                'to_wallet_address' => "'" . $row->to_wallet_address,
                 'payment_method' => $row->payment_method,
                 'payment_platform_name' => $row->payment_account?->payment_platform_name,
                 'bank_region' => $row->payment_account?->bank_region,
