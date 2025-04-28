@@ -204,7 +204,7 @@ const closeDialog = () => {
 
                         <div class="flex items-center space-x-4 w-full md:w-auto mt-4 md:mt-0">
                             <AllocatePool
-                                :active_pamm_capital="active_subscriptions_capital"
+                                :active_pamm_capital="active_pamm_capital"
                                 :active_subscriptions_capital="active_subscriptions_capital"
                                 :extra_fund_sum="extra_fund_sum"
                             />
