@@ -11,63 +11,34 @@ import dayjs from "dayjs";
 import InputNumber from "primevue/inputnumber";
 import {useForm} from "@inertiajs/vue3";
 import InputError from "@/Components/InputError.vue";
+import {transactionFormat} from "@/Composables/index.js";
+import InputText from "primevue/inputtext";
+import InputLabel from "@/Components/Label.vue";
+import DatePicker from "primevue/datepicker";
 
 const props = defineProps({
-    last_allocate_date: String,
+    active_pamm_capital: Number,
+    active_subscriptions_capital: Number,
+    extra_fund_sum: Number,
 })
 
 const visible = ref(false);
+const {formatAmount} = transactionFormat();
 
 const openDialog = () => {
     visible.value = true;
 }
 
-// Initialize the pool_allocations as an empty array
-const pool_allocations = ref([]);
-const lastAddedDate = ref(
-    props.last_allocate_date ? dayjs(props.last_allocate_date) : dayjs()
-);
-
-// Initialize Inertia form
 const form = useForm({
-    pool_allocations: [],
+    allocation_date: '',
+    allocation_amount: null,
 });
 
-const addDividend = () => {
-    let nextDay = lastAddedDate.value.add(1, 'day'); // Start from the correct lastAddedDate
-
-    pool_allocations.value.push({
-        date: nextDay.format('D/M'), // Displayed format
-        full_date: nextDay.format('YYYY-MM-DD'),
-        pool_amount: null,
-    });
-
-    lastAddedDate.value = nextDay;
-};
-
-addDividend();
-
-const removeDividend = (index) => {
-    if (index >= 0 && index < pool_allocations.value.length) {
-        pool_allocations.value.splice(index, 1);
-
-        // Ensure lastAddedDate updates to the last remaining date
-        if (pool_allocations.value.length > 0) {
-            lastAddedDate.value = dayjs(pool_allocations.value[pool_allocations.value.length - 1].full_date);
-        } else {
-            lastAddedDate.value = dayjs(); // Reset if all removed
-        }
-    }
-};
-
 const submitForm = () => {
-    form.pool_allocations = pool_allocations.value;
     form.post(route('world_pool.allocateWorldPool'), {
         onSuccess: () => {
             closeDialog();
             form.reset();
-            pool_allocations.value = [];
-            addDividend();
         }
     });
 }
@@ -92,70 +63,80 @@ const closeDialog = () => {
         :header="$t('public.allocate_pool')"
         class="dialog-xs md:dialog-md"
     >
-        <div class="flex flex-col items-center gap-3 self-stretch">
-            <div class="flex justify-between items-center py-2 self-stretch border-b border-gray-200 bg-gray-100 dark:bg-gray-800 dark:border-gray-900">
-                <div class="flex items-center px-2 w-full text-gray-950 dark:text-white text-xs font-semibold uppercase">
-                    {{ $t('public.date') }}
+        <form class="flex flex-col items-center gap-5 self-stretch">
+            <div class="flex flex-col gap-3 items-center p-5 self-stretch bg-gray-100 dark:bg-gray-800">
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[160px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.total_capital') }}
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        ${{ formatAmount(active_pamm_capital + active_subscriptions_capital) }}
+                    </div>
                 </div>
-                <div class="flex items-center px-2 w-full text-gray-950 dark:text-white text-xs font-semibold uppercase">
-                    {{ $t('public.pool_amount') }} ($)
+                <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
+                    <div class="w-[160px] text-gray-500 text-xs font-medium">
+                        {{ $t('public.extra_fund') }} ({{ $t('public.until_today') }})
+                    </div>
+                    <div class="text-gray-950 dark:text-white text-sm font-medium">
+                        ${{ formatAmount(extra_fund_sum) }}
+                    </div>
                 </div>
             </div>
 
-            <div class="flex flex-col items-center self-stretch max-h-[400px] overflow-y-auto">
-                <div
-                    v-for="(profitDay, index) in pool_allocations"
-                    class="flex justify-between py-1 items-center self-stretch"
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                <div class="flex flex-col gap-1 items-start self-stretch">
+                    <InputLabel
+                        for="allocation_date"
+                        :invalid="!!form.errors.allocation_date"
+                    >
+                        {{ $t('public.date') }}
+                    </InputLabel>
+                    <DatePicker
+                        v-model="form.allocation_date"
+                        dateFormat="yy-mm-dd"
+                        class="w-full font-normal"
+                        placeholder="YYYY-MM-DD"
+                        :invalid="!!form.errors.allocation_date"
+                    />
+                    <InputError :message="form.errors.allocation_date" />
+                </div>
+                <div class="flex flex-col gap-1 items-start self-stretch">
+                    <InputLabel
+                        for="allocation_amount"
+                        :invalid="!!form.errors.allocation_amount"
+                    >
+                        {{ $t('public.amount') }} ($)
+                    </InputLabel>
+                    <InputNumber
+                        v-model="form.allocation_amount"
+                        :minFractionDigits="2"
+                        fluid
+                        placeholder="0.00"
+                        :invalid="!!form.errors.allocation_amount"
+                    />
+                    <InputError :message="form.errors.allocation_amount" />
+                </div>
+            </div>
+
+            <div class="flex w-full justify-end gap-3">
+                <Button
+                    type="button"
+                    severity="secondary"
+                    size="small"
+                    class="w-full md:w-auto"
+                    @click="closeDialog"
                 >
-                    <div class="text-gray-950 dark:text-white px-2 w-full">
-                        {{ profitDay.date }}
-                    </div>
-                    <div class="flex flex-col gap-1 items-start px-2 w-full">
-                        <div class="flex items-center gap-1 w-full">
-                            <InputNumber
-                                v-model="profitDay.pool_amount"
-                                :minFractionDigits="2"
-                                fluid
-                                placeholder="0.00"
-                                inputClass="w-20"
-                                :invalid="!!form.errors[`pool_allocations.${index}.pool_amount`]"
-                            />
-                            <Button
-                                v-if="pool_allocations.length === 1 || index !== pool_allocations.length - 1"
-                                type="button"
-                                severity="info"
-                                size="small"
-                                class="!p-2"
-                                text
-                                @click="addDividend"
-                            >
-                                <IconCirclePlus size="20" />
-                            </Button>
-                            <Button
-                                v-else
-                                type="button"
-                                severity="danger"
-                                size="small"
-                                text
-                                @click="removeDividend(index)"
-                                class="!p-2"
-                            >
-                                <IconCircleX size="20" />
-                            </Button>
-                        </div>
-                        <InputError :message="form.errors[`pool_allocations.${index}.pool_amount`]" />
-                    </div>
-                </div>
+                    {{ $t('public.cancel') }}
+                </Button>
+                <Button
+                    type="submit"
+                    size="small"
+                    class="w-full md:w-auto"
+                    @click.prevent="submitForm"
+                >
+                    {{ $t('public.save') }}
+                </Button>
             </div>
-
-            <Button
-                type="submit"
-                size="small"
-                class="w-full"
-                @click="submitForm"
-            >
-                {{ $t('public.save') }}
-            </Button>
-        </div>
+        </form>
     </Dialog>
 </template>

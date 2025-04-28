@@ -4,7 +4,9 @@ import AllocationTable from "@/Pages/WorldPool/Allocation/AllocationTable.vue";
 import CurrentPool from "@/Pages/WorldPool/Allocation/CurrentPool.vue";
 
 defineProps({
-    last_allocate_date: String,
+    active_pamm_capital: Number,
+    active_subscriptions_capital: Number,
+    extra_fund_sum: Number,
     world_pool: Object,
 })
 </script>
@@ -22,12 +24,17 @@ defineProps({
         <div class="flex flex-col gap-5 items-center self-stretch">
             <!-- Current World Pool -->
             <CurrentPool
+                :active_pamm_capital="active_pamm_capital"
+                :active_subscriptions_capital="active_subscriptions_capital"
+                :extra_fund_sum="extra_fund_sum"
                 :world_pool="world_pool"
             />
 
             <!-- Allocation Table -->
             <AllocationTable
-                :last_allocate_date="last_allocate_date"
+                :active_pamm_capital="active_pamm_capital"
+                :active_subscriptions_capital="active_subscriptions_capital"
+                :extra_fund_sum="extra_fund_sum"
             />
         </div>
     </AuthenticatedLayout>

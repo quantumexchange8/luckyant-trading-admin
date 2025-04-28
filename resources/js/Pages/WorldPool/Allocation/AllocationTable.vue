@@ -24,7 +24,9 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 dayjs.extend(isSameOrBefore);
 
 defineProps({
-    last_allocate_date: String
+    active_pamm_capital: Number,
+    active_subscriptions_capital: Number,
+    extra_fund_sum: Number,
 })
 
 const isLoading = ref(false);
@@ -202,7 +204,9 @@ const closeDialog = () => {
 
                         <div class="flex items-center space-x-4 w-full md:w-auto mt-4 md:mt-0">
                             <AllocatePool
-                                :last_allocate_date="last_allocate_date"
+                                :active_pamm_capital="active_subscriptions_capital"
+                                :active_subscriptions_capital="active_subscriptions_capital"
+                                :extra_fund_sum="extra_fund_sum"
                             />
                         </div>
                     </div>
@@ -240,11 +244,26 @@ const closeDialog = () => {
                     <Column
                         field="allocation_amount"
                         class="table-cell"
-                        :header="$t('public.pool_amount')"
+                        :header="$t('public.extra_fund')"
                         sortable
                     >
                         <template #body="{ data }">
                             ${{ formatAmount(data.allocation_amount) }}
+                        </template>
+                    </Column>
+                    <Column
+                        field="world_pool_amount"
+                        class="table-cell"
+                        :header="$t('public.world_pool')"
+                        sortable
+                    >
+                        <template #body="{ data }">
+                            <div v-if="data.world_pool_amount">
+                                ${{ formatAmount(data.world_pool_amount) }}
+                            </div>
+                            <div v-else>
+                                -
+                            </div>
                         </template>
                     </Column>
                     <Column

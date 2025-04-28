@@ -37,7 +37,10 @@ class UpdateWorldPoolAllocationCommand extends Command
             })
             ->sum('subscription_amount');
 
-        $world_pool = ($active_pamm_capital + $active_subscriptions_capital + $today_pool->allocation_amount) / 10000 * 0.4;
+        $total_extra_amount = WorldPoolAllocation::whereDate('allocation_date', '<=', Carbon::now())
+            ->sum('allocation_amount');
+
+        $world_pool = ($active_pamm_capital + $active_subscriptions_capital + $total_extra_amount) / 10000 * 0.4;
 
         $today_pool->update([
             'world_pool_amount' => $world_pool,

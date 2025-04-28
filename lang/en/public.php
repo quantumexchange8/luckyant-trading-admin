@@ -389,4 +389,9 @@ return [
     "toast_success_update_world_pool" =>
     "The world pool has been updated successfully.",
     "edit_amount" => "Edit Amount",
+    "total_capital" => "Total Capital",
+    "until_today" => "Until Today",
+    "date_existed" => "Date entered already exist",
+    "date_cannot_be_past" => "Date cannot be past",
+    "date_cannot_be_today" => "Date cannot be today",
 ];

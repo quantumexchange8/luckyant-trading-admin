@@ -9,6 +9,7 @@ use App\Models\WorldPoolAllocation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class WorldPoolController extends Controller
@@ -21,21 +22,32 @@ class WorldPoolController extends Controller
             ->pluck('name')
             ->toArray();
 
-        $allocation_amount = WorldPoolAllocation::whereDate('allocation_date', '<=', Carbon::now())
-            ->sum('world_pool_amount');
+        $query = WorldPoolAllocation::whereDate('allocation_date', '<=', Carbon::now());
 
         $world_pool = [];
 
         foreach ($ranks as $index => $rank) {
             if ($index === 0) {
-                $world_pool[$rank] = $allocation_amount;
+                $world_pool[$rank] = $query->sum('world_pool_amount');
             } else {
-                $world_pool[$rank] = $allocation_amount * 2;
+                $world_pool[$rank] = $query->sum('world_pool_amount') * 2;
             }
         }
 
+        $active_subscriptions_capital = Subscription::where('status', 'Active')
+            ->sum('meta_balance');
+
+        $active_pamm_capital = PammSubscription::with('master:id,involves_world_pool')
+            ->where('status', 'Active')
+            ->whereHas('master', function ($q) {
+                $q->where('involves_world_pool', 1);
+            })
+            ->sum('subscription_amount');
+
         return Inertia::render('WorldPool/Allocation/WorldPoolAllocation', [
-            'last_allocate_date' => WorldPoolAllocation::orderByDesc('allocation_date')->first()?->allocation_date,
+            'active_pamm_capital' => (float) $active_pamm_capital,
+            'active_subscriptions_capital' => (float) $active_subscriptions_capital,
+            'extra_fund_sum' => (float) $query->sum('allocation_amount'),
             'world_pool' => $world_pool,
         ]);
     }
@@ -77,21 +89,43 @@ class WorldPoolController extends Controller
     public function allocateWorldPool(Request $request)
     {
         Validator::make($request->all(), [
-            'pool_allocations' => ['required'],
-            'pool_allocations.*.pool_amount' => ['required', 'numeric'],
+            'allocation_date' => ['required'],
+            'allocation_amount' => ['required'],
         ])->setAttributeNames([
-            'pool_allocations' => trans('public.date'),
-            'pool_allocations.*.pool_amount' => trans('public.pool_amount'),
+            'allocation_date' => trans('public.date'),
+            'allocation_amount' => trans('public.amount'),
         ])->validate();
 
-        $pool_allocations = $request->pool_allocations;
+        $last_date = WorldPoolAllocation::orderByDesc('allocation_date')->first();
+        $allocation_date = Carbon::parse($request->allocation_date)->addHours(8);
 
-        foreach ($pool_allocations as $pool_allocation) {
-            WorldPoolAllocation::create([
-                'allocation_date' => $pool_allocation['full_date'],
-                'allocation_amount' => $pool_allocation['pool_amount'],
-            ]);
+        if ($last_date) {
+            // If same as existing allocation_date
+            if ($allocation_date->isSameDay($last_date->allocation_date)) {
+                throw ValidationException::withMessages([
+                    'allocation_date' => trans('public.date_existed')
+                ]);
+            }
+
+            // If smaller than today
+            if (!$allocation_date->greaterThan(Carbon::today())) {
+                throw ValidationException::withMessages([
+                    'allocation_date' => trans('public.date_cannot_be_past')
+                ]);
+            }
+
+            // If smaller than today
+            if ($allocation_date == Carbon::today()) {
+                throw ValidationException::withMessages([
+                    'allocation_date' => trans('public.date_cannot_be_today')
+                ]);
+            }
         }
+
+        WorldPoolAllocation::create([
+            'allocation_date' => $allocation_date,
+            'allocation_amount' => $request->allocation_amount,
+        ]);
 
         return back()->with('toast', [
             'title' => trans("public.success"),
