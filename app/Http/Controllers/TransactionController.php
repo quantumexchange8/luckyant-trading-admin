@@ -9,22 +9,15 @@ use DB;
 use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
 use App\Models\Wallet;
-use App\Models\WalletLog;
 use App\Models\Transaction;
-// use App\Exports\BalanceAdjustmentExport;
 use Illuminate\Http\Request;
-use App\Exports\DepositExport;
-// use App\Models\BalanceAdjustment;
-use App\Exports\WithdrawalExport;
 use App\Exports\TransactionsExport;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PendingDepositExport;
 use App\Services\SelectOptionService;
-use App\Exports\InternalTransferExport;
 use App\Exports\PendingWithdrawalExport;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Validation\ValidationException;
 use App\Notifications\DepositConfirmationNotification;
 use App\Notifications\WithdrawalConfirmationNotification;
 
@@ -72,9 +65,9 @@ class TransactionController extends Controller
             'user:id,name,email,hierarchyList',
             'from_wallet:id,type,name,wallet_address',
             'to_wallet:id,type,name,wallet_address',
-            'from_meta_login:id,meta_login',
-            'to_meta_login:id,meta_login,account_type',
-            'to_meta_login.accountType:id,name,slug',
+            'from_account:id,meta_login',
+            'to_account:id,meta_login,account_type',
+            'to_account.accountType:id,name,slug',
             'payment_account',
             'media',
             'setting_payment'
@@ -385,8 +378,8 @@ class TransactionController extends Controller
                 'user',
                 'from_wallet:id,type,name,wallet_address',
                 'to_wallet:id,type,name,wallet_address',
-                'from_meta_login:id,meta_login',
-                'to_meta_login:id,meta_login',
+                'from_account:id,meta_login',
+                'to_account:id,meta_login',
             ])
                 ->where('transaction_type', $data['filters']['type']['value'])
                 ->whereNot('status', 'Processing');

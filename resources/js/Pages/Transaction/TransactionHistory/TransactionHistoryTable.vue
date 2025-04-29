@@ -289,8 +289,8 @@ const closeModal = () => {
                         <div>
                             {{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : (transaction.from_meta_login ? $t('public.account_no') : '-') }}
                         </div>
-                        <div v-if="transaction.from_meta_login" class="font-semibold">
-                            {{ transaction.from_meta_login ? transaction.from_meta_login.meta_login : '-' }}
+                        <div class="font-semibold">
+                            {{ transaction.from_meta_login ?? '-' }}
                         </div>
                     </div>
                 </td>
@@ -315,8 +315,8 @@ const closeModal = () => {
                         <div>
                             {{ transaction.to_wallet ? $t('public.' + transaction.to_wallet.type) : (transaction.to_meta_login ? $t('public.account_no') : '-') }}
                         </div>
-                        <div v-if="transaction.to_meta_login" class="font-semibold">
-                            {{ transaction.to_meta_login ? transaction.to_meta_login.meta_login : '-' }}
+                        <div class="font-semibold">
+                            {{ transaction.to_meta_login ?? '-' }}
                         </div>
                     </div>
                 </td>
@@ -370,7 +370,7 @@ const closeModal = () => {
         </div>
         <div class="grid grid-cols-3 items-center gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.from') }}</span>
-            <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.from_wallet ? $t('public.' + transactionDetail.from_wallet.type) : (transactionDetail.from_meta_login ? $t('public.account_no') + ' - ' + transactionDetail.from_meta_login.meta_login : '-') }}</span>
+            <span class="col-span-2 text-black dark:text-white py-2">{{ transactionDetail.from_wallet ? $t('public.' + transactionDetail.from_wallet.type) : (transactionDetail.from_meta_login ? $t('public.account_no') + ' - ' + transactionDetail.from_meta_login : '-') }}</span>
         </div>
         <div class="grid grid-cols-3 items-start gap-2">
             <span class="col-span-1 text-sm font-semibold dark:text-gray-400">{{ $t('public.to') }}</span>

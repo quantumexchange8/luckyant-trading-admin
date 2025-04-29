@@ -389,4 +389,11 @@ return [
     "toast_success_update_world_pool" =>
     "The world pool has been updated successfully.",
     "edit_amount" => "Edit Amount",
+    "adjustment_type" => "Adjustment Type",
+    "wallet_adjustment" => "Wallet Adjustment",
+    "wallet_redemption" => "Wallet Redemption",
+    "returned_amount" => "Returned Amount",
+    "adjustment" => "Adjustment",
+    "add" => "Add",
+    "deduct" => "Deduct",
 ];

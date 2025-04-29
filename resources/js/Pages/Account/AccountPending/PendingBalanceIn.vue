@@ -180,7 +180,7 @@ watchEffect(() => {
                     tableStyle="md:min-width: 50rem"
                     paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                    :globalFilterFields="['user.name', 'user.email', 'to_meta_login.meta_login', 'transaction_number']"
+                    :globalFilterFields="['user.name', 'user.email', 'to_account.meta_login', 'transaction_number']"
                     ref="dt"
                     :loading="isLoading"
                 >
@@ -322,17 +322,17 @@ watchEffect(() => {
                             </template>
                         </Column>
                         <Column
-                            field="to_meta_login.meta_login"
+                            field="to_account.meta_login"
                             class="table-cell min-w-40"
                         >
                             <template #header>
                                 <span class="block">{{ $t('public.account') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="font-semibold mr-1">{{ slotProps.data.to_meta_login.meta_login }}</span>
+                                <span class="font-semibold mr-1">{{ slotProps.data.to_meta_login }}</span>
                                 <Tag
                                     severity="secondary"
-                                    :value="$t(`public.${slotProps.data.to_meta_login.account_type.slug}`)"
+                                    :value="$t(`public.${slotProps.data.to_account.account_type.slug}`)"
                                 />
                             </template>
                         </Column>

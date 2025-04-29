@@ -525,10 +525,8 @@ class TradingController extends Controller
         $query = Transaction::with([
             'user:id,name,email,hierarchyList',
             'from_wallet:id,type,name,wallet_address',
-//            'to_wallet:id,type,name,wallet_address',
-//            'from_meta_login:id,meta_login',
-            'to_meta_login:id,meta_login,account_type',
-            'to_meta_login.accountType:id,name,slug',
+            'to_account:id,meta_login,account_type',
+            'to_account.accountType:id,name,slug',
         ])
             ->where([
             'category' => 'trading_account',
@@ -702,8 +700,8 @@ class TradingController extends Controller
                 'user',
                 'from_wallet:id,type,name,wallet_address',
                 'to_wallet:id,type,name,wallet_address',
-                'from_meta_login:id,meta_login',
-                'to_meta_login:id,meta_login',
+                'from_account:id,meta_login',
+                'to_account:id,meta_login',
             ])
                 ->where('category', 'trading_account')
                 ->where('transaction_type', $data['filters']['type']['value'])
