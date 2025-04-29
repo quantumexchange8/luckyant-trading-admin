@@ -397,8 +397,8 @@ const exportReport = () => {
                                 <div v-if="slotProps.data.from_wallet">
                                     {{ $t(`public.${slotProps.data.from_wallet.type}`) }}
                                 </div>
-                                <div v-else-if="slotProps.data.from_meta_login">
-                                    {{ slotProps.data.from_meta_login.meta_login }}
+                                <div v-else-if="slotProps.data.from_account">
+                                    {{ slotProps.data.from_account.meta_login }}
                                 </div>
                                 <div v-else>
                                     -
@@ -417,7 +417,7 @@ const exportReport = () => {
                                     {{ $t(`public.${slotProps.data.to_wallet.type}`) }}
                                 </div>
                                 <div v-else-if="slotProps.data.to_meta_login">
-                                    {{ slotProps.data.to_meta_login.meta_login }}
+                                    {{ slotProps.data.to_meta_login }}
                                 </div>
                                 <div v-else>
                                     -
@@ -625,7 +625,7 @@ const exportReport = () => {
                             {{ $t(`public.${detail.from_wallet.type}`) }}
                         </div>
                         <div v-else-if="detail.from_meta_login">
-                            {{ detail.from_meta_login.meta_login }}
+                            {{ detail.from_meta_login }}
                         </div>
                         <div v-else>
                             -
@@ -642,7 +642,7 @@ const exportReport = () => {
                             {{ $t(`public.${detail.to_wallet.type}`) }}
                         </div>
                         <div v-else-if="detail.to_meta_login">
-                            {{ detail.to_meta_login.meta_login }}
+                            {{ detail.to_meta_login }}
                         </div>
                         <div v-else>
                             -

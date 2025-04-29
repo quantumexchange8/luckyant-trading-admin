@@ -121,12 +121,12 @@ const closeModal = () => {
                             <span class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold">{{ $t('public.' + transaction.from_wallet.type) }}</span>
                         </div>
                     </div>
-                    <div class="flex items-center justify-between gap-2 self-stretch" v-if="(transaction.from_wallet || transaction.from_meta_login) && transaction.transaction_type !== 'WalletAdjustment' && transaction.transaction_type !== 'PerformanceIncentive'">
+                    <div class="flex items-center justify-between gap-2 self-stretch" v-if="(transaction.from_wallet || transaction.from_account) && transaction.transaction_type !== 'WalletAdjustment' && transaction.transaction_type !== 'PerformanceIncentive'">
                         <div class="font-semibold text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                             {{$t('public.transfer_from')}}
                         </div>
                         <div class="text-sm sm:text-base font-semibold">
-                            <span class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold" v-if="transaction.transaction_type !== 'Transfer'">{{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : transaction.from_meta_login.meta_login }}</span>
+                            <span class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold" v-if="transaction.transaction_type !== 'Transfer'">{{ transaction.from_wallet ? $t('public.' + transaction.from_wallet.type) : transaction.from_meta_login }}</span>
                             <span class="text-sm sm:text-base text-gray-800 dark:text-white font-semibold" v-if="transaction.transaction_type === 'Transfer'">{{ transaction.from_wallet ? transaction.from_wallet.wallet_address : transaction.from_meta_login }}</span>
                         </div>
                     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
@@ -54,36 +55,36 @@ class Transaction extends Model implements HasMedia
         ];
     }
 
-    public function from_wallet(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function from_wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class, 'from_wallet_id', 'id');
     }
 
-    public function to_wallet(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function to_wallet(): BelongsTo
     {
         return $this->belongsTo(Wallet::class, 'to_wallet_id', 'id');
     }
 
-    public function from_meta_login(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function from_account(): BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'from_meta_login', 'meta_login');
     }
 
-    public function to_meta_login(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function to_account(): BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'to_meta_login', 'meta_login');
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id')->withTrashed();
     }
 
-    public function payment_account(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function payment_account(): BelongsTo
     {
         return $this->belongsTo(PaymentAccount::class, 'payment_account_id', 'id');
     }
-    public function setting_payment(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function setting_payment(): BelongsTo
     {
         return $this->belongsTo(SettingPaymentMethod::class, 'setting_payment_method_id', 'id');
     }

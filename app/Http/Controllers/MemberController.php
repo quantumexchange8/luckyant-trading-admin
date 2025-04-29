@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Exports\AffiliateSummaryExport;
 use App\Exports\MemberFundExport;
 use App\Exports\MemberListingExport;
-use App\Http\Requests\WalletAdjustmentRequest;
 use App\Jobs\ExportMemberReportJob;
 use App\Models\AccountTypeToLeader;
 use App\Models\Country;
@@ -627,44 +626,49 @@ class MemberController extends Controller
         ]);
     }
 
-    public function wallet_adjustment(WalletAdjustmentRequest $request)
+    public function wallet_adjustment(Request $request)
     {
+        Validator::make($request->all(), [
+            'adjustment_type' => ['required'],
+            'adjustment_action' => ['required'],
+            'amount' => ['required', 'min:1'],
+            'remarks' => ['required'],
+        ])->setAttributeNames([
+            'adjustment_type' => trans('public.adjustment_type'),
+            'adjustment_action' => trans('public.adjustment'),
+            'amount' => trans('public.amount'),
+            'remarks' => trans('public.remarks'),
+        ])->validate();
+
         $amount = $request->amount;
         $wallet = Wallet::find($request->wallet_id);
-        $transaction_type = $request->transaction_type;
+        $transaction_type = $request->adjustment_type;
+        $action = $request->adjustment_action;
 
-        $transactionData = [
-            'user_id' => $request->user_id,
+        $transaction = Transaction::create([
+            'user_id' => $wallet->user_id,
             'category' => 'wallet',
+            'transaction_type' => $transaction_type,
+            'transaction_number' => RunningNumberService::getID('transaction'),
+            'amount' => $amount,
             'transaction_charges' => 0,
-            'remarks' => $request->description,
+            'transaction_amount' => $amount,
+            'remarks' => $request->remarks,
             'handle_by' => Auth::id(),
             'status' => 'Success',
-            'transaction_number' => RunningNumberService::getID('transaction')
-        ];
-
-        if ($transaction_type == 'Deposit') {
-            $transactionData['amount'] = $amount;
-            $transactionData['transaction_amount'] = $amount;
-            $transactionData['new_wallet_amount'] = $wallet->balance + $amount;
-        } else {
-            $transactionData['amount'] = -$amount;
-            $transactionData['transaction_amount'] = -$amount;
-            $transactionData['new_wallet_amount'] = $wallet->balance - $amount;
-        }
-
-        $transactionData['from_wallet_id'] = $wallet->id;
-        $transactionData['transaction_type'] = $request->type;
-
-        if ($transactionData['new_wallet_amount'] < 0 && $request->type != 'ReturnedAmount') {
-            throw ValidationException::withMessages(['amount' => 'Insufficient balance']);
-        }
-
-        $transaction = Transaction::create($transactionData);
-
-        $wallet->update([
-            'balance' => $transaction->new_wallet_amount
         ]);
+
+        if ($action == 'add') {
+            $transaction->to_wallet_id = $wallet->id;
+            $wallet->balance += $amount;
+        } else {
+            $transaction->from_wallet_id = $wallet->id;
+            $wallet->balance -= $amount;
+        }
+
+        $wallet->save();
+        $transaction->new_wallet_amount = $wallet->balance;
+        $transaction->save();
 
         return back()->with('toast', [
             'title' => trans("public.success"),

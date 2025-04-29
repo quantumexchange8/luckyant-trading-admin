@@ -394,4 +394,11 @@ return [
     "date_existed" => "Date entered already exist",
     "date_cannot_be_past" => "Date cannot be past",
     "date_cannot_be_today" => "Date cannot be today",
+    "adjustment_type" => "Adjustment Type",
+    "wallet_adjustment" => "Wallet Adjustment",
+    "wallet_redemption" => "Wallet Redemption",
+    "returned_amount" => "Returned Amount",
+    "adjustment" => "Adjustment",
+    "add" => "Add",
+    "deduct" => "Deduct",
 ];

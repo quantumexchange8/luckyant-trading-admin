@@ -120,7 +120,7 @@ const closeDialog = () => {
                         {{ $t('public.account') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ pending.to_meta_login.meta_login }}
+                        {{ pending.to_meta_login }}
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row md:items-center gap-1 self-stretch">
@@ -128,7 +128,7 @@ const closeDialog = () => {
                         {{ $t('public.account_type') }}
                     </div>
                     <div class="text-gray-950 dark:text-white text-sm font-medium">
-                        {{ $t(`public.${pending.to_meta_login.account_type.slug}`) }}
+                        {{ $t(`public.${pending.to_account.account_type.slug}`) }}
                     </div>
                 </div>
                 <div class="flex flex-col md:flex-row md:items-start gap-1 self-stretch">
