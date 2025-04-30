@@ -829,67 +829,113 @@ class MemberController extends Controller
 
     public function affiliate_tree($id)
     {
-        $user = User::find($id);
+        $user = User::with('media')
+            ->withCount('children')
+            ->find($id);
+
+        $root = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
+            'email' => $user->email,
+            'level' => 0,
+            'rank' => $user->rank->name,
+            'direct_affiliate' => $user->children_count,
+            'total_affiliate' => count($user->getChildrenIds()),
+            'self_deposit' => $this->getSelfDeposit($user),
+            'total_group_deposit' => $this->getTotalGroupDeposit($user),
+        ];
 
         return Inertia::render('Member/MemberAffiliates/MemberAffiliate', [
-            'user' => $user
+            'root' => $root
         ]);
     }
 
     public function getTreeData(Request $request, $id)
     {
-        $searchTerm = $request->input('search');
-        $locale = app()->getLocale();
-        $childrenIds = User::find($id)->getChildrenIds();
-        $childrenIds[] = $id; // Include the given $id in the array
+        $authUser = User::find($id);
+        $childrenIds = $authUser->getChildrenIds();
+        $childrenIds[] = $authUser->id;
 
-        $searchUser = null;
-
-        if ($searchTerm) {
-            // Search for a user by name or email, restricted to children IDs
-            $searchUser = User::where(function ($query) use ($searchTerm) {
-                $query->where('name', 'like', '%' . $searchTerm . '%')
-                    ->orWhere('email', 'like', '%' . $searchTerm . '%');
-            })
-                ->whereIn('id', $childrenIds) // Ensure the user is within the children IDs
+        // Handle Search
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $searchUser = User::with(['children', 'media', 'rank'])
+                ->where(function ($query) use ($searchTerm) {
+                    $query->where('name', 'like', "%{$searchTerm}%")
+                        ->orWhere('email', 'like', "%{$searchTerm}%")
+                        ->orWhere('username', 'like', "%{$searchTerm}%");
+                })
+                ->whereIn('id', $childrenIds)
                 ->first();
 
             if (!$searchUser) {
-                return response()->json(['error' => 'User not found for the given search term or not within the allowed hierarchy.'], 404);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found'
+                ]);
             }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $searchUser->id,
+                    'name' => $searchUser->name,
+                    'profile_photo' => $searchUser->getFirstMediaUrl('profile_photo'),
+                    'email' => $searchUser->email,
+                    'level' => $searchUser->id == $authUser->id
+                        ? 0
+                        : $this->calculateLevel($searchUser->hierarchyList, $id),
+                    'rank' => $searchUser->rank?->name ?? 'N/A',
+                    'direct_affiliate' => $searchUser->children()->count(),
+                    'total_affiliate' => count($searchUser->getChildrenIds()),
+                    'self_deposit' => $this->getSelfDeposit($searchUser),
+                    'total_group_deposit' => $this->getTotalGroupDeposit($searchUser),
+                    'has_children' => $searchUser->children()->exists(),
+                ]
+            ]);
         }
 
-        // Find the user by ID or use the searched user
-        $user = $searchUser ?? User::find($id);
+        // Load direct children of child_id node
+        $childId = $request->input('child_id');
+        $parent = User::with(['children', 'media', 'rank'])->findOrFail($childId);
 
-        $users = User::whereHas('upline', function ($query) use ($user) {
-            $query->where('id', $user->id);
-        })->get();
+        $directs = $parent->children->map(function ($user) use ($authUser, $id) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
+                'email' => $user->email,
+                'level' => $user->id == $authUser->id
+                    ? 0
+                    : $this->calculateLevel($user->hierarchyList, $id),
+                'rank' => $user->rank?->name ?? 'N/A',
+                'direct_affiliate' => $user->children()->count(),
+                'total_affiliate' => count($user->getChildrenIds()),
+                'self_deposit' => $this->getSelfDeposit($user),
+                'total_group_deposit' => $this->getTotalGroupDeposit($user),
+                'has_children' => $user->children()->exists(),
+            ];
+        });
 
-        $rank = SettingRank::where('id', $user->display_rank_id)->first();
+        return response()->json([
+            'success' => true,
+            'data' => $directs,
+        ]);
+    }
 
-        // Parse the JSON data in the name column to get translations
-        $translations = json_decode($rank->name, true);
+    private function calculateLevel($hierarchyList, $rootId)
+    {
+        if (is_null($hierarchyList) || $hierarchyList === '') {
+            return 0;
+        }
 
-        $level = 0;
-        $rootNode = [
-            'id' => $user->id,
-            'name' => $user->name,
-            'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
-            'email' => $user->email,
-            'level' => $level,
-            'rank' => $translations[$locale] ?? $rank->name,
-            'direct_affiliate' => count($user->children),
-            'total_affiliate' => count($user->getChildrenIds()),
-            'self_deposit' => $this->getSelfDeposit($user),
-            'total_group_deposit' => $this->getTotalGroupDeposit($user),
-            //'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
-            'children' => $users->map(function ($user) {
-                return $this->mapUser($user, 0);
-            })
-        ];
+        $split = explode('-' . $rootId . '-', $hierarchyList);
+        if (count($split) < 2) {
+            return 0;
+        }
 
-        return response()->json($rootNode);
+        return substr_count($split[1], '-') + 1;
     }
 
     protected function getSelfDeposit($user)
@@ -898,7 +944,11 @@ class MemberController extends Controller
             ->where('status', 'Active')
             ->sum('meta_balance');
 
-        $pamm = PammSubscription::where('user_id', $user->id)
+        $pamm = PammSubscription::with('master')
+            ->whereHas('master', function ($q) {
+                $q->where('involves_world_pool', 1);
+            })
+            ->where('user_id', $user->id)
             ->where('status', 'Active')
             ->sum('subscription_amount');
 
@@ -913,57 +963,16 @@ class MemberController extends Controller
             ->where('status', 'Active')
             ->sum('meta_balance');
 
-        $pamm = PammSubscription::whereIn('user_id', $ids)
+        $pamm = PammSubscription::with('master')
+            ->whereHas('master', function ($q) {
+                $q->where('involves_world_pool', 1);
+            })
+            ->whereIn('user_id', $ids)
             ->where('status', 'Active')
             ->sum('subscription_amount');
 
         return $subscriptions + $pamm;
     }
-
-    protected function mapUser($user, $level) {
-        $children = $user->children;
-
-        $mappedChildren = $children->map(function ($child) use ($level) {
-            return $this->mapUser($child, $level + 1);
-        });
-
-        $locale = app()->getLocale();
-
-        $rank = SettingRank::where('id', $user->display_rank_id)->first();
-
-        // Parse the JSON data in the name column to get translations
-        $translations = json_decode($rank->name, true);
-
-        $mappedUser = [
-            'id' => $user->id,
-            'name' => $user->name,
-            'profile_photo' => $user->getFirstMediaUrl('profile_photo'),
-            'email' => $user->email,
-            'level' => $level + 1,
-            'rank' => $translations[$locale] ?? $rank->name,
-            'total_affiliate' => count($user->getChildrenIds()),
-            'self_deposit' => $this->getSelfDeposit($user),
-            'total_group_deposit' => $this->getTotalGroupDeposit($user),
-        //    'valid_affiliate_deposit' => $this->getValidAffiliateDeposit($user),
-        ];
-
-        // Add 'children' only if there are children
-        if (!$mappedChildren->isEmpty()) {
-            $mappedUser['children'] = $mappedChildren;
-        }
-
-        return $mappedUser;
-    }
-
-    // protected function getValidAffiliateDeposit($user)
-    // {
-    //     $ids = $user->getChildrenIds();
-
-    //     return InvestmentSubscription::query()
-    //         ->whereIn('user_id', $ids)
-    //         ->whereDate('expired_date', '>', now())
-    //         ->sum('amount');
-    // }
 
     public function impersonate($user_id)
     {
