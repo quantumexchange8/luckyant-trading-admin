@@ -18,7 +18,9 @@ class UpdateWorldPoolAllocationCommand extends Command
     {
         $today_pool = WorldPoolAllocation::whereDate('allocation_date', today())->first();
 
-        $last_pool_amount = WorldPoolAllocation::whereDate('allocation_date', Carbon::yesterday())->first();
+        $last_pool_amount = WorldPoolAllocation::whereDate('allocation_date', '<', today())
+            ->latest()
+            ->first();
 
         if (!$today_pool) {
             $today_pool = WorldPoolAllocation::create([
