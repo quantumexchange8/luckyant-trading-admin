@@ -401,4 +401,5 @@ return [
     "adjustment" => "Adjustment",
     "add" => "Add",
     "deduct" => "Deduct",
+    "incorrect_bonus_correction" => "Incorrect Bonus Correction",
 ];

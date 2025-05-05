@@ -25,7 +25,8 @@ const openDialog = () => {
 const adjustmentTypes = [
     'WalletAdjustment',
     'WalletRedemption',
-    'ReturnedAmount'
+    'ReturnedAmount',
+    'IncorrectBonusCorrection'
 ];
 
 const selectedAdjustmentType = ref('');
@@ -109,7 +110,7 @@ const closeDialog = () => {
                         :value="$t('public.adjustment_type')"
                     />
                     <div
-                        class="flex items-start gap-3 self-stretch w-full overflow-x-auto"
+                        class="grid grid-cols-1 md:grid-cols-2 gap-3 self-stretch w-full"
                     >
                         <div
                             v-for="adjustment in adjustmentTypes"
