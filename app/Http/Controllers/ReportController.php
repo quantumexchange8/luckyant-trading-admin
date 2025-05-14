@@ -7,7 +7,9 @@ use App\Exports\TradeRebatesExport;
 use App\Models\PerformanceIncentive;
 use App\Models\TradeRebateHistory;
 use App\Models\TradeRebateSummary;
+use App\Models\TradingAccount;
 use App\Models\User;
+use App\Services\UserService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,82 +92,139 @@ class ReportController extends Controller
         return Inertia::render('Report/PerformanceIncentive/PerformanceIncentive');
     }
 
-    public function getPerformanceIncentive(Request $request)
+    public function getPerformanceIncentive(Request $request, UserService $userService)
     {
-        $authUser = \Auth::user();
-        $columnName = $request->input('columnName'); // Retrieve encoded JSON string
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
 
-        // Decode the JSON
-        $decodedColumnName = json_decode(urldecode($columnName), true);
+            $query = PerformanceIncentive::with([
+                'user',
+                'subscription',
+                'subscription.user',
+                'pamm_subscription',
+                'pamm_subscription.user',
+            ]);
 
-        $column = $decodedColumnName ? $decodedColumnName['id'] : 'created_at';
-        $sortOrder = $decodedColumnName ? ($decodedColumnName['desc'] ? 'desc' : 'asc') : 'desc';
+            if ($data['filters']['global']['value']) {
+                $keyword = $data['filters']['global']['value'];
 
-        $query = PerformanceIncentive::query()
-            ->with('user');
-
-        if ($request->filled('search')) {
-            $search = '%' . $request->input('search') . '%';
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($user) use ($search) {
-                    $user->where('name', 'like', $search)
-                        ->orWhere('email', 'like', $search);
+                $query->where(function ($q) use ($keyword) {
+                    $q->whereHas('user', function ($user) use ($keyword) {
+                        $user->where('name', 'like', $keyword)
+                            ->orWhere('email', 'like', $keyword)
+                            ->orWhere('username', 'like', $keyword);
+                    });
                 });
-            });
-        }
-
-        if ($request->filled('leader')) {
-            $leader = $request->input('leader');
-            $leaderUser = User::find($leader);
-            if ($leaderUser) {
-                $query->whereIn('user_id', $leaderUser->getChildrenIds());
             }
+
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = \Illuminate\Support\Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('created_at', [$start_date, $end_date]);
+            }
+
+            $category = $data['filters']['category']['value'];
+
+            if ($category) {
+                if ($category == 'pamm') {
+                    $query->where('category', 'pamm');
+                } else {
+                    $query->whereNot('category', 'pamm');
+                }
+            }
+
+            $type = $data['filters']['type']['value'];
+
+            if ($type) {
+                if ($type == 'personal') {
+                    $query->whereNotNull('meta_login');
+                } else {
+                    $query->whereNull('meta_login');
+                }
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            //sort field/order
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
+            } else {
+                $query->orderByDesc('created_at');
+            }
+
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('user_id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('user_id', []);
+            }
+
+            // Export logic
+            if ($request->has('exportStatus') && $request->exportStatus) {
+                return Excel::download(new PerformanceIncentiveExport($query), Carbon::now() . '-performance-incentive-report.xlsx');
+            }
+
+            $total_user = (clone $query)->distinct('user_id')->count();
+            $total_performance_incentive = (clone $query)->sum('personal_bonus_amt');
+
+            $performanceIncentives = $query->paginate($data['rows']);
+
+            $userHierarchyLists = $performanceIncentives->pluck('user.hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            if ($leaderId > 0) {
+                $leaderQuery = User::where('id', $leaderId)
+                    ->where('leader_status', 1);
+            } else {
+                $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                    ->where('leader_status', 1);
+            }
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            $performanceIncentives->each(function ($transaction) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($transaction->user?->hierarchyList, $leaders);
+
+                $transaction->first_leader_id = $firstLeader?->id;
+                $transaction->first_leader_name = $firstLeader?->name;
+                $transaction->first_leader_email = $firstLeader?->email;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $performanceIncentives,
+                'totalUser' => $total_user,
+                'totalPerformanceIncentive' => (float) $total_performance_incentive,
+            ]);
         }
 
-        if ($request->filled('date')) {
-            $date = $request->input('date');
-            $dateRange = explode(' - ', $date);
-            $start_date = Carbon::createFromFormat('Y-m-d', $dateRange[0])->startOfDay();
-            $end_date = Carbon::createFromFormat('Y-m-d', $dateRange[1])->endOfDay();
-
-            $query->whereBetween('created_at', [$start_date, $end_date]);
-        }
-
-        if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
-            $childrenIds = $authUser->getChildrenIds();
-            $childrenIds[] = $authUser->id;
-            $query->whereIn('user_id', $childrenIds);
-        } elseif ($authUser->hasRole('super-admin')) {
-            // Super-admin logic, no need to apply whereIn
-        } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
-            $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
-            $query->whereIn('user_id', $childrenIds);
-        } else {
-            // No applicable conditions, set whereIn to empty array
-            $query->whereIn('user_id', []);
-        }
-
-        if ($request->has('exportStatus')) {
-            return Excel::download(new PerformanceIncentiveExport($query), Carbon::now() . '-performance-incentive-report.xlsx');
-        }
-
-        $totalUserQuery = clone $query;
-
-        $results = $query->orderBy($column == null ? 'created_at' : $column, $sortOrder)
-            ->paginate($request->input('paginate', 10));
-
-        $totalTerminations = $totalUserQuery->distinct('user_id')->count();
-        $totalPerformanceIncentives = $query->sum('personal_bonus_amt');
-
-        $results->each(function ($performance) {
-            $performance->first_leader = $performance->user->getFirstLeader()->name ?? '-';
-        });
-
-        return response()->json([
-            'performanceIncentives' => $results,
-            'totalUser' => $totalTerminations,
-            'totalPerformanceIncentives' => $totalPerformanceIncentives,
-        ]);
+        return response()->json(['success' => false, 'data' => []]);
     }
 
     public function daily_register()

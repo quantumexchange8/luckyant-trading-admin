@@ -402,4 +402,11 @@ return [
     "add" => "Add",
     "deduct" => "Deduct",
     "incorrect_bonus_correction" => "Incorrect Bonus Correction",
+    "performance_incentive" => "Performance Incentive",
+    "personal" => "Personal",
+    "copytrade" => "Copy Trading",
+    "subscription_no" => "Subscription No",
+    "incentive" => "Incentive",
+    "filter_by_category" => "Filter by category",
+    "category" => "Category",
 ];
