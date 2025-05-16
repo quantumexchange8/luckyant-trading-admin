@@ -110,9 +110,9 @@ class ReportController extends Controller
 
                 $query->where(function ($q) use ($keyword) {
                     $q->whereHas('user', function ($user) use ($keyword) {
-                        $user->where('name', 'like', $keyword)
-                            ->orWhere('email', 'like', $keyword)
-                            ->orWhere('username', 'like', $keyword);
+                        $user->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%')
+                            ->orWhere('username', 'like', '%' . $keyword . '%');
                     });
                 });
             }

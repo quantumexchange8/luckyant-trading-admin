@@ -417,6 +417,21 @@ const exportReport = () => {
                         </Column>
 
                         <Column
+                            field="subscription_amount"
+                            class="table-cell min-w-24"
+                            :header="$t('public.fund_capital')"
+                        >
+                            <template #body="{ data }">
+                                <div v-if="data.category === 'pamm'">
+                                    <span class="font-medium">${{ formatAmount(data.pamm_subscription.subscription_amount) }}</span>
+                                </div>
+                                <div v-else class="flex flex-col">
+                                    <span class="font-medium">${{ formatAmount(data.subscription.meta_balance) }}</span>
+                                </div>
+                            </template>
+                        </Column>
+
+                        <Column
                             field="subscription_profit_amt"
                             class="table-cell min-w-24"
                             sortable
