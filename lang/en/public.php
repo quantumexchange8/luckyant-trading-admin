@@ -409,4 +409,5 @@ return [
     "incentive" => "Incentive",
     "filter_by_category" => "Filter by category",
     "category" => "Category",
+    "profit_sharing" => "Profit Sharing",
 ];

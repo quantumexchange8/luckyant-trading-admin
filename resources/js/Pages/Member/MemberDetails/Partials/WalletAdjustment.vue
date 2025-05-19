@@ -26,7 +26,8 @@ const adjustmentTypes = [
     'WalletAdjustment',
     'WalletRedemption',
     'ReturnedAmount',
-    'IncorrectBonusCorrection'
+    'IncorrectBonusCorrection',
+    'ProfitSharing',
 ];
 
 const selectedAdjustmentType = ref('');
