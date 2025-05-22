@@ -33,6 +33,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
             'type',
             'approval_date',
             'termination_date',
+            'settlement_date',
             'created_at',
             'status',
         ])
@@ -76,6 +77,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
                 'fund_size' => $record->subscription_amount,
                 'status' => $record->status,
                 'approval_date' => $record->approval_date ? Carbon::parse($record->approval_date)->format('Y-m-d H:i:s') : '',
+                'settlement_date' => $record->settlement_date ? Carbon::parse($record->settlement_date)->addDay()->format('Y-m-d') : '',
                 'termination_date' => $record->termination_date ? Carbon::parse($record->termination_date)->format('Y-m-d H:i:s') : '',
             );
         }
@@ -101,6 +103,7 @@ class PammSubscriptionExport implements FromCollection, WithHeadings
             'Fund Size',
             'Status',
             'Approval Date',
+            'Settlement Date',
             'Termination Date',
         ];
     }

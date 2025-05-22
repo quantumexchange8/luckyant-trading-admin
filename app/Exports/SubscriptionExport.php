@@ -22,21 +22,7 @@ class SubscriptionExport implements FromCollection, WithHeadings
      */
     public function collection(): Collection
     {
-        $records = $this->query->select([
-            'id',
-            'user_id',
-            'trading_account_id',
-            'meta_login',
-            'meta_balance',
-            'real_fund',
-            'demo_fund',
-            'master_id',
-            'master_meta_login',
-            'subscription_number',
-            'approval_date',
-            'termination_date',
-            'status',
-        ])
+        $records = $this->query
             ->orderByDesc('approval_date')
             ->get();
 
@@ -74,6 +60,7 @@ class SubscriptionExport implements FromCollection, WithHeadings
                 'amount' => $record->meta_balance,
                 'real_fund' => $record->real_fund,
                 'demo_fund' => $record->demo_fund,
+                'settlement_date' => $record->subscription->expired_date ? Carbon::parse($record->subscription->expired_date)->addDay()->format('Y-m-d') : null,
                 'termination_date' => $record->termination_date ? Carbon::parse($record->termination_date)->format('Y-m-d') : null,
                 'status' => $record->status,
             );
@@ -97,6 +84,7 @@ class SubscriptionExport implements FromCollection, WithHeadings
             'Amount',
             'Real Fund',
             'Demo Fund',
+            'Settlement Date',
             'Termination Date',
             'Status'
         ];
