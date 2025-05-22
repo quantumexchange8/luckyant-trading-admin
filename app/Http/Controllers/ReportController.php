@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Exports\PerformanceIncentiveExport;
+use App\Exports\ProfitSharingExport;
 use App\Exports\TradeRebatesExport;
+use App\Models\PammSubscription;
 use App\Models\PerformanceIncentive;
+use App\Models\Subscription;
+use App\Models\SubscriptionProfitHistory;
 use App\Models\TradeRebateHistory;
 use App\Models\TradeRebateSummary;
 use App\Models\TradingAccount;
@@ -343,6 +347,130 @@ class ReportController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $registrations,
+            ]);
+        }
+
+        return response()->json(['success' => false, 'data' => []]);
+    }
+
+    public function profit_sharing()
+    {
+        return Inertia::render('Report/ProfitSharing/ProfitSharing');
+    }
+
+    public function getProfitSharingData(Request $request, UserService $userService)
+    {
+        if ($request->has('lazyEvent')) {
+            $data = json_decode($request->only(['lazyEvent'])['lazyEvent'], true);
+            $category = $data['filters']['category']['value'];
+
+            $query = SubscriptionProfitHistory::with([
+                'user',
+            ])->where('category', $category);
+
+            if ($data['filters']['global']['value']) {
+                $keyword = $data['filters']['global']['value'];
+
+                $query->where(function ($q) use ($keyword) {
+                    $q->whereHas('user', function ($user) use ($keyword) {
+                        $user->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('email', 'like', '%' . $keyword . '%')
+                            ->orWhere('username', 'like', '%' . $keyword . '%');
+                    })->orWhere('subscription_number', 'like', '%' . $keyword . '%');
+                });
+            }
+
+            if (!empty($data['filters']['start_date']['value']) && !empty($data['filters']['end_date']['value'])) {
+                $start_date = \Illuminate\Support\Carbon::parse($data['filters']['start_date']['value'])->addDay()->startOfDay();
+                $end_date = Carbon::parse($data['filters']['end_date']['value'])->addDay()->endOfDay();
+
+                $query->whereBetween('created_at', [$start_date, $end_date]);
+            }
+
+            $leaderId = $data['filters']['leader_id']['value']['id'] ?? null;
+
+            // Filter by leaderId if provided
+            if ($leaderId) {
+                // Load users under the specified leader
+                $usersUnderLeader = User::where('leader_status', 1)
+                    ->where('id', $leaderId)
+                    ->orWhere('hierarchyList', 'like', "%-$leaderId-%")
+                    ->pluck('id');
+
+                $query->whereIn('user_id', $usersUnderLeader);
+            }
+
+            //sort field/order
+            if ($data['sortField'] && $data['sortOrder']) {
+                $order = $data['sortOrder'] == 1 ? 'asc' : 'desc';
+                $query->orderBy($data['sortField'], $order);
+            } else {
+                $query->orderByDesc('created_at');
+            }
+
+            $authUser = Auth::user();
+
+            if ($authUser->hasRole('admin') && $authUser->leader_status == 1) {
+                $childrenIds = $authUser->getChildrenIds();
+                $childrenIds[] = $authUser->id;
+                $query->whereIn('user_id', $childrenIds);
+            } elseif ($authUser->hasRole('super-admin')) {
+                // Super-admin logic, no need to apply whereIn
+            } elseif (!empty($authUser->getFirstLeader()) && $authUser->getFirstLeader()->hasRole('admin')) {
+                $childrenIds = $authUser->getFirstLeader()->getChildrenIds();
+                $query->whereIn('user_id', $childrenIds);
+            } else {
+                // No applicable conditions, set whereIn to empty array
+                $query->whereIn('user_id', []);
+            }
+
+            // Export logic
+            if ($request->has('exportStatus') && $request->exportStatus) {
+                return Excel::download(new ProfitSharingExport($query), Carbon::now() . '-profit-sharing-report.xlsx');
+            }
+
+            if ($category == 'pamm') {
+                $active_capital = PammSubscription::where('status', 'Active')
+                    ->sum('subscription_amount');
+            } else {
+                $active_capital = Subscription::where('status', 'Active')
+                    ->sum('meta_balance');
+            }
+
+            $total_profit_sharing = (clone $query)->sum('profit_sharing_amt');
+
+            $performanceIncentives = $query->paginate($data['rows']);
+
+            $userHierarchyLists = $performanceIncentives->pluck('user.hierarchyList')
+                ->filter()
+                ->flatMap(fn($list) => explode('-', trim($list, '-')))
+                ->unique()
+                ->toArray();
+
+            // Load all potential leaders in bulk
+            if ($leaderId > 0) {
+                $leaderQuery = User::where('id', $leaderId)
+                    ->where('leader_status', 1);
+            } else {
+                $leaderQuery = User::whereIn('id', $userHierarchyLists)
+                    ->where('leader_status', 1);
+            }
+
+            $leaders = $leaderQuery->get()->keyBy('id');
+
+            $performanceIncentives->each(function ($transaction) use ($userService, $leaders) {
+                $firstLeader = $userService->getFirstLeader($transaction->user?->hierarchyList, $leaders);
+
+                $transaction->first_leader_id = $firstLeader?->id;
+                $transaction->first_leader_name = $firstLeader?->name;
+                $transaction->first_leader_email = $firstLeader?->email;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $performanceIncentives,
+                'activeCapital' => (float) $active_capital,
+                'totalProfitSharing' => (float) $total_profit_sharing,
             ]);
         }
 

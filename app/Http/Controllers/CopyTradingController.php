@@ -211,6 +211,7 @@ class CopyTradingController extends Controller
                 'master:id,meta_login',
                 'master.tradingUser:id,meta_login,name,company,account_type',
                 'master.tradingUser.from_account_type',
+                'subscription'
             ]);
 
             $authUser = Auth::user();

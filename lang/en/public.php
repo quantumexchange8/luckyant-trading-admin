@@ -410,4 +410,7 @@ return [
     "filter_by_category" => "Filter by category",
     "category" => "Category",
     "profit_sharing" => "Profit Sharing",
+    "claimed" => "Claimed",
+    "active_fund" => "Active Fund",
+    "next_settlement" => "Next Settlement",
 ];

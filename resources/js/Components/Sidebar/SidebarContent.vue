@@ -300,6 +300,11 @@ const { hasRole } = usePermission();
                 :title="$t('public.daily_register')"
                 :active="route().current('report.daily_register')"
             />
+            <SidebarCollapsibleItem
+                :href="route('report.profit_sharing')"
+                :title="$t('public.profit_sharing')"
+                :active="route().current('report.profit_sharing')"
+            />
         </SidebarCollapsible>
 
         <SidebarCategoryLabel

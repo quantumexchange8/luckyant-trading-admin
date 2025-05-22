@@ -22,22 +22,24 @@ import InputIconWrapper from "@/Components/InputIconWrapper.vue";
 import Button from "primevue/button";
 import Select from "primevue/select";
 import Popover from "primevue/popover";
-import RadioButton from "primevue/radiobutton";
+
+const props = defineProps({
+    selectedType: String
+})
 
 const isLoading = ref(false);
 const dt = ref(null);
 const histories = ref([]);
 const exportTable = ref('no');
-const {formatAmount} = transactionFormat();
+const {formatAmount, formatType} = transactionFormat();
 const totalRecords = ref(0);
 const first = ref(0);
-const totalPerformanceIncentive = ref();
-const totalUser = ref();
+const totalProfitSharing = ref();
+const activeCapital = ref();
 
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    category: { value: null, matchMode: FilterMatchMode.EQUALS },
-    type: { value: null, matchMode: FilterMatchMode.EQUALS },
+    category: { value: props.selectedType, matchMode: FilterMatchMode.EQUALS },
     leader_id: {value: null, matchMode: FilterMatchMode.EQUALS},
     start_date: { value: null, matchMode: FilterMatchMode.EQUALS },
     end_date: { value: null, matchMode: FilterMatchMode.EQUALS },
@@ -60,14 +62,14 @@ const loadLazyData = (event) => {
                 lazyEvent: JSON.stringify(lazyParams.value)
             };
 
-            const url = route('report.getPerformanceIncentive', params);
+            const url = route('report.getProfitSharingData', params);
             const response = await fetch(url);
             const results = await response.json();
 
             histories.value = results?.data?.data;
             totalRecords.value = results?.data?.total;
-            totalPerformanceIncentive.value = results?.totalPerformanceIncentive;
-            totalUser.value = results?.totalUser;
+            totalProfitSharing.value = results?.totalProfitSharing;
+            activeCapital.value = results?.activeCapital;
             isLoading.value = false;
         }, 100);
     }  catch (e) {
@@ -149,15 +151,19 @@ watch(
     }, 300)
 );
 
-watch([filters.value['type'], filters.value['leader_id'], filters.value['category'], filters.value['type']], () => {
+watch(() => props.selectedType, (newType) => {
+    filters.value['category'].value = newType;
+    clearAll();
+    loadLazyData();
+})
+
+watch([filters.value['leader_id']], () => {
     loadLazyData()
 });
 
 
 const clearAll = () => {
     filters.value['global'].value = null;
-    filters.value['category'].value = null;
-    filters.value['type'].value = null;
     filters.value['leader_id'].value = null;
     selectedDate.value = [];
 };
@@ -174,10 +180,10 @@ watchEffect(() => {
 
 const emit = defineEmits(['update-totals']);
 
-watch([totalPerformanceIncentive, totalUser], () => {
+watch([totalProfitSharing, activeCapital], () => {
     emit('update-totals', {
-        totalPerformanceIncentive: totalPerformanceIncentive.value,
-        totalUser: totalUser.value,
+        totalProfitSharing: totalProfitSharing.value,
+        activeCapital: activeCapital.value,
     });
 });
 
@@ -198,7 +204,7 @@ const exportReport = () => {
         exportStatus: true,
     };
 
-    const url = route('report.getPerformanceIncentive', params);  // Construct the export URL
+    const url = route('report.getProfitSharingData', params);  // Construct the export URL
 
     try {
         // Send the request to the backend to trigger the export
@@ -331,7 +337,6 @@ const exportReport = () => {
 
                         <Column
                             field="first_leader_id"
-                            show-filter-menu
                             class="table-cell"
                         >
                             <template #header>
@@ -349,118 +354,55 @@ const exportReport = () => {
                                 </div>
                             </template>
                         </Column>
-
-                        <Column
-                            field="type"
-                            class="table-cell min-w-32"
-                            :header="$t('public.category')"
-                        >
-                            <template #body="{ data }">
-                                <Tag
-                                    :severity="data.category === 'pamm' ? 'secondary' : 'info'"
-                                    :value="$t(`public.${data.category}`)"
-                                />
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="meta_login"
-                            class="table-cell min-w-24"
-                            :header="$t('public.from')"
-                        >
-                            <template #body="{ data }">
-                                <div v-if="data.meta_login" class="flex gap-1 items-center">
-                                    <span class="text-sm font-semibold">{{ data.meta_login }}</span>
-                                    <Tag
-                                        severity="contrast"
-                                        :value="$t('public.personal')"
-                                    />
-                                </div>
-                                <div
-                                    v-else-if="data.category === 'pamm'"
-                                    class="flex flex-col"
-                                >
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-sm font-semibold">{{ data.pamm_subscription.meta_login }}</span>
-                                        <Tag
-                                            severity="warn"
-                                            :value="$t('public.network')"
-                                        />
-                                    </div>
-                                    <span class="text-xs text-gray-400 dark:text-gray-500">{{ data.pamm_subscription.user.email }}</span>
-                                </div>
-                                <div
-                                    v-else
-                                    class="flex flex-col"
-                                >
-                                    <div class="flex items-center gap-1">
-                                        <span class="text-sm font-semibold">{{ data.subscription.meta_login }}</span>
-                                        <Tag
-                                            severity="warn"
-                                            :value="$t('public.network')"
-                                        />
-                                    </div>
-                                    <span class="text-xs text-gray-400 dark:text-gray-500">{{ data.subscription.user.email }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
                         <Column
                             field="subscription_number"
-                            class="table-cell min-w-24"
-                            sortable
+                            class="table-cell"
                             :header="$t('public.subscription_no')"
                         >
-                            <template #body="{ data }">
+                            <template #body="{data}">
                                 <span class="font-medium">{{ data.subscription_number }}</span>
                             </template>
                         </Column>
-
                         <Column
-                            field="subscription_amount"
-                            class="table-cell min-w-24"
-                            :header="$t('public.fund_capital')"
-                        >
-                            <template #body="{ data }">
-                                <div v-if="data.category === 'pamm'">
-                                    <span class="font-medium">${{ formatAmount(data.pamm_subscription.subscription_amount) }}</span>
-                                </div>
-                                <div v-else class="flex flex-col">
-                                    <span class="font-medium">${{ formatAmount(data.subscription.meta_balance) }}</span>
-                                </div>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="subscription_profit_amt"
-                            class="table-cell min-w-24"
+                            field="total_profit"
+                            class="table-cell"
                             sortable
                             :header="$t('public.profit')"
                         >
-                            <template #body="{ data }">
-                                <span class="font-medium">${{ formatAmount(data.subscription_profit_amt) }}</span>
+                            <template #body="{data}">
+                                ${{ formatAmount(data.total_profit) }}
                             </template>
                         </Column>
-
                         <Column
-                            field="personal_bonus_percent"
-                            class="table-cell min-w-24"
-                            sortable
-                            :header="$t('public.incentive') + ' %'"
+                            field="profit_sharing_percent"
+                            class="table-cell"
+                            :header="$t('public.profit') + ' %'"
                         >
-                            <template #body="{ data }">
-                                <span class="font-medium">{{ data.personal_bonus_percent % 1 === 0 ? formatAmount(data.personal_bonus_percent, 0) : formatAmount(data.personal_bonus_percent) }}%</span>
+                            <template #body="{data}">
+                                {{ formatAmount(data.profit_sharing_percent, 0) }}%
                             </template>
                         </Column>
-
                         <Column
-                            field="personal_bonus_amt"
-                            class="table-cell min-w-32"
+                            field="profit_sharing_amt"
+                            class="table-cell"
                             sortable
-                            :header="$t('public.performance_incentive')"
+                            :header="$t('public.amount')"
                         >
-                            <template #body="{ data }">
-                                <span class="font-medium text-success-500">${{ formatAmount(data.personal_bonus_amt) }}</span>
+                            <template #body="{data}">
+                                <span class="font-medium">${{ formatAmount(data.profit_sharing_amt, 0) }}</span>
+                            </template>
+                        </Column>
+                        <Column
+                            field="is_claimed"
+                            class="table-cell"
+                            :header="$t('public.status')"
+                        >
+                            <template #body="{data}">
+                                <Tag
+                                    :severity="data.is_claimed === 'Claimed' ? 'success' : 'danger'"
+                                    class="uppercase"
+                                    :value="$t(`public.${formatType(data.is_claimed).toLowerCase().replace(/\s+/g, '_')}`)"
+                                />
                             </template>
                         </Column>
                     </template>
@@ -521,59 +463,6 @@ const exportReport = () => {
                         @click="clearDate"
                     >
                         <IconCircleX size="16" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Category -->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    {{ $t('public.filter_by_category') }}
-                </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton
-                            v-model="filters['category'].value"
-                            inputId="copytrade"
-                            value="copytrade"
-                            class="w-4 h-4"/>
-                        <label for="copytrade">{{ $t('public.copytrade') }}</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton
-                            v-model="filters['category'].value"
-                            inputId="pamm"
-                            value="pamm"
-                            class="w-4 h-4"
-                        />
-                        <label for="pamm">{{ $t('public.pamm') }}</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Type -->
-            <div class="flex flex-col gap-2 items-center self-stretch">
-                <div class="flex self-stretch text-xs text-gray-950 dark:text-white font-semibold">
-                    {{ $t('public.filter_by_type') }}
-                </div>
-                <div class="flex flex-col gap-1 self-stretch">
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton
-                            v-model="filters['type'].value"
-                            inputId="personal"
-                            value="personal"
-                            class="w-4 h-4"
-                        />
-                        <label for="personal">{{ $t('public.personal') }}</label>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-950 dark:text-gray-300">
-                        <RadioButton
-                            v-model="filters['type'].value"
-                            inputId="network"
-                            value="network"
-                            class="w-4 h-4"
-                        />
-                        <label for="network">{{ $t('public.network') }}</label>
                     </div>
                 </div>
             </div>

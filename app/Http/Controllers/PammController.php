@@ -299,6 +299,7 @@ class PammController extends Controller
             'type',
             'approval_date',
             'termination_date',
+            'settlement_date',
             'status',
         ])
             ->orderByDesc('approval_date')

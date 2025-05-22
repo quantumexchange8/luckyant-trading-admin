@@ -297,6 +297,10 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/daily_register',[ReportController::class, 'daily_register'])->name('report.daily_register');
         Route::get('/getDailyRegisterData',[ReportController::class, 'getDailyRegisterData'])->name('report.getDailyRegisterData');
         Route::get('/getDailyChildRegisterData',[ReportController::class, 'getDailyChildRegisterData'])->name('report.getDailyChildRegisterData');
+
+        // Profit Sharing
+        Route::get('/profit_sharing', [ReportController::class, 'profit_sharing'])->name('report.profit_sharing');
+        Route::get('/getProfitSharingData', [ReportController::class, 'getProfitSharingData'])->name('report.getProfitSharingData');
     });
 
     /**

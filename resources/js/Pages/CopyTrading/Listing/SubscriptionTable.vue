@@ -491,6 +491,15 @@ watchEffect(() => {
                             </template>
                         </Column>
                         <Column
+                            field="settlement_date"
+                            class="table-cell"
+                            :header="$t('public.settlement')"
+                        >
+                            <template #body="{data}">
+                                {{ dayjs(data.subscription.expired_date).add(1, 'day').format('YYYY/MM/DD') }}
+                            </template>
+                        </Column>
+                        <Column
                             field="termination_date"
                             sortable
                             class="table-cell min-w-32"

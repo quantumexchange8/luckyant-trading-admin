@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
@@ -47,34 +49,39 @@ class SubscriptionBatch extends Model
         'approval_date' => 'datetime',
     ];
 
-    public function tradingAccount(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function tradingAccount(): BelongsTo
     {
         return $this->belongsTo(TradingAccount::class, 'trading_account_id', 'id');
     }
 
-    public function master(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function master(): BelongsTo
     {
         return $this->belongsTo(Master::class, 'master_id', 'id');
     }
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function transaction(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'transaction_id', 'id');
     }
 
-    public function tradingUser(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function tradingUser(): BelongsTo
     {
         return $this->belongsTo(TradingUser::class, 'master_meta_login', 'meta_login');
     }
 
-    public function subscription_penalty(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function subscription_penalty(): HasOne
     {
         return $this->hasOne(SubscriptionPenaltyLog::class, 'subscription_batch_id', 'id');
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class, 'subscription_id', 'id');
     }
 
     public function getActivitylogOptions(): LogOptions
