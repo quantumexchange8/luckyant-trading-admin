@@ -470,6 +470,25 @@ const downloadFile = () => {
                             </template>
                         </Column>
                         <Column
+                            field="username"
+                            :header="$t('public.username')"
+                            class="table-cell"
+                        >
+                            <template #body="{data}">
+                                {{ data.username ?? '-' }}
+                            </template>
+                        </Column>
+                        <Column
+                            field="dob"
+                            header="DOB"
+                            class="table-cell"
+                            sortable
+                        >
+                            <template #body="{data}">
+                                <span class="uppercase">{{ dayjs(data.dob).format('YYYY/MM/DD') }}</span>
+                            </template>
+                        </Column>
+                        <Column
                             field="leader_id"
                             class="table-cell"
                         >
@@ -497,7 +516,7 @@ const downloadFile = () => {
                                 <span class="block">{{ $t('public.date') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('DD/MM/YYYY') }}</span>
+                                <span class="uppercase">{{ dayjs(slotProps.data.created_at).format('YYYY/MM/DD') }}</span>
                             </template>
                         </Column>
                         <Column
@@ -517,6 +536,15 @@ const downloadFile = () => {
                                         -
                                     </div>
                                 </div>
+                            </template>
+                        </Column>
+                        <Column
+                            field="gender"
+                            :header="$t('public.gender')"
+                            class="table-cell"
+                        >
+                            <template #body="{data}">
+                                {{ data.gender ? $t(`public.${data.gender}`) : '-' }}
                             </template>
                         </Column>
                         <Column
