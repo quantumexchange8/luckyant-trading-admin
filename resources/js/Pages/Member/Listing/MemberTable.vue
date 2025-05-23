@@ -556,7 +556,7 @@ const downloadFile = () => {
                             </template>
                             <template #body="slotProps">
                                 <div class="font-bold">
-                                    $ {{ formatAmount((slotProps.data.active_pamm_sum_subscription_amount ?? 0) + (slotProps.data.active_copy_trade_sum_meta_balance)) }}
+                                    $ {{ formatAmount(Number(slotProps.data.active_pamm_sum_subscription_amount ?? 0) + Number(slotProps.data.active_copy_trade_sum_meta_balance)) }}
                                 </div>
                             </template>
                         </Column>
