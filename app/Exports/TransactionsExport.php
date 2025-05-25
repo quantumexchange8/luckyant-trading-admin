@@ -2,92 +2,28 @@
 
 namespace App\Exports;
 
-use App\Models\Country;
-use App\Models\Transaction;
 use App\Models\User;
-use App\Models\WalletLog;
 use App\Services\UserService;
-use Carbon\Carbon;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
 
-class TransactionsExport implements FromCollection, WithHeadings
+class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithChunkReading
 {
     private $query;
+    public $timeout = null;
 
     public function __construct($query)
     {
         $this->query = $query;
+
+        ini_set('memory_limit', '512M');
     }
 
-    /**
-     * @return Collection
-     */
-    public function collection(): Collection
+    public function query()
     {
-        $records = $this->query->get();
-
-        $userHierarchyLists = $records->pluck('user.hierarchyList')
-            ->filter()
-            ->flatMap(fn($list) => explode('-', trim($list, '-')))
-            ->unique()
-            ->toArray();
-
-        $leaders = User::whereIn('id', $userHierarchyLists)
-            ->where('leader_status', 1)
-            ->get()
-            ->keyBy('id');
-
-        // Attach the first leader details
-        $records->each(function ($transaction) use ($leaders) {
-            $userService = new UserService();
-            $firstLeader = $userService->getFirstLeader($transaction->user?->hierarchyList, $leaders);
-
-            $transaction->first_leader_name = $firstLeader?->name;
-        });
-
-        $result = array();
-        foreach($records as $record){
-            if ($record->transaction_type == 'Transfer') {
-                $from = $record->from_wallet ? $record->from_wallet->user->name : '-';
-                $to = $record->to_wallet ? $record->to_wallet->user->name : '-';
-            } else {
-                $from = $record->from_wallet ? $record->from_wallet->name : ($record->from_meta_login ?? $record->to_meta_login ?? '-');
-                $to = $record->to_wallet ? $record->to_wallet->name : ($record->to_meta_login ?? $record->from_meta_login ?? '-');
-            }
-
-            $result[] = array(
-                'name' => $record->user->name,
-                'email' => $record->user->email,
-                'first_leader' => $record->first_leader_name,
-                'country' => $record->user?->ofCountry?->name ?? '-',
-                'type' => $record->transaction_type,
-                'fund_type' => $record->fund_type,
-                'from' => $from,
-                'to' => $record->transaction_type == 'Withdrawal' ? $record->to_wallet_address : $to,
-                'transaction_id' => $record->transaction_number,
-                'txn_hash' => $record->txn_hash,
-                'to_wallet_address' => "'" . $record->to_wallet_address,
-                'payment_method' => $record->payment_method,
-                'payment_platform_name' => $record->payment_account->payment_platform_name ?? '',
-                'bank_sub_branch' => $record->payment_account->bank_sub_branch ?? '',
-                'payment_account_name' => $record->setting_payment->payment_account_name ?? '',
-                'payment_account_no' => $record->setting_payment->account_no ?? '',
-                'date' => Carbon::parse($record->created_at)->format('Y-m-d'),
-                'amount' =>  number_format((float)$record->amount, 2, '.', ''),
-                'payment_charges' =>  number_format((float)$record->transaction_charges, 2, '.', ''),
-                'transaction_amount' =>  number_format((float)$record->transaction_amount, 2, '.', ''),
-                'conversion_amount' =>  number_format((float)$record->conversion_amount, 2, '.', ''),
-                'profit' =>  number_format((float)$record->profitAmount, 2, '.', ''),
-                'bonus' =>  number_format((float)$record->bonusAmount, 2, '.', ''),
-                'status' => $record->status,
-                'approval_at' => !empty($record->approval_at) ? $record->approval_at : null,
-                'remarks' => $record->remarks,
-            );
-        }
-
-        return collect($result);
+        return $this->query;
     }
 
     public function headings(): array
@@ -103,7 +39,7 @@ class TransactionsExport implements FromCollection, WithHeadings
             'To',
             'Transaction ID',
             'Transaction Hash',
-            'To Wallet Address',
+            'Wallet Address / Account Number',
             'Payment Method',
             'Bank / Crypto',
             'Bank Branch',
@@ -120,5 +56,60 @@ class TransactionsExport implements FromCollection, WithHeadings
             'Approval Date',
             'Remarks',
         ];
+    }
+
+    public function map($row): array
+    {
+        $userService = new UserService();
+        $hierarchyList = $row->user?->hierarchyList;
+        $leaders = User::whereIn('id', collect(explode('-', trim($hierarchyList, '-'))))
+            ->where('leader_status', 1)
+            ->get()
+            ->keyBy('id');
+
+        $firstLeader = $userService->getFirstLeader($hierarchyList, $leaders);
+
+        if ($row->transaction_type == 'Transfer') {
+            $from = $row->from_wallet ? $row->from_wallet->user->name : '-';
+            $to = $row->to_wallet ? $row->to_wallet->user->name : '-';
+        } else {
+            $from = $row->from_wallet ? $row->from_wallet->name : ($row->from_meta_login ?? $row->to_meta_login ?? '-');
+            $to = $row->to_wallet ? $row->to_wallet->name : ($row->to_meta_login ?? $row->from_meta_login ?? '-');
+        }
+
+        // map and return your columns here
+        return [
+            $row->user->name,
+            $row->user->email,
+            $firstLeader?->name,
+            $row->user?->ofCountry?->name ?? '-',
+            $row->transaction_type,
+            $row->fund_type,
+            $from,
+            $row->transaction_type == 'Withdrawal' ? $row->to_wallet_address : $to,
+            $row->transaction_number,
+            $row->txn_hash,
+            $row->payment_method == 'Bank' ? $row->to_wallet_address : "'".$row->to_wallet_address,
+            $row->payment_method,
+            $row->payment_account_name,
+            $row->payment_account->payment_platform_name ?? '',
+            $row->payment_account->bank_sub_branch ?? '',
+            $row->setting_payment->payment_account_name ?? '',
+            $row->setting_payment->account_no ?? '',
+            number_format((float)$row->amount, 2, '.', ''),
+            number_format((float)$row->transaction_charges, 2, '.', ''),
+            number_format((float)$row->transaction_amount, 2, '.', ''),
+            number_format((float)$row->conversion_amount, 2, '.', ''),
+            number_format((float)$row->profitAmount, 2, '.', ''),
+            number_format((float)$row->bonusAmount, 2, '.', ''),
+            $row->status,
+            !empty($row->approval_at) ? $row->approval_at : null,
+            $row->remarks,
+        ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 500; // Adjust based on server memory
     }
 }
