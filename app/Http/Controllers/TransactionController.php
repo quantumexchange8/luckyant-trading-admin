@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ExportTransactionHistoryJob;
 use App\Services\UserService;
 use Carbon\Carbon;
 use App\Models\User;
@@ -20,6 +21,7 @@ use App\Exports\PendingWithdrawalExport;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\DepositConfirmationNotification;
 use App\Notifications\WithdrawalConfirmationNotification;
+use Storage;
 
 class TransactionController extends Controller
 {
@@ -476,7 +478,13 @@ class TransactionController extends Controller
 
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {
-                return Excel::download(new TransactionsExport($query), now() . '-'. $data['filters']['type']['value'] . 'report.xlsx');
+                $ids = $query->pluck('id')->toArray();
+                ExportTransactionHistoryJob::dispatch($ids);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Exporting report. Please wait..',
+                ]);
             }
 
             // Calculate totals before pagination
@@ -573,4 +581,68 @@ class TransactionController extends Controller
         return response()->json([$type => $results]);
     }
 
+    public function checkExportStatus()
+    {
+        // Check the jobs table for the job ID and queue name
+        $job = DB::table('jobs')
+            ->where('queue', 'transaction-export')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($job) {
+            return response()->json([
+                'status' => 'in_progress',
+                'message' => 'Export is still processing.',
+            ]);
+        }
+
+        // Check the failed_jobs table if the job is not in the jobs table
+        $failedJob = DB::table('failed_jobs')
+            ->where('queue', 'transaction-export')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($failedJob) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Export job failed.',
+            ]);
+        }
+
+        $filePath = storage_path('app/public/transaction-report.xlsx');
+
+        // Check if the file exists
+        if (file_exists($filePath)) {
+            return response()->json([
+                'status' => 'completed',
+                'message' => 'Export is complete. You can download the file.',
+                'file_url' => asset('storage/transaction-report.xlsx'),
+            ]);
+        } else {
+            return response()->json([
+                'status' => 'failed',
+            ]);
+        }
+    }
+
+    public function deleteReport()
+    {
+        $filePath = 'transaction-report.xlsx';
+
+        // Check if the file exists in the 'public' disk
+        if (Storage::disk('public')->exists($filePath)) {
+            // Delete the file from the 'public' disk
+            Storage::disk('public')->delete($filePath);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'File deleted successfully.',
+            ]);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'File not found.',
+        ], 404);
+    }
 }

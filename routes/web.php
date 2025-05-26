@@ -66,7 +66,6 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::get('/member_details/{id}', [MemberController::class, 'viewMemberDetails'])->name('member.viewMemberDetails');
         Route::get('/getExtraBonus', [MemberController::class, 'getExtraBonus'])->name('member.getExtraBonus');
         Route::get('checkExportStatus', [MemberController::class, 'checkExportStatus'])->name('member.checkExportStatus');
-        Route::get('downloadMemberReport', [MemberController::class, 'downloadMemberReport'])->name('member.downloadMemberReport');
 
         Route::delete('/export/delete', [MemberController::class, 'deleteReport'])->name('member.deleteReport');
 
@@ -173,6 +172,9 @@ Route::middleware(['auth', 'role:super-admin|admin'])->group(function () {
         Route::post('/rejectTransaction', [TransactionController::class, 'rejectTransaction'])->name('transaction.rejectTransaction');
         Route::get('/getTransactionHistory', [TransactionController::class, 'getTransactionHistory'])->name('transaction.getTransactionHistory');
         Route::get('/getBalanceHistory/{type}', [TransactionController::class, 'getBalanceHistory'])->name('transaction.getBalanceHistory');
+        Route::get('checkExportStatus', [TransactionController::class, 'checkExportStatus'])->name('transaction.checkExportStatus');
+
+        Route::delete('/export/delete', [TransactionController::class, 'deleteReport'])->name('transaction.deleteReport');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

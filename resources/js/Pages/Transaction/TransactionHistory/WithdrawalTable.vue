@@ -21,10 +21,11 @@ import Popover from "primevue/popover";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker"
 import debounce from "lodash/debounce.js";
-import {IconFileSearch, IconCircleX} from "@tabler/icons-vue";
+import {IconFileSearch, IconCircleX, IconLoader} from "@tabler/icons-vue";
 import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
 import RadioButton from "primevue/radiobutton";
+import toast from "@/Composables/toast.js";
 
 const props = defineProps({
     selectedType: String
@@ -169,6 +170,7 @@ onMounted(() => {
     };
 
     loadLazyData();
+    checkExportStatus();
 });
 
 watch(
@@ -231,12 +233,15 @@ watch([totalAmount, successAmount, rejectedAmount], () => {
 });
 
 const exportStatus = ref(false);
+const exportingFile = ref(false);
+const statusMessage = ref('');
+const downloadLink = ref(null);
+let checkInterval = null;
 
+// Function to start export and get Job ID
 const exportReport = () => {
     exportStatus.value = true;
-    isLoading.value = true;
-
-    lazyParams.value = {...lazyParams.value, first: event?.first || first.value};
+    exportingFile.value = true;
 
     const params = {
         page: JSON.stringify(event?.page + 1),
@@ -247,16 +252,90 @@ const exportReport = () => {
         exportStatus: true,
     };
 
-    const url = route('transaction.getTransactionHistory', params);  // Construct the export URL
+    // Construct the URL
+    const url = route('transaction.getTransactionHistory'); // Get the base URL
 
+    // Start export and get the Job ID
+    axios.get(url, { params })
+        .then((response) => {
+            if (response.data.status === 'success') {
+                statusMessage.value = 'Export started. Please wait...';
+
+                // Start checking export status every 2 seconds
+                checkInterval = setInterval(() => checkExportStatus(), 2000);
+            } else {
+                exportingFile.value = false;
+                statusMessage.value = 'Failed to start export.';
+
+                toast.add({
+                    title: 'Error',
+                    message: 'Export Error. Please try again later.',
+                    type: 'error',
+                });
+            }
+        })
+        .catch((error) => {
+            exportingFile.value = false;
+            toast.add({
+                title: 'Error',
+                message: 'Export Error. Please try again later.',
+                type: 'error',
+            });
+            console.error('Error occurred during export:', error);
+        });
+};
+
+// Function to check export status
+const checkExportStatus = async () => {
     try {
-        // Send the request to the backend to trigger the export
-        window.location.href = url;  // This will trigger the download directly
-    } catch (e) {
-        console.error('Error occurred during export:', e);  // Log the error if any
-    } finally {
-        isLoading.value = false;  // Reset loading state
-        exportStatus.value = false;  // Reset export status
+        const response = await axios.get(route('transaction.checkExportStatus'));
+
+        if (response.data.status === 'completed') {
+            clearInterval(checkInterval);
+            downloadLink.value = response.data.file_url; // Set the file download URL
+            statusMessage.value = 'Export completed. Ready to download.';
+            exportingFile.value = false;
+            exportStatus.value = false;
+        } else if (response.data.status === 'failed') {
+            clearInterval(checkInterval);
+            exportingFile.value = false;
+            exportStatus.value = false;
+        } else {
+            statusMessage.value = 'Export in progress...';
+            exportingFile.value = true;
+            exportStatus.value = true;
+        }
+    } catch (error) {
+        console.error('Error checking export status:', error);
+        clearInterval(checkInterval);
+        statusMessage.value = 'An error occurred while checking export status.';
+        exportingFile.value = false;
+        exportStatus.value = false;
+    }
+};
+
+const downloadFile = () => {
+    if (downloadLink.value) {
+        // Create an anchor tag to trigger download
+        const anchor = document.createElement('a');
+        anchor.href = downloadLink.value;
+        anchor.download = ''; // Optional: Provide a default filename
+        anchor.target = '_blank'; // Open in a new tab if needed
+        anchor.click();
+
+        axios.delete(route('transaction.deleteReport'))
+            .then(response => {
+                downloadLink.value = null;
+                statusMessage.value = 'Download started and file deleted successfully.';
+            })
+            .catch(error => {
+                console.error('Error deleting file:', error);
+                statusMessage.value = 'Error occurred while deleting the file.';
+            });
+
+        statusMessage.value = 'Download started.';
+    } else {
+        statusMessage.value = 'Download link not available.';
     }
 };
 </script>
@@ -288,7 +367,7 @@ const exportReport = () => {
                     :globalFilterFields="['user.name', 'user.email', 'meta_login', 'master_meta_login']"
                 >
                     <template #header>
-                        <div class="flex flex-col md:flex-row gap-3 items-center self-stretch md:pb-5">
+                        <div class="flex flex-col md:flex-row gap-3 items-start self-stretch pb-3 md:pb-5">
                             <div class="relative w-full md:w-60">
                                 <InputIconWrapper class="md:col-span-2">
                                     <template #icon>
@@ -311,26 +390,44 @@ const exportReport = () => {
                                     <XCircleIcon aria-hidden="true" class="w-4 h-4"/>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 w-full gap-3">
+                            <div class="flex justify-between items-start self-stretch w-full gap-3">
                                 <Button
                                     class="w-full md:w-28 flex gap-2"
                                     severity="secondary"
                                     outlined
                                     @click="toggle"
                                 >
-                                    <SlidersOneIcon class="w-4 h-4"/>
+                                    <SlidersOneIcon class="w-4 h-4" />
                                     Filter
                                 </Button>
                                 <div class="w-full flex justify-end">
-                                    <Button
-                                        class="w-full md:w-28 flex gap-2"
-                                        severity="secondary"
-                                        @click="exportReport"
-                                        :disabled="exportTable==='yes'"
-                                    >
-                                        <CloudDownloadIcon class="w-4 h-4"/>
-                                        Export
-                                    </Button>
+                                    <div class="flex flex-col items-end gap-1 w-full">
+                                        <Button
+                                            v-if="downloadLink"
+                                            class="w-full md:w-fit flex gap-2"
+                                            severity="success"
+                                            @click="downloadFile"
+                                            :disabled="exportingFile"
+                                        >
+                                            Download
+                                        </Button>
+                                        <Button
+                                            v-else
+                                            class="w-full md:w-fit flex gap-2"
+                                            severity="secondary"
+                                            @click="exportReport"
+                                            :disabled="exportingFile"
+                                        >
+                                            <div v-if="exportingFile" class="animate-spin">
+                                                <IconLoader size="20" stroke-width="1.5" />
+                                            </div>
+                                            <CloudDownloadIcon v-else class="w-4 h-4" />
+                                            {{ exportingFile ? 'Exporting' : 'Export' }}
+                                        </Button>
+                                        <div v-if="statusMessage && exportStatus" class="text-sm">
+                                            {{ statusMessage }}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
