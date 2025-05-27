@@ -9,7 +9,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class ExportTransactionHistoryJob implements ShouldQueue
+class ExportWithdrawalJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -19,11 +19,11 @@ class ExportTransactionHistoryJob implements ShouldQueue
     public function __construct($ids)
     {
         $this->ids = $ids;
-        $this->queue = 'transaction-export';
+        $this->queue = 'withdrawal-export';
     }
 
     public function handle(): void
     {
-        (new TransactionsExport($this->ids))->store('public/transaction-report.xlsx');
+        (new TransactionsExport($this->ids))->store('public/withdrawal-report.xlsx');
     }
 }

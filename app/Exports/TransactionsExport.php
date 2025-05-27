@@ -27,7 +27,7 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithCh
             ->get()
             ->keyBy('id');
 
-        ini_set('memory_limit', '1024M');
+        ini_set('memory_limit', '2048M');
     }
 
     public function query()
@@ -140,8 +140,8 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithCh
         $firstLeader = $this->getFirstLeaderFromHierarchy($row->user->hierarchyList);
 
         if ($row->transaction_type == 'Transfer') {
-            $from = $row->from_wallet ? $row->from_wallet->user->name : '-';
-            $to = $row->to_wallet ? $row->to_wallet->user->name : '-';
+            $from = $row->from_wallet ? $row->from_wallet->user?->name : '-';
+            $to = $row->to_wallet ? $row->to_wallet->user?->name : '-';
         } else {
             $from = $row->from_wallet ? $row->from_wallet->name : ($row->from_meta_login ?? $row->to_meta_login ?? '-');
             $to = $row->to_wallet ? $row->to_wallet->name : ($row->to_meta_login ?? $row->from_meta_login ?? '-');

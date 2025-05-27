@@ -288,7 +288,9 @@ const exportReport = () => {
 // Function to check export status
 const checkExportStatus = async () => {
     try {
-        const response = await axios.get(route('transaction.checkExportStatus'));
+        const response = await axios.get(route('transaction.checkExportStatus', {
+            type: filters.value['type'].value,
+        }));
 
         if (response.data.status === 'completed') {
             clearInterval(checkInterval);
@@ -323,7 +325,9 @@ const downloadFile = () => {
         anchor.target = '_blank'; // Open in a new tab if needed
         anchor.click();
 
-        axios.delete(route('transaction.deleteReport'))
+        axios.delete(route('transaction.deleteReport', {
+            type: filters.value['type'].value,
+        }))
             .then(response => {
                 downloadLink.value = null;
                 statusMessage.value = 'Download started and file deleted successfully.';

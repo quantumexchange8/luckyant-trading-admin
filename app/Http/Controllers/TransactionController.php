@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ExportTransactionHistoryJob;
+use App\Jobs\ExportDepositJob;
+use App\Jobs\ExportTransferJob;
+use App\Jobs\ExportWithdrawalJob;
 use App\Services\UserService;
 use Carbon\Carbon;
 use App\Models\User;
@@ -12,7 +14,6 @@ use Inertia\Inertia;
 use App\Models\Wallet;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
-use App\Exports\TransactionsExport;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PendingDepositExport;
@@ -383,6 +384,7 @@ class TransactionController extends Controller
                 'from_account:id,meta_login',
                 'to_account:id,meta_login',
             ])
+                ->where('category', 'wallet')
                 ->where('transaction_type', $data['filters']['type']['value'])
                 ->whereNot('status', 'Processing');
 
@@ -479,7 +481,24 @@ class TransactionController extends Controller
             // Export logic
             if ($request->has('exportStatus') && $request->exportStatus) {
                 $ids = $query->pluck('id')->toArray();
-                ExportTransactionHistoryJob::dispatch($ids);
+                $type = $data['filters']['type']['value'];
+
+                switch ($type) {
+                    case 'Deposit':
+                        ExportDepositJob::dispatch($ids);
+                        break;
+
+                    case 'Withdrawal':
+                        ExportWithdrawalJob::dispatch($ids);
+                        break;
+
+                    case 'Transfer':
+                        ExportTransferJob::dispatch($ids);
+                        break;
+
+                    default:
+                        break;
+                }
 
                 return response()->json([
                     'status' => 'success',
@@ -581,11 +600,13 @@ class TransactionController extends Controller
         return response()->json([$type => $results]);
     }
 
-    public function checkExportStatus()
+    public function checkExportStatus(Request $request)
     {
+        $type = strtolower($request->type);
+
         // Check the jobs table for the job ID and queue name
         $job = DB::table('jobs')
-            ->where('queue', 'transaction-export')
+            ->where('queue', "$type-export")
             ->orderByDesc('id')
             ->first();
 
@@ -598,7 +619,7 @@ class TransactionController extends Controller
 
         // Check the failed_jobs table if the job is not in the jobs table
         $failedJob = DB::table('failed_jobs')
-            ->where('queue', 'transaction-export')
+            ->where('queue', "$type-export")
             ->orderByDesc('id')
             ->first();
 
@@ -609,14 +630,14 @@ class TransactionController extends Controller
             ]);
         }
 
-        $filePath = storage_path('app/public/transaction-report.xlsx');
+        $filePath = storage_path("app/public/$type-report.xlsx");
 
         // Check if the file exists
         if (file_exists($filePath)) {
             return response()->json([
                 'status' => 'completed',
                 'message' => 'Export is complete. You can download the file.',
-                'file_url' => asset('storage/transaction-report.xlsx'),
+                'file_url' => asset("storage/$type-report.xlsx"),
             ]);
         } else {
             return response()->json([
@@ -625,9 +646,10 @@ class TransactionController extends Controller
         }
     }
 
-    public function deleteReport()
+    public function deleteReport(Request $request)
     {
-        $filePath = 'transaction-report.xlsx';
+        $type = strtolower($request->type);
+        $filePath = "$type-report.xlsx";
 
         // Check if the file exists in the 'public' disk
         if (Storage::disk('public')->exists($filePath)) {
