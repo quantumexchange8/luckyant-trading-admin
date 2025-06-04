@@ -48,7 +48,7 @@ const tabs = ref([
     // },
 ]);
 
-const selectedType = ref('deposit');
+const selectedType = ref('Deposit');
 const activeIndex = ref('0');
 
 // Watch for changes in selectedType and update the activeIndex accordingly
