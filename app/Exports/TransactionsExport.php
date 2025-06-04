@@ -132,6 +132,27 @@ class TransactionsExport implements FromQuery, WithHeadings, WithMapping, WithCh
             'Approval Date',
             'Remarks',
         ];
+
+        return [
+            'Request Date',
+            'Name',
+            'Email',
+            'First Leader',
+            'Live Account',
+            'Master',
+            'Type',
+            'Master Account',
+            'Account Type',
+            'Subscription Number',
+            'Subscription Package',
+            'Subscription Product',
+            'Fund Size',
+            'Expired On',
+            'Status',
+            'Approval Date',
+            'Settlement Date',
+            'Termination Date',
+        ];
     }
 
     public function map($row): array

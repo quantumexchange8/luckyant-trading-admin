@@ -413,4 +413,6 @@ return [
     "claimed" => "Claimed",
     "active_fund" => "Active Fund",
     "next_settlement" => "Next Settlement",
+    "expired_on" => "Expired On",
+    "rejected" => "Rejected",
 ];
