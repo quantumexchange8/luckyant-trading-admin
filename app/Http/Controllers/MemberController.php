@@ -117,15 +117,6 @@ class MemberController extends Controller
             $phone_number = '+' . $phone;
         }
 
-        $users = User::where('dial_code', $request->dial_code)
-            ->get();
-
-        foreach ($users as $user_phone) {
-            if ($user_phone->phone == $phone_number) {
-                throw ValidationException::withMessages(['phone' => trans('public.invalid_mobile_phone')]);
-            }
-        }
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -365,17 +356,6 @@ class MemberController extends Controller
         } else {
             // If phone number already starts with dial code, use the phone number directly
             $phone_number = '+' . $phone;
-        }
-
-        $users = User::where('dial_code', $request->dial_code)
-            ->whereNot('id', $user->id)
-            ->where('status', 'Active')
-            ->get();
-
-        foreach ($users as $user_phone) {
-            if ($user_phone->phone == $phone_number) {
-                throw ValidationException::withMessages(['phone' => trans('public.invalid_mobile_phone')]);
-            }
         }
 
         $dobInput = $request->input('dob'); // Replace with actual input retrieval
@@ -1016,17 +996,6 @@ class MemberController extends Controller
         } else {
             // If phone number already starts with dial code, use the phone number directly
             $phone_number = '+' . $phone;
-        }
-
-        $users = User::where('dial_code', $dial_code)
-            ->whereNot('id', $user->id)
-            ->where('status', 'Active')
-            ->get();
-
-        foreach ($users as $user_phone) {
-            if ($user_phone->phone == $phone_number) {
-                throw ValidationException::withMessages(['phone' => trans('public.invalid_mobile_phone')]);
-            }
         }
 
         $user->update([

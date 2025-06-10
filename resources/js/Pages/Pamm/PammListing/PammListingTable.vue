@@ -490,7 +490,7 @@ watchEffect(() => {
                             </template>
                         </Column>
                         <Column
-                            field="approval_date"
+                            field="expired_date"
                             sortable
                             class="table-cell text-nowrap"
                             :header="$t('public.expired_on')"
