@@ -127,7 +127,7 @@ class MemberListingExport implements FromQuery, WithHeadings, WithMapping
             $user->address_1,
             $user->ofCountry?->name,
             $user->nationality ?? '-',
-            $user->identification_number ?? '-',
+            "'" . $user->identification_number ?? '-',
             $user->rank?->name,
             $user->kyc_approval,
             $user->active_pamm_sum_subscription_amount + $user->active_copy_trade_sum_meta_balance,
