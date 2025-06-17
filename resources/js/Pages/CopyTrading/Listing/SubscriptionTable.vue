@@ -372,7 +372,7 @@ watchEffect(() => {
                                 <span class="block">{{ $t('public.join_date') }}</span>
                             </template>
                             <template #body="slotProps">
-                                <span class="uppercase">{{ dayjs(slotProps.data.approval_date).format('DD/MM/YYYY HH:mm:ss') }}</span>
+                                <span class="uppercase">{{ dayjs(slotProps.data.subscription.approval_date).format('DD/MM/YYYY HH:mm:ss') }}</span>
                             </template>
                         </Column>
                         <Column
@@ -496,7 +496,7 @@ watchEffect(() => {
                             :header="$t('public.settlement')"
                         >
                             <template #body="{data}">
-                                {{ dayjs(data.subscription.expired_date).add(1, 'day').format('YYYY/MM/DD') }}
+                                {{ dayjs(data.subscription.expired_date).add(1, 'day').format('DD/MM/YYYY') }}
                             </template>
                         </Column>
                         <Column

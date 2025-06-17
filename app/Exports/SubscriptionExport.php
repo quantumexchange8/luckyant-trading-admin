@@ -60,7 +60,10 @@ class SubscriptionExport implements FromCollection, WithHeadings
                 'amount' => $record->meta_balance,
                 'real_fund' => $record->real_fund,
                 'demo_fund' => $record->demo_fund,
-                'settlement_date' => $record->subscription?->expired_date ? Carbon::parse($record->subscription->expired_date)->addDay()->format('Y-m-d') : null,
+                'settlement_date' => $record->subscription
+                    ? Carbon::parse($record->subscription->approval_date)->format('Y-m-d') . ' - ' .
+                    Carbon::parse($record->subscription->expired_date)->addDay()->format('Y-m-d')
+                    : null,
                 'termination_date' => $record->termination_date ? Carbon::parse($record->termination_date)->format('Y-m-d') : null,
                 'status' => $record->status,
             );
