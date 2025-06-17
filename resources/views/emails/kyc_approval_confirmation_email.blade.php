@@ -9,8 +9,8 @@ We are pleased to inform you that your KYC (Know Your Customer) documentation ha
 
 Now that your KYC has been approved, you can proceed with confidence to explore the full range of services we offer. If you have any questions or require further assistance, our dedicated support team is ready to help.
 
-Best Regards,  
-Lucky Ant Trading Team
+Best Regards,
+Lucky Ant Trading Ltd Team
 
 @component('mail::subcopy')
 "Disclaimer - Despite thorough research to compile the above content, it serves purely as informational and educational material. None of the content provided should be construed as investment advice in any form."
@@ -35,7 +35,7 @@ Lucky Ant Trading Team
 既然您的KYC已经获得批准,您可以放心地继续探索我们提供的全部服务。如果您有任何问题或需要进一步的帮助,我们专门的支持团队已经准备好提供帮助。
 
 此致敬礼,
-蚂蚁科技团队
+Lucky Ant Trading Ltd Team
 
 @component('mail::subcopy')
 "免责声明 - 尽管经过深入研究编制了上述内容,但它纯粹作为信息和教育材料提供。所提供的任何内容都不应被解释为任何形式的投资建议。"

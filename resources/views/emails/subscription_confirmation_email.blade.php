@@ -15,7 +15,7 @@ We highly value your trading needs and ensure that all trades are executed promp
 If you have any questions or need further assistance, please feel free to contact our customer service team. Our staff is committed to assisting you and ensuring that your trading experience is optimal.
 
 Best Regards,
-Lucky Ant Trading Team
+Lucky Ant Trading Ltd Team
 
 @component('mail::subcopy')
 "Disclaimer - Despite thorough research to compile the above content, it serves purely as informational and educational material. None of the content provided should be construed as investment advice in any form."
@@ -45,7 +45,7 @@ Lucky Ant Trading Team
 如果您有任何疑问或需要进一步协助,请随时联系我们的客户服务团队。我们的工作人员将竭诚为您提供帮助,并确保您的交易体验达到最佳状态。
 
 此致敬礼,
-蚂蚁科技团队
+Lucky Ant Trading Ltd Team
 
 @component('mail::subcopy')
 "免责声明 - 尽管经过深入研究编制了上述内容,但它纯粹作为信息和教育材料提供。所提供的任何内容都不应被解释为任何形式的投资建议。"
