@@ -62,6 +62,8 @@ class PammSubscriptionExport implements FromCollection, WithHeadings, WithMappin
             $record->status,
             $record->approval_date ? Carbon::parse($record->approval_date)->format('Y-m-d H:i:s') : '',
             $record->settlement_date ? Carbon::parse($record->approval_date)->format('Y-m-d') . ' - ' . Carbon::parse($record->settlement_date)->addDay()->format('Y-m-d') : '',
+            $record->settlement_date ? Carbon::parse($record->settlement_date)->subDays($record->settlement_period)->format('Y-m-d') : '',
+            $record->settlement_date ? Carbon::parse($record->settlement_date)->addDay()->format('Y-m-d') : '',
             $record->termination_date ? Carbon::parse($record->termination_date)->format('Y-m-d H:i:s') : '',
         ];
     }
@@ -85,7 +87,8 @@ class PammSubscriptionExport implements FromCollection, WithHeadings, WithMappin
             'Expired On',
             'Status',
             'Approval Date',
-            'Settlement Date',
+            'Settlement Start Date',
+            'Settlement End Date',
             'Termination Date',
         ];
     }
