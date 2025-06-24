@@ -66,16 +66,14 @@ class PammSubscriptionExport implements FromCollection, WithHeadings, WithMappin
                 $date = Carbon::parse($settlementDate)->subDays($settlementPeriod);
                 $time = $date->format('H:i:s');
 
-                if ($time === '23:59:59') {
-                    return $date->addSecond()->format('Y-m-d');
-                } elseif ($time === '00:00:00') {
-                    return $date->format('Y-m-d');
+                if ($time === '00:00:00') {
+                    return $date->subSecond()->format('Y-m-d');
                 } else {
-                    return $date->addDay()->format('Y-m-d');
+                    return $date->format('Y-m-d');
                 }
             })($record->settlement_date, $record->settlement_period)
                 : '',
-            $record->settlement_date ? Carbon::parse($record->settlement_date)->addDay()->format('Y-m-d') : '',
+            $record->settlement_date ? Carbon::parse($record->settlement_date)->format('Y-m-d') : '',
             $record->termination_date ? Carbon::parse($record->termination_date)->format('Y-m-d H:i:s') : '',
         ];
     }
