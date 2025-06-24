@@ -61,10 +61,21 @@ class SubscriptionExport implements FromCollection, WithHeadings
                 'real_fund' => $record->real_fund,
                 'demo_fund' => $record->demo_fund,
                 'settlement_start_date' => $record->subscription
-                    ? Carbon::parse($record->subscription->approval_date)->addSecond()->format('Y-m-d')
+                    ? (function ($approvalDate) {
+                        $date = Carbon::parse($approvalDate);
+                        $time = $date->format('H:i:s');
+
+                        if ($time === '23:59:59') {
+                            return $date->addSecond()->format('Y-m-d');
+                        } elseif ($time === '00:00:00') {
+                            return $date->format('Y-m-d');
+                        } else {
+                            return $date->addDay()->format('Y-m-d');
+                        }
+                    })($record->subscription->approval_date)
                     : null,
                 'settlement_end_date' => $record->subscription
-                    ? Carbon::parse($record->subscription->next_pay_date)->format('Y-m-d')
+                    ? Carbon::parse($record->subscription->next_pay_date)->addDay()->format('Y-m-d')
                     : null,
                 'termination_date' => $record->termination_date ? Carbon::parse($record->termination_date)->format('Y-m-d') : null,
                 'status' => $record->status,
