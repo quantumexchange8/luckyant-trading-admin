@@ -65,8 +65,8 @@ class SubscriptionExport implements FromCollection, WithHeadings
                         $date = Carbon::parse($approvalDate);
                         $time = $date->format('H:i:s');
 
-                        if ($time === '00:00:00') {
-                            return $date->subSecond()->format('Y-m-d');
+                        if ($time !== '00:00:00') {
+                            return $date->addDay()->format('Y-m-d');
                         } else {
                             return $date->format('Y-m-d');
                         }
