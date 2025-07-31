@@ -21,7 +21,8 @@ const form = useForm({
     is_public: null,
 });
 
-const selectedUpline = ref(props.member.upline ? { value: props.member.upline.id, label: props.member.upline.email } : {});
+// const selectedUpline = ref(props.member.upline ? { value: props.member.upline.id, label: props.member.upline.email } : {});
+const selectedUpline = ref();
 const uplines = ref([]);
 const loadingUsers = ref(false);
 
@@ -30,6 +31,7 @@ const getUsers = async () => {
     try{
         const response = await axios.get('/getUsers');
         uplines.value = response.data;
+        // selectedUpline.value = uplines.value.find(upline => upline.id === props.member.upline_id) || null;
         selectedUpline.value = uplines.value.find(upline => upline.id === props.member.upline_id) || null;
     } catch(error) {
         console.error('Error fetching uplines:', error);
@@ -38,6 +40,7 @@ const getUsers = async () => {
     }
 }
 
+getUsers();
 
 function loadUsers(query, setOptions) {
     fetch('/member/getAllUsers?query=' + query + '&id=' + props.member.id)
@@ -65,7 +68,8 @@ const selectGroupStatus = (type) => {
 }
 
 const submitForm = () => {
-    form.upline_id = selectedUpline.value['value'];
+    // form.upline_id = selectedUpline.value['value'];
+    form.upline_id = selectedUpline.value?.id;
     form.is_public = selectedGroupStatus.value;
 
     form.put(route('member.updateMemberGroup'));
@@ -96,7 +100,7 @@ const submitForm = () => {
                                 {{ member.upline?.email ?? '-' }}
                             </div>
                         </div>
-                        <div class="flex flex-col md:flex-row items-start md:items-center gap-1 self-stretch">
+                        <div class="flex flex-col md:flex-row items-start md:items-center gap-1 self-stretch md:justify-between w-full">
                             <div class="w-[140px] text-gray-500 text-xs font-medium">
                                 {{ $t('public.status') }}
                             </div>
@@ -115,13 +119,38 @@ const submitForm = () => {
                             >
                                 {{ $t('public.referrer') }}
                             </InputLabel>
-                            <div class="w-full">
-                                <Combobox
-                                    :load-options="loadUsers"
-                                    v-model="selectedUpline"
-                                    :error="form.errors.upline_id"
-                                />
-                            </div>
+<!--                            <div class="w-full">-->
+<!--                                <Combobox-->
+<!--                                    :load-options="loadUsers"-->
+<!--                                    v-model="selectedUpline"-->
+<!--                                    :error="form.errors.upline_id"-->
+<!--                                />-->
+<!--                            </div>-->
+
+                            <Select
+                                v-model="selectedUpline"
+                                :options="uplines"
+                                optionLabel="email"
+                                placeholder="Select a leader"
+                                class="w-full"
+                                filter
+                                :filter-fields="['name', 'email']"
+                                :virtualScrollerOptions="{ itemSize: 50 }"
+                                :loading="loadingUsers"
+                            >
+                                <template #value="{value, placeholder}">
+                                    <div v-if="value" class="flex items-center">
+                                        {{ value.email }}
+                                    </div>
+                                    <span v-else>{{ placeholder }}</span>
+                                </template>
+                                <template #option="slotProps">
+                                    <div class="flex flex-col max-w-[220px] truncate">
+                                        <div>{{ slotProps.option.name }}</div>
+                                        <div class="text-gray-400">{{ slotProps.option.email }}</div>
+                                    </div>
+                                </template>
+                            </Select>
                             <InputError :message="form.errors.upline_id" />
                         </div>
 
